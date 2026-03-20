@@ -865,7 +865,7 @@ function renderChapterList() {
     ));
   });
   wrap.appendChild(nav);
-  wrap.appendChild(h('div', { style: { textAlign: 'center', fontSize: '11px', color: 'var(--tx3)', margin: '24px 0 8px' } }, 'v2.2.2'));
+  wrap.appendChild(h('div', { style: { textAlign: 'center', fontSize: '11px', color: 'var(--tx3)', margin: '24px 0 8px' } }, 'v2.2.3'));
   return wrap;
 }
 
