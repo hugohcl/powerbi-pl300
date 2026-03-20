@@ -129,7 +129,8 @@ const CHAPTERS = [
         code: null,
         result: { headers: ["Zone", "Position", "Rôle"], rows: [["Requêtes", "Gauche", "Liste des tables chargées"], ["Aperçu données", "Centre", "Preview des données (100 premières lignes)"], ["Étapes appliquées", "Droite", "Pipeline de transformations (modifiable)"]] },
         business: "80% du temps d'un Data Analyst est du nettoyage. Power Query est l'outil dédié pour ça. Le DAX n'est PAS fait pour nettoyer.",
-        tip: "Accueil → Transformer les données pour ouvrir PQ. Tu peux modifier, supprimer ou réordonner n'importe quelle étape."
+        tip: "Accueil → Transformer les données pour ouvrir PQ. Tu peux modifier, supprimer ou réordonner n'importe quelle étape.",
+        deep: "Power Query fonctionne en lazy evaluation : les étapes ne sont exécutées que lors du 'Fermer et Appliquer'. L'aperçu ne montre que 100 lignes. Chaque étape est une transformation M immuable — tu peux supprimer ou réordonner les étapes sans casser les précédentes (sauf si elles dépendent d'une colonne renommée/supprimée). L'examen PL-300 teste la connaissance de l'éditeur PQ : savoir où sont les étapes appliquées, comment les modifier, et quand utiliser PQ vs DAX."
       },
       {
         id: "2.2", title: "Types de données",
@@ -137,7 +138,8 @@ const CHAPTERS = [
         code: null,
         result: { headers: ["Icône", "Type", "Piège courant"], rows: [["ABC", "Texte", "Nombre stocké en texte → SUM retourne erreur"], ["123", "Entier", "Décimales silencieusement tronquées (3578.27 → 3578)"], ["1.2", "Décimal", "Délimiteur , vs . selon les locales → valeurs fausses"], ["📅", "Date", "JJ/MM vs MM/JJ ambigu → 03/04 = 3 avril ou 4 mars ?"]] },
         business: "Règle d'or : vérifier les types est TOUJOURS la première étape dans Power Query. Avant de renommer, avant de filtrer, avant tout.",
-        tip: "Clic sur l'icône de type en haut de chaque colonne pour changer le type. PQ → jamais DAX pour les types."
+        tip: "Clic sur l'icône de type en haut de chaque colonne pour changer le type. PQ → jamais DAX pour les types.",
+        deep: "Power BI détecte automatiquement les types à la connexion ('Changed Type' dans les étapes). Mais cette détection se base sur les 200 premières lignes et peut se tromper. Exemple : une colonne avec '001', '002' détectée en Entier → les zéros de tête disparaissent. Depuis PostgreSQL, les types sont généralement corrects car définis dans la base. Les pièges classiques à l'examen : Decimal Number vs Fixed Decimal Number (précision comptable), Date vs DateTime (DateTime inclut l'heure), et les locales (virgule vs point décimal)."
       },
       {
         id: "2.3", title: "Les 5 gestes de nettoyage",
@@ -145,27 +147,31 @@ const CHAPTERS = [
         code: null,
         result: { headers: ["Geste", "Comment", "Avant → Après"], rows: [["1. Renommer", "Double-clic en-tête", "orderdate → DateCommande"], ["2. Supprimer", "Clic droit → Supprimer", "15 colonnes → 5 colonnes utiles"], ["3. Filtrer", "Flèche en-tête → filtre", "295 produits → 246 (listprice > 0)"], ["4. Remplacer", "Clic droit → Remplacer", "color: NULL → Non renseigné"], ["5. Type", "Clic icône type", "SalesAmount ABC → SalesAmount 1.2"]] },
         business: "Moins de colonnes = modèle plus rapide et plus clair. Supprime tout ce qui ne sert pas à l'analyse (Phone, AddressLine2, LargePhoto...).",
-        tip: "Pour les colonnes à garder dans Customer : customerid, personid, storeid, territoryid. Tout le reste est du bruit."
+        tip: "Pour les colonnes à garder dans Customer : customerid, personid, storeid, territoryid. Tout le reste est du bruit.",
+        deep: "L'ordre des gestes est important : renomme d'abord (les étapes suivantes référencent les nouveaux noms), supprime les colonnes inutiles tôt (réduit le volume de données pour les étapes suivantes), puis filtre et remplace. Supprimer des colonnes tôt améliore les performances du refresh car Power Query traite moins de données. Dans AdventureWorks avec PostgreSQL, la table Product a ~15 colonnes dont ~5 utiles. Supprimer les 10 autres réduit la taille du modèle de ~30%."
       },
       {
         id: "2.4", title: "Transformations avancées",
         theory: "Colonne conditionnelle, Split (séparer une colonne), Unpivot (colonnes → lignes).",
         code: '= Table.AddColumn(Source, "Gamme", each\n    if [listprice] > 1000 then "Premium"\n    else if [listprice] > 100 then "Standard"\n    else "Entrée de gamme")',
         result: { headers: ["name", "listprice", "Gamme"], rows: [["Mountain-200 Black", "2 294,99", "Premium"], ["Touring-1000 Blue", "2 384,07", "Premium"], ["HL Road Tire", "32,60", "Entrée de gamme"]] },
-        business: "Unpivot : quand Excel a les mois en colonnes, on les transforme en lignes.", tip: null
+        business: "Unpivot : quand Excel a les mois en colonnes, on les transforme en lignes.", tip: "Colonne conditionnelle = l'équivalent PQ du IF/SWITCH DAX. Utilise-la pour créer des catégories (Gamme, Segment) directement dans PQ plutôt qu'en DAX si la logique est fixe.",
+        deep: "Split : sépare une colonne en plusieurs (ex: 'Paris, France' → 'Paris' + 'France'). Deux modes : par délimiteur (virgule, espace) ou par nombre de caractères. Unpivot : transforme des colonnes en lignes. Indispensable quand tu reçois un fichier Excel avec Jan, Fev, Mar en colonnes — Power BI a besoin d'une colonne Mois unique pour les visuels. Merge + Unpivot sont les 2 transformations avancées les plus testées à l'examen PL-300."
       },
       {
         id: "2.5", title: "Merge et Append",
         theory: "Merge = JOIN (ajouter des COLONNES). Append = UNION (empiler des LIGNES de même structure).",
         code: null,
         result: { headers: ["Opération", "SQL équivalent", "Résultat"], rows: [["Merge", "JOIN", "Ajouter des COLONNES d'une autre table"], ["Append", "UNION", "Empiler des LIGNES de même structure"]] },
-        business: null, tip: "Après un Merge, il faut EXPAND pour voir les colonnes (sinon 'Table' affiché)."
+        business: "Merge = enrichir une table avec des colonnes d'une autre (ex: ajouter le nom de catégorie à la table Products via productcategoryid). Append = empiler des tables mensuelles (ex: Ventes_Jan + Ventes_Fev + Ventes_Mar en une seule table Sales).", tip: "Après un Merge, il faut EXPAND pour voir les colonnes (sinon 'Table' affiché).",
+        deep: "Merge = LEFT JOIN par défaut (garde toutes les lignes de la table de gauche). Autres types : Inner (intersection), Full Outer (tout), Right Outer, Left Anti (lignes sans correspondance). Append = UNION ALL (empile sans dédoublonner). Les colonnes doivent avoir les mêmes noms et types pour que l'Append fonctionne correctement. L'examen PL-300 teste la différence entre Merge et Append — ne jamais confondre colonnes (Merge) et lignes (Append)."
       },
       {
         id: "2.6", title: "M language (lecture)",
         theory: "Structure : let (étapes) ... in (résultat). Chaque variable = une étape.",
         code: 'let\n    Source = PostgreSQL.Database("localhost", "adventureworks"),\n    Sales = Source{[Schema="sales", Item="salesorderdetail"]}[Data],\n    Types = Table.TransformColumnTypes(Sales,\n        {{"salesamount", type number}}),\n    Filtre = Table.SelectRows(Types, each [orderyear] = 2023)\nin\n    Filtre',
-        result: null, business: null, tip: null
+        result: null, business: "En entreprise, tu ne modifies jamais le M à la main sauf pour des cas avancés (paramètres dynamiques, fonctions personnalisées). Mais savoir le LIRE est indispensable pour debugger les étapes appliquées qui ne font pas ce que tu attends.", tip: "Chaque étape appliquée dans PQ correspond à une ligne dans le code M. Clique sur une étape → regarde la barre de formule pour voir le M généré. C'est le meilleur moyen d'apprendre M sans l'écrire.",
+        deep: "M est un langage fonctionnel : chaque variable (étape) est immuable. let Source = ..., Filtre = Table.SelectRows(Source, ...) in Filtre. La dernière variable après 'in' est le résultat retourné. Les fonctions M les plus fréquentes : Table.SelectRows (filtre), Table.TransformColumnTypes (types), Table.AddColumn (colonne calculée), Table.NestedJoin (merge). L'examen PL-300 demande parfois de lire du M et identifier ce que fait une étape."
       }
     ]
   },
@@ -194,14 +200,16 @@ const CHAPTERS = [
         theory: "Fact (transactions) au centre : FK + mesures (SalesAmount, orderqty). Dim (contexte) autour : PK + attributs (name, countryregioncode, Year).",
         code: null,
         result: { headers: ["Type", "Exemples (après renommage PQ)", "Contient"], rows: [["Fact", "Sales (salesorderdetail) + Orders (salesorderheader)", "FK + mesures (SalesAmount, orderqty)"], ["Dim", "Product, Customer, Territory, ProductCategory, ProductSubcategory, DateTable (DAX)", "PK + attributs"]] },
-        business: null, tip: null
+        business: "Le schéma en étoile est le standard universel en BI. Les dimensions (Product, Customer, Territory) filtrent la table de faits (Sales). Sans cette structure, les mesures DAX donnent des résultats incohérents ou des erreurs de cardinalité.", tip: "En vue Modèle, organise visuellement les tables : Sales au centre, dimensions autour. Si tu vois des tables 'en cascade' (A→B→C→D), c'est un flocon — simplifie en étoile.",
+        deep: "Étoile vs Flocon : en étoile, chaque dimension est directement reliée aux faits. En flocon (snowflake), les dimensions sont normalisées (Product → SubCategory → Category). Le flocon est plus compact mais ralentit les requêtes DAX car les filtres doivent traverser plus de relations. Power BI recommande l'étoile. Dans AdventureWorks, ProductCategory et ProductSubcategory forment un flocon — en production, on les aplatirait dans Product via un Merge PQ."
       },
       {
         id: "3.2", title: "Relations et cardinalités",
         theory: "1:N (95% des cas). 1:1 (rare). N:N (éviter → table pont). Direction Single (recommandé) vs Both (dangereux, ambiguïtés).",
         code: null,
         result: { headers: ["Cardinalité", "Usage", "Exemple"], rows: [["1:N", "95% des cas", "1 produit → N ventes"], ["1:1", "Rare", "Profil ↔ Détail"], ["N:N", "Éviter → table pont", "Requiert bridge table"]] },
-        business: null, tip: null
+        business: "Dans AdventureWorks, Product (1) → Sales (N) : un produit apparaît dans N ventes. La direction de filtre Single signifie que Product filtre Sales, pas l'inverse. Both est dangereux car il crée des ambiguïtés quand plusieurs chemins relient deux tables.", tip: "Toujours vérifier en vue Modèle que la flèche va de la dimension (1) vers les faits (N). Si Power BI détecte du N:N, c'est souvent un problème de doublons — nettoie dans PQ avant de forcer la relation.",
+        deep: "Direction Single vs Both :\n- Single (recommandé) : la dimension filtre les faits dans un seul sens. Product filtre Sales, mais Sales ne filtre pas Product. C'est le sens naturel de l'analyse.\n- Both : filtre dans les deux sens. Nécessaire dans de rares cas (table pont N:N), mais crée des ambiguïtés si plusieurs chemins existent entre deux tables. L'examen PL-300 teste cette différence — la réponse attendue est presque toujours Single."
       },
       {
         id: "3.3", title: "Table de dates",
@@ -209,7 +217,8 @@ const CHAPTERS = [
         code: 'DateTable =\n    ADDCOLUMNS(\n        CALENDARAUTO(),\n        "Année", YEAR([Date]),\n        "Mois", MONTH([Date]),\n        "NomMois", FORMAT([Date], "MMMM"),\n        "Trimestre", "Q" & QUARTER([Date])\n    )',
         result: { headers: ["Date", "Année", "Mois", "NomMois", "Tri"], rows: [["01/01/2020", "2020", "1", "January", "Q1"], ["15/06/2021", "2021", "6", "June", "Q2"]] },
         business: "Créer une fois, toutes les analyses temporelles en dépendent.",
-        tip: "Clic droit → Marquer comme table de dates → colonne Date."
+        tip: "Clic droit → Marquer comme table de dates → colonne Date.",
+        deep: "Pourquoi créer une table de dates en DAX plutôt qu'utiliser les colonnes date existantes ? 1) Continuité : chaque jour doit exister, même sans vente. Orders[orderdate] a des trous (pas de vente le dimanche). 2) Unicité : une seule ligne par date. Orders[orderdate] a des doublons (500 ventes le même jour). 3) Colonnes dérivées : Année, Mois, Trimestre pour les hiérarchies et les slicers. CALENDARAUTO() détecte les bornes automatiquement, CALENDAR() permet de les fixer. Toujours ajouter au minimum : Année, NumMois, NomMois, Trimestre."
       },
       {
         id: "3.4", title: "USERELATIONSHIP",
@@ -217,14 +226,16 @@ const CHAPTERS = [
         code: 'CA Livraison =\n    CALCULATE(\n        [CA Total],\n        USERELATIONSHIP(\n            Orders[shipdate],\n            DateTable[Date]\n        )\n    )',
         result: { headers: ["Mois", "CA Commande", "CA Livraison"], rows: [["Janvier", "2 100 000 €", "1 950 000 €"], ["Février", "1 800 000 €", "2 050 000 €"]] },
         business: "Analyse par date de commande ET par date de livraison sur le même rapport.",
-        tip: null
+        tip: "Power BI n'autorise qu'UNE relation active entre 2 tables. La relation inactive (pointillés en vue Modèle) est activée ponctuellement par USERELATIONSHIP dans CALCULATE. C'est le seul moyen d'utiliser 2 colonnes date différentes.",
+        deep: "USERELATIONSHIP est un filtre de CALCULATE, pas une fonction autonome. Il ne fonctionne QUE dans CALCULATE. La relation inactive doit EXISTER dans le modèle (créée en vue Modèle avec double-clic → rendre inactive). Cas courants : date de commande vs date de livraison, date de création vs date de clôture, date d'embauche vs date de départ. L'examen PL-300 teste régulièrement ce concept."
       },
       {
         id: "3.5", title: "Sécurité RLS",
         theory: "Row Level Security. Modélisation → Gérer les rôles → Nouveau → [countryregioncode] = \"France\". L'utilisateur ne voit que la France.",
         code: null, result: null,
         business: "Créer dans Desktop, ASSIGNER dans Service (Dataset → Sécurité).",
-        tip: "Créer ≠ appliquer. 2 étapes obligatoires."
+        tip: "Créer ≠ appliquer. 2 étapes obligatoires.",
+        deep: "RLS filtre les données au niveau du modèle : l'utilisateur assigné au rôle 'France' ne voit que les lignes où [countryregioncode] = 'France'. Le filtre se propage à toutes les tables liées grâce aux relations. Piège critique : ALL() dans une mesure supprime le filtre RLS — utilise ALLSELECTED() pour garder la sécurité. Tester dans Desktop : Modélisation → Afficher en tant que → cocher le rôle. Mais le RLS ne s'applique réellement que dans le Service après assignation."
       }
     ]
   },
@@ -271,7 +282,8 @@ const CHAPTERS = [
         code: 'CA Premium =\n    CALCULATE(\n        [CA Total],\n        FILTER(\n            Product,\n            Product[listprice] > 1000\n        )\n    )',
         result: { headers: ["CA Total", "CA Premium", "% Premium"], rows: [["29 358 677 €", "18 234 000 €", "62%"]] },
         business: "Filtre direct = colonne. FILTER = expression complexe.",
-        tip: "CALCULATE n'accepte que des filtres sur colonnes. Pour une mesure → FILTER."
+        tip: "CALCULATE n'accepte que des filtres sur colonnes. Pour une mesure → FILTER.",
+        deep: "FILTER est un itérateur : il parcourt CHAQUE ligne de la table et évalue la condition. C'est plus lent qu'un filtre direct de CALCULATE (qui utilise un index interne). Règle de performance : si ta condition porte sur une SEULE colonne (ex: Price > 1000), utilise le filtre direct. Si ta condition combine plusieurs colonnes ou utilise une mesure (ex: [CA Total] > 100000), FILTER est obligatoire. Piège PL-300 : CALCULATE([CA], [Marge] > 0.3) → ERREUR. Les mesures ne sont pas acceptées en filtre direct. Correction : CALCULATE([CA], FILTER(ALL(Product), [Marge] > 0.3))."
       },
       {
         id: "4.4", title: "KEEPFILTERS",
@@ -279,7 +291,8 @@ const CHAPTERS = [
         code: '// Sans KEEPFILTERS : REMPLACE\nCA France = CALCULATE([CA], Country = "France")\n\n// Avec : INTERSECTION\nCA Keep = CALCULATE([CA],\n    KEEPFILTERS(Country = "France"))',
         result: null,
         business: "KEEPFILTERS force l'ajout au lieu du remplacement sur la même colonne.",
-        tip: null
+        tip: "KEEPFILTERS est rarement utilisé en pratique (< 5% des cas). Retiens surtout le comportement par défaut de CALCULATE : REMPLACE sur la même colonne, AJOUTE sur une autre. C'est ce que l'examen PL-300 teste.",
+        deep: "Sans KEEPFILTERS, CALCULATE(..., Country='France') dans un visuel filtré sur Germany remplace Germany par France → résultat = CA France. Avec KEEPFILTERS, CALCULATE(..., KEEPFILTERS(Country='France')) fait l'intersection : Country = France AND Country = Germany → résultat = BLANK (aucun pays n'est à la fois France et Germany). Cas d'usage réel : quand tu veux afficher uniquement les lignes qui matchent EXACTEMENT le filtre du visuel ET le filtre de CALCULATE, sans remplacement."
       }
     ]
   },

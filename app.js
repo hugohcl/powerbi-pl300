@@ -44,6 +44,7 @@ const S = {
   examHistory: [], // [{date, score, total, pct, byDomain}]
   examUserAnswers: [], // user answers during exam (parallel to quizQuestions)
   examReview: false,
+  examFullReview: false,
   examReviewData: [],
   // Exercises
   exMode: false,
@@ -462,15 +463,15 @@ function showOnboarding() {
   var card = h('div', { className: 'onboarding-card' },
     h('div', { style: { marginBottom: '16px' } }, icon('award', 32)),
     h('h2', null, 'Bienvenue dans ton parcours PL-300'),
-    h('p', null, 'Cette application te guide de zéro à la certification Power BI PL-300.'),
+    h('p', null, 'Cette application te guide de z\u00e9ro \u00e0 la certification Power\u00a0BI PL-300.'),
     h('div', { style: { textAlign: 'left', margin: '20px 0' } },
-      h('div', { className: 'onboarding-step' }, icon('book', 16), ' Formation : 7 chapitres avec missions pratiques'),
-      h('div', { className: 'onboarding-step' }, icon('target', 16), ' Quiz PL-300 : entraînement par domaine + examen blanc'),
-      h('div', { className: 'onboarding-step' }, icon('zap', 16), ' Flashcards : répétition espacée (SM-2)'),
-      h('div', { className: 'onboarding-step' }, icon('flag', 16), ' Projet Racing Games : application sur un projet réel'),
-      h('div', { className: 'onboarding-step' }, icon('trophy', 16), ' Objectif : PL-300 Ready (3000 XP)')
+      h('div', { className: 'onboarding-step' }, icon('book', 16), ' Formation\u00a0: 7 chapitres avec missions pratiques'),
+      h('div', { className: 'onboarding-step' }, icon('target', 16), ' Quiz PL-300\u00a0: entra\u00eenement par domaine + examen blanc'),
+      h('div', { className: 'onboarding-step' }, icon('zap', 16), ' Flashcards\u00a0: r\u00e9p\u00e9tition espac\u00e9e (SM-2)'),
+      h('div', { className: 'onboarding-step' }, icon('flag', 16), ' Projet Racing Games\u00a0: application sur un projet r\u00e9el'),
+      h('div', { className: 'onboarding-step' }, icon('trophy', 16), ' Objectif\u00a0: \u00ab\u00a0PL-300 Ready\u00a0\u00bb (3\u202f000 XP)')
     ),
-    h('p', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Tu gagnes des XP à chaque action : missions, quiz, exercices, flashcards.'),
+    h('p', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Tu gagnes des XP \u00e0 chaque action\u00a0: missions, quiz, exercices, flashcards.'),
     h('button', {
       onClick: function() {
         localStorage.setItem('pbi-onboarded', '1');
@@ -851,6 +852,7 @@ function renderChapterList() {
       onClick: () => { S.chapterIdx = idx; render(); }
     },
       h('div', { className: 'ch-num' }, `${ch.id}`),
+      h('span', { className: 'ch-domain', style: { color: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color : 'var(--tx3)', background: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color + '18' : 'var(--bg3)' } }, ch.domain || 'Intro'),
       h('div', { style: { flex: '1' } },
         h('div', { className: 'ch-title' }, ch.title),
         h('div', { style: { marginTop: '6px' } },
@@ -1391,6 +1393,13 @@ function renderQuiz() {
   if (S.quizQuestions.length === 0) {
     // Exam strategy
     wrap.appendChild(renderExamStrategy());
+    var totalAnswered = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right + s.wrong; }, 0);
+    if (totalAnswered === 0) {
+      wrap.appendChild(h('div', { className: 'box box-tip', style: { marginBottom: '16px' } },
+        h('span', { className: 'box-label' }, 'Bienvenue'),
+        'Selectionne un domaine et lance-toi. Chaque bonne reponse rapporte 5 XP.'
+      ));
+    }
     wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Mode entraînement'));
     wrap.appendChild(h('div', { className: 'pills' },
       ...['all', 'PQ', 'MO', 'VA', 'DE'].map(k =>
@@ -1437,6 +1446,12 @@ function renderQuiz() {
     // Exam history
     if (S.examHistory.length) {
       wrap.appendChild(h('h3', { style: { fontSize: '14px', marginTop: '24px', marginBottom: '12px' } }, 'Historique des examens'));
+    } else {
+      wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '20px', color: 'var(--tx3)', fontSize: '13px', marginTop: '20px' } },
+        'Aucun examen pass\u00e9 pour le moment. Entra\u00eene-toi avec les quiz avant de te lancer !'
+      ));
+    }
+    if (S.examHistory.length) {
       S.examHistory.slice().reverse().forEach(ex => {
         const passed = ex.score >= 700;
         wrap.appendChild(h('div', { className: 'card', style: { padding: '12px 16px' } },
@@ -1485,12 +1500,16 @@ function renderQuiz() {
     var reviewBtns = h('div', { style: { display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' } });
     if (S.examReviewData && S.examReviewData.length > 0) {
       reviewBtns.appendChild(h('button', {
-        onClick: () => { S.examReview = true; render(); },
+        onClick: () => { S.examReview = true; S.examFullReview = false; render(); },
         style: { background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)' }
       }, 'Revoir mes erreurs (' + S.examReviewData.length + ')'));
     }
     reviewBtns.appendChild(h('button', {
-      onClick: () => { S.quizQuestions = []; S.qi = 0; S.examReview = false; render(); }
+      onClick: () => { S.examFullReview = true; S.examReview = false; render(); },
+      style: { background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
+    }, 'Revue complete'));
+    reviewBtns.appendChild(h('button', {
+      onClick: () => { S.quizQuestions = []; S.qi = 0; S.examReview = false; S.examFullReview = false; render(); }
     }, 'Retour au menu'));
     wrap.appendChild(reviewBtns);
 
@@ -1501,7 +1520,7 @@ function renderQuiz() {
         var q = item.question;
         var userAns = item.userAnswer;
         var qt = q.type || 'single';
-        var reviewCard = h('div', { className: 'card', style: { padding: '16px', marginBottom: '12px' } });
+        var reviewCard = h('div', { className: 'card', style: { padding: '16px', marginBottom: '12px', borderLeft: '3px solid var(--red)' } });
         reviewCard.appendChild(h('div', { style: { fontSize: '13px', color: 'var(--tx3)', marginBottom: '6px' } }, 'Question ' + (idx + 1)));
         reviewCard.appendChild(h('p', { style: { fontSize: '15px', fontWeight: '500', marginBottom: '12px', lineHeight: '1.5' } }, q.q));
         if (q.o) {
@@ -1526,6 +1545,68 @@ function renderQuiz() {
       }, 'Fermer la revue'));
     }
 
+    // Full exam review (all questions, color-coded)
+    if (S.examFullReview && S.quizQuestions.length > 0) {
+      wrap.appendChild(h('h3', { style: { fontSize: '16px', marginTop: '24px', marginBottom: '12px' } }, 'Revue complete de l\'examen'));
+      // Domain summary with pass/fail indicators
+      var summaryGrid = h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' } });
+      Object.entries(ex.byDomain).forEach(function(entry) {
+        var d = entry[0], stats = entry[1];
+        var dPct = Math.round(stats.right / stats.total * 100);
+        var dom = DOMAINS[d];
+        if (!dom) return;
+        var dPassed = dPct >= 70;
+        summaryGrid.appendChild(h('div', {
+          style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: 'var(--radius)', background: dPassed ? 'var(--green-bg)' : 'var(--red-bg)', border: '1px solid ' + (dPassed ? 'var(--green)' : 'var(--red)') }
+        },
+          icon(dom.icon, 14),
+          h('span', { style: { fontSize: '13px', fontWeight: '500' } }, dom.name),
+          h('span', { style: { marginLeft: 'auto', fontSize: '13px', fontWeight: '600', color: dPassed ? 'var(--green)' : 'var(--red)' } }, dPct + '%'),
+          h('span', { style: { fontSize: '11px', fontWeight: '600', padding: '2px 6px', borderRadius: '4px', background: dPassed ? 'var(--green)' : 'var(--red)', color: 'white' } }, dPassed ? 'OK' : 'KO')
+        ));
+      });
+      wrap.appendChild(summaryGrid);
+
+      // All questions with green/red border
+      S.quizQuestions.forEach(function(q, qi) {
+        var userAns = S.examAnswers[qi];
+        var qt = q.type || 'single';
+        var qCorrect;
+        if (qt === 'multi') qCorrect = Array.isArray(userAns) && Array.isArray(q.a) && q.a.length === userAns.length && q.a.every(function(a) { return userAns.includes(a); });
+        else if (qt === 'order') qCorrect = Array.isArray(userAns) && Array.isArray(q.a) && q.a.every(function(a, idx) { return userAns[idx] === a; });
+        else qCorrect = userAns === q.a;
+
+        var borderClr = qCorrect ? 'var(--green)' : 'var(--red)';
+        var frc = h('div', { className: 'card', style: { padding: '16px', marginBottom: '12px', borderLeft: '3px solid ' + borderClr } });
+        var domLabel = DOMAINS[q.d] ? h('span', { className: 'badge', style: { background: DOMAINS[q.d].color + '15', color: DOMAINS[q.d].color, marginLeft: '8px', fontSize: '11px' } }, DOMAINS[q.d].name) : null;
+        frc.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', fontSize: '13px', color: 'var(--tx3)', marginBottom: '6px' } },
+          h('span', null, 'Q' + (qi + 1)),
+          domLabel,
+          h('span', { style: { marginLeft: 'auto', fontWeight: '600', color: borderClr } }, qCorrect ? 'Correct' : 'Incorrect')
+        ));
+        frc.appendChild(h('p', { style: { fontSize: '15px', fontWeight: '500', marginBottom: '12px', lineHeight: '1.5' } }, q.q));
+        if (q.o) {
+          q.o.forEach(function(opt, oi) {
+            var optCorrect = qt === 'multi' ? (Array.isArray(q.a) && q.a.includes(oi)) : (oi === q.a);
+            var optPicked = qt === 'multi' ? (Array.isArray(userAns) && userAns.includes(oi)) : (userAns === oi);
+            var optStyle = { padding: '8px 14px', borderRadius: 'var(--radius)', marginBottom: '4px', fontSize: '14px', lineHeight: '1.5', border: '1px solid var(--bd)' };
+            if (optCorrect) { optStyle.background = 'var(--green-bg)'; optStyle.borderColor = 'var(--green)'; optStyle.color = 'var(--green)'; }
+            else if (optPicked) { optStyle.background = 'var(--red-bg)'; optStyle.borderColor = 'var(--red)'; optStyle.color = 'var(--red)'; }
+            var prefix = optCorrect ? '✓ ' : (optPicked ? '✗ ' : '');
+            frc.appendChild(h('div', { style: optStyle }, prefix + String.fromCharCode(65 + oi) + '. ' + opt));
+          });
+        }
+        if (!qCorrect && q.w) {
+          frc.appendChild(h('div', { className: 'quiz-explain', style: { marginTop: '10px' } }, q.w));
+        }
+        wrap.appendChild(frc);
+      });
+      wrap.appendChild(h('button', {
+        onClick: function() { S.examFullReview = false; render(); },
+        style: { marginTop: '12px' }
+      }, 'Fermer la revue'));
+    }
+
     return wrap;
   }
 
@@ -1533,11 +1614,31 @@ function renderQuiz() {
   if (!cq) {
     // Quiz finished (training mode)
     const pct = S.total > 0 ? S.score / S.total : 0;
+    var pctInt = Math.round(pct * 100);
+
+    // Domain-specific feedback
+    var domFeedback = null;
+    if (S.quizFilter && S.quizFilter !== 'all' && !S.quizFilter.startsWith('ch') && DOMAINS[S.quizFilter]) {
+      var domName = DOMAINS[S.quizFilter].name;
+      var domTips = {
+        PQ: 'Revise les types de donnees et les transformations Power Query.',
+        MO: 'Revise les relations, les hierarchies et les schemas en etoile.',
+        VA: 'Revise les visuels, les filtres et la mise en forme conditionnelle.',
+        DE: 'Revise les espaces de travail, la securite RLS et le partage.'
+      };
+      domFeedback = h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '14px', padding: '8px 12px', background: 'var(--bg2)', borderRadius: 'var(--radius)' } },
+        h('strong', null, domName + ' : ' + pctInt + '%'),
+        ' — ',
+        pctInt >= 85 ? 'Excellent ! Ce domaine est bien maitrise.' : pctInt >= 70 ? 'Bien ! ' + (domTips[S.quizFilter] || '') : (domTips[S.quizFilter] || 'Continue de t\'entrainer sur ce domaine.')
+      );
+    }
+
     wrap.appendChild(h('div', { className: 'quiz-result', style: { background: pct >= .7 ? 'var(--green-bg)' : 'var(--red-bg)' } },
       h('div', { className: 'score', style: { color: pct >= .7 ? 'var(--green)' : 'var(--red)' } }, `${S.score}/${S.total}`),
       h('div', { style: { fontSize: '14px', color: pct >= .7 ? 'var(--green)' : 'var(--red)', marginBottom: '14px' } },
         pct >= .85 ? 'Excellent !' : pct >= .7 ? 'Bien. Révise les erreurs.' : 'Continue de t\'entraîner.'
       ),
+      domFeedback,
       h('button', { onClick: () => { S.quizQuestions = []; render(); } }, 'Retour'),
       S.quizHistory.length > 0 ? h('button', {
         onClick: () => { S.quizQuestions = shuf(S.quizHistory); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizHistory = []; render(); },
@@ -2495,8 +2596,28 @@ function renderProgress() {
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Streak'),
       h('div', { className: 'stat-value', style: { color: '#ffc233' } }, icon('flame', 20), ' ' + S.streak, h('span', { className: 'stat-sub' }, ' jours'))
+    ),
+    h('div', { className: 'stat-card' },
+      h('div', { className: 'stat-label' }, 'Temps d\'etude'),
+      h('div', { className: 'stat-value' }, String(Math.round(S.xp / 120 * 10) / 10), h('span', { className: 'stat-sub' }, ' h'))
     )
   ));
+
+  // Prochaine révision
+  var dueCount = getDueCards().length;
+  var revBox = h('div', { className: 'box ' + (dueCount > 0 ? 'box-tip' : 'box-business'), style: { marginBottom: '20px' } },
+    h('span', { className: 'box-label' }, 'Prochaine revision'),
+    dueCount > 0
+      ? h('span', null, icon('cards', 14), ' ', String(dueCount), ' flashcard' + (dueCount > 1 ? 's' : '') + ' a revoir aujourd\'hui')
+      : h('span', null, icon('check', 14), ' Aucune flashcard a revoir — bien joue !')
+  );
+  if (dueCount > 0) {
+    revBox.appendChild(h('button', {
+      onClick: function() { S.tab = 'flashcards'; S.fcFilter = 'due'; render(); },
+      style: { marginTop: '8px', fontSize: '12px', padding: '4px 12px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
+    }, 'Reviser maintenant →'));
+  }
+  wrap.appendChild(revBox);
 
   // XP Activity Chart (14 last days)
   if (S.xpHistory.length > 0) {
@@ -2628,15 +2749,18 @@ function renderProgress() {
     const pct = total > 0 ? Math.round(right / total * 100) : 0;
     const weak = total > 5 && pct < 60;
 
+    var domColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#e8a030' : 'var(--red)';
+    var domIndicator = total > 0 ? h('span', { style: { display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: domColor, marginRight: '6px' } }) : null;
     wrap.appendChild(h('div', { style: { marginBottom: '14px' } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' } },
         h('span', null, icon(dom.icon, 14), ' ' + dom.name + ' (' + dom.weight + ')'),
-        h('span', { style: { color: pct >= 70 ? 'var(--green)' : pct > 0 ? 'var(--red)' : 'var(--tx3)' } },
-          total > 0 ? `${pct}% (${right}/${total})` : 'Pas encore testé'
+        h('span', { style: { color: total > 0 ? domColor : 'var(--tx3)', fontWeight: total > 0 ? '600' : '400' } },
+          domIndicator,
+          total > 0 ? `${pct}% (${right}/${total})` : 'Pas encore teste'
         )
       ),
       h('div', { className: 'progress-bar' },
-        h('div', { className: 'progress-fill', style: { width: pct + '%', background: pct >= 70 ? 'var(--green)' : 'var(--red)' } })
+        h('div', { className: 'progress-fill', style: { width: pct + '%', background: total > 0 ? domColor : 'var(--bd)' } })
       ),
       weak ? h('div', { style: { fontSize: '12px', color: 'var(--red)', marginTop: '4px' } }, `Point faible — revise les chapitres ${PL300_INFO.domains.find(x => x.id === d)?.chapters.join(', ')}`) : null
     ));
@@ -2648,6 +2772,10 @@ function renderProgress() {
     wrap.appendChild(h('div', { className: 'box ' + (best.score >= 700 ? 'box-business' : 'box-error'), style: { marginTop: '20px' } },
       h('span', { className: 'box-label' }, 'Meilleur examen'),
       `${best.score}/1000 — ${best.date} — ${best.score >= 700 ? 'RÉUSSI' : 'Pas encore le niveau'}`
+    ));
+  } else {
+    wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '16px', color: 'var(--tx3)', fontSize: '13px', marginTop: '20px' } },
+      'Pas encore d\'examen blanc. Lance-toi quand tu te sens pr\u00eat !'
     ));
   }
 
