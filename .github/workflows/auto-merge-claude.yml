@@ -12,25 +12,18 @@ jobs:
   create-and-merge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Create PR and merge
         run: |
-          # Create PR
-          PR_URL=$(gh pr create --base master --head "$GITHUB_REF_NAME" \
+          # Create PR (ignore error if already exists)
+          gh pr create --repo "$GH_REPO" --base master --head "$GITHUB_REF_NAME" \
             --title "Auto-merge: $GITHUB_REF_NAME" \
-            --body "Auto-created from push to $GITHUB_REF_NAME" 2>&1) || true
+            --body "Auto-created from push to $GITHUB_REF_NAME" 2>/dev/null || true
 
-          # If PR already exists, get its URL
-          if echo "$PR_URL" | grep -q "already exists"; then
-            PR_URL=$(gh pr list --head "$GITHUB_REF_NAME" --json url --jq '.[0].url')
-          fi
-
-          # Wait a moment for PR to be ready
-          sleep 5
+          # Wait for PR to be ready
+          sleep 3
 
           # Merge the PR
-          gh pr merge "$GITHUB_REF_NAME" --squash --delete-branch
+          gh pr merge "$GITHUB_REF_NAME" --repo "$GH_REPO" --squash --delete-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}

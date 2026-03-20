@@ -100,8 +100,10 @@ Les `.box-*` utilisent un fond neutre `var(--bg2)` avec **seulement un border-le
 - Un décalage dans sw.js cause du cache stale
 
 ## Déploiement
-- Push directement sur master (pas de branches, pas de PR)
+- **CLI locale** : push directement sur master
+- **Claude Code web** : push sur branche `claude/xxx` → GitHub Actions crée la PR + merge auto (`.github/workflows/auto-merge-claude.yml`)
 - Render auto-deploy on commit sur master
+- Après chaque push, communiquer la version (ex: "v1.3.8 pushée")
 
 ## Auto-correction
 Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire la même erreur.
@@ -115,4 +117,4 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - Réduire les blocs colorés : le contenu principal doit être en texte brut, pas dans des box
 
 ## Version actuelle
-v1.3.7
+v1.3.8
