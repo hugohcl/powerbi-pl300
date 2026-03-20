@@ -1187,7 +1187,7 @@ const CASES = [
   },
   {
     id: 4,
-    title: "SecureBank — Securite et deploiement",
+    title: "SecureBank — Sécurité et déploiement",
     scenario: "SecureBank déploie un rapport Power BI pour ses 200 employés répartis en 5 agences. Chaque directeur d'agence ne doit voir que les données de son agence. Le rapport doit être actualisé quotidiennement à partir d'une base SQL Server on-premises. L'équipe IT veut un déploiement contrôlé (Dev → Test → Prod) et un audit des accès.",
     questions: [
       { q: "Chaque directeur ne voit que son agence. Quelle approche RLS ?", o: ["Créer 5 rapports séparés", "RLS dynamique avec USERPRINCIPALNAME() et table de mapping utilisateur-agence", "Filtres de page verrouillés", "Slicer désactivé"], a: 1, w: "RLS dynamique : table SecurityMapping(Email, AgenceID) + filtre [Email] = USERPRINCIPALNAME(). Un seul rapport pour tous." },

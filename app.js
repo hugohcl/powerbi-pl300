@@ -650,7 +650,7 @@ function renderDiagram(type) {
       { label: 'Contexte initial', sub: 'slicers, axes', x: 10, color: 'var(--accent)' },
       { label: 'CALCULATE modifie', sub: 'filtres +/-', x: 170, color: 'var(--purple)' },
       { label: 'Nouveau contexte', sub: 'filtre final', x: 330, color: 'var(--green)' },
-      { label: 'Expression evaluee', sub: 'resultat', x: 490, color: 'var(--accent)' }
+      { label: 'Expression évaluée', sub: 'résultat', x: 490, color: 'var(--accent)' }
     ];
     boxes.forEach((b, i) => {
       s.appendChild(svg('rect', { x: b.x, y: '30', width: '140', height: '60', rx: '8', fill: b.color + '18', stroke: b.color, 'stroke-width': '1.5' }));
@@ -1359,7 +1359,7 @@ function renderCaseStudy() {
     wrap.appendChild(h('button', {
       className: 'quiz-next',
       onClick: () => { S.caseQi++; S.caseSel = null; S.caseShown = false; render(); }
-    }, isLast ? 'Voir le resultat' : 'Suivante →'));
+    }, isLast ? 'Voir le résultat' : 'Suivante →'));
   }
 
   // Quit
@@ -1387,7 +1387,7 @@ function renderQuiz() {
     if (totalAnswered === 0) {
       wrap.appendChild(h('div', { className: 'box box-tip', style: { marginBottom: '16px' } },
         h('span', { className: 'box-label' }, 'Bienvenue'),
-        'Selectionne un domaine et lance-toi. Chaque bonne reponse rapporte 5 XP.'
+        'Sélectionne un domaine et lance-toi. Chaque bonne réponse rapporte 5 XP.'
       ));
     }
     wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Mode entraînement'));
@@ -1623,10 +1623,10 @@ function renderQuiz() {
     if (S.quizFilter && S.quizFilter !== 'all' && !S.quizFilter.startsWith('ch') && DOMAINS[S.quizFilter]) {
       var domName = DOMAINS[S.quizFilter].name;
       var domTips = {
-        PQ: 'Revise les types de donnees et les transformations Power Query.',
-        MO: 'Revise les relations, les hierarchies et les schemas en etoile.',
-        VA: 'Revise les visuels, les filtres et la mise en forme conditionnelle.',
-        DE: 'Revise les espaces de travail, la securite RLS et le partage.'
+        PQ: 'Révise les types de données et les transformations Power Query.',
+        MO: 'Révise les relations, les hiérarchies et les schémas en étoile.',
+        VA: 'Révise les visuels, les filtres et la mise en forme conditionnelle.',
+        DE: 'Révise les espaces de travail, la sécurité RLS et le partage.'
       };
       domFeedback = h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '14px', padding: '8px 12px', background: 'var(--bg2)', borderRadius: 'var(--radius)' } },
         h('strong', null, domName + ' : ' + pctInt + '%'),
@@ -1645,7 +1645,7 @@ function renderQuiz() {
       S.quizHistory.length > 0 ? h('button', {
         onClick: () => { S.quizQuestions = shuf(S.quizHistory); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizHistory = []; render(); },
         style: { marginLeft: '8px', background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)' }
-      }, `Revoir les ${S.quizHistory.length} erreurs`) : null
+      }, `Revoir les erreurs`) : null
     ));
 
     // "Retourner au chapitre" button if score < 70%
@@ -1706,7 +1706,7 @@ function renderQuiz() {
 
   if (qType === 'multi' && !S.shown) {
     wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--accent)', marginBottom: '10px', fontWeight: '500' } },
-      `Selectionnez ${cq.a.length} reponses`
+      `Sélectionnez ${cq.a.length} réponses`
     ));
   } else if (qType === 'order' && !S.shown) {
     wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--accent)', marginBottom: '10px', fontWeight: '500' } },
@@ -2047,8 +2047,8 @@ function getGuidedSteps(ex) {
     steps.push({ text: "Ecris les conditions du PLUS restrictif au MOINS restrictif", hint: "Ex: > 10000 AVANT > 1000" });
     steps.push({ text: "N'oublie pas la valeur par defaut en dernier", hint: "La derniere valeur sans condition = else" });
   } else if (sol.includes('VAR')) {
-    steps.push({ text: "Commence par declarer tes VARiables", hint: "VAR NomVariable = expression" });
-    steps.push({ text: "Utilise RETURN pour le resultat final", hint: "RETURN utilise les VARiables declarees au-dessus" });
+    steps.push({ text: "Commence par déclarer tes VARiables", hint: "VAR NomVariable = expression" });
+    steps.push({ text: "Utilise RETURN pour le résultat final", hint: "RETURN utilise les VARiables déclarées au-dessus" });
   } else {
     steps.push({ text: "Identifie la fonction DAX principale a utiliser", hint: (ex.hints && ex.hints[0]) || "" });
     steps.push({ text: "Quel(s) argument(s) fournir ?", hint: (ex.hints && ex.hints[1]) || "" });
@@ -2188,7 +2188,7 @@ function renderExercises() {
     var steps = getGuidedSteps(ex);
     var guidedDiv = h('div', { style: { marginTop: '16px', marginBottom: '12px' } });
     guidedDiv.appendChild(h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '10px', fontWeight: '500' } },
-      'Etape ' + (S.exGuidedStep + 1) + ' sur ' + steps.length
+      'Étape ' + (S.exGuidedStep + 1) + ' sur ' + steps.length
     ));
     steps.forEach(function(step, i) {
       var isActive = i === S.exGuidedStep;
@@ -2216,7 +2216,7 @@ function renderExercises() {
           stepBtns.appendChild(h('button', {
             onClick: function() { S.exGuidedStep = i + 1; render(); },
             style: { fontSize: '12px', padding: '4px 12px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
-          }, 'Etape suivante →'));
+          }, 'Étape suivante →'));
         }
         stepDiv.appendChild(stepBtns);
       }
@@ -2395,7 +2395,7 @@ function renderFlashcards() {
   wrap.appendChild(h('div', { style: { textAlign: 'center', marginTop: '12px', fontSize: '11px', color: 'var(--tx3)' } },
     h('span', { className: 'kbd' }, 'Espace'), ' retourner  ',
     h('span', { className: 'kbd' }, '←'), h('span', { className: 'kbd' }, '→'), ' naviguer  ',
-    h('span', { className: 'kbd' }, '1'), ' a revoir  ',
+    h('span', { className: 'kbd' }, '1'), ' à revoir  ',
     h('span', { className: 'kbd' }, '2'), ' difficile  ',
     h('span', { className: 'kbd' }, '3'), ' facile'
   ));
@@ -2534,7 +2534,7 @@ function getRecommendations() {
   if (unstarted.length > 0 && unstarted.length < CHAPTERS.length) {
     const ch = unstarted[0];
     recs.push({
-      text: `${unstarted.length} chapitre${unstarted.length > 1 ? 's' : ''} non commence${unstarted.length > 1 ? 's' : ''}. Commence par Ch.${ch.id} — ${ch.title}.`,
+      text: `${unstarted.length} chapitre${unstarted.length > 1 ? 's' : ''} non commencé${unstarted.length > 1 ? 's' : ''}. Commence par Ch.${ch.id} — ${ch.title}.`,
       action: () => { S.tab = 'formation'; S.chapterIdx = ch.id - 1; render(); },
       label: `Ch.${ch.id}`
     });
@@ -2650,8 +2650,8 @@ function renderProgress() {
   var revBox = h('div', { className: 'box ' + (dueCount > 0 ? 'box-tip' : 'box-business'), style: { marginBottom: '20px' } },
     h('span', { className: 'box-label' }, 'Prochaine revision'),
     dueCount > 0
-      ? h('span', null, icon('cards', 14), ' ', String(dueCount), ' flashcard' + (dueCount > 1 ? 's' : '') + ' a revoir aujourd\'hui')
-      : h('span', null, icon('check', 14), ' Aucune flashcard a revoir — bien joue !')
+      ? h('span', null, icon('cards', 14), ' ', String(dueCount), ' flashcard' + (dueCount > 1 ? 's' : '') + ' à revoir aujourd\'hui')
+      : h('span', null, icon('check', 14), ' Aucune flashcard à revoir — bien joué !')
   );
   if (dueCount > 0) {
     revBox.appendChild(h('button', {
@@ -2696,7 +2696,7 @@ function renderProgress() {
   } else {
     wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'XP des 30 derniers jours'));
     wrap.appendChild(h('div', { className: 'box box-business', style: { marginBottom: '20px', textAlign: 'center', padding: '24px 16px' } },
-      h('div', { style: { fontSize: '13px', color: 'var(--fg2)' } }, 'Commence a apprendre pour voir ta progression ici.')
+      h('div', { style: { fontSize: '13px', color: 'var(--fg2)' } }, 'Commence à apprendre pour voir ta progression ici.')
     ));
   }
 
@@ -2821,7 +2821,7 @@ function renderProgress() {
       h('div', { className: 'progress-bar' },
         h('div', { className: 'progress-fill', style: { width: pct + '%', background: total > 0 ? domColor : 'var(--bd)' } })
       ),
-      weak ? h('div', { style: { fontSize: '12px', color: 'var(--red)', marginTop: '4px' } }, `Point faible — revise les chapitres ${PL300_INFO.domains.find(x => x.id === d)?.chapters.join(', ')}`) : null
+      weak ? h('div', { style: { fontSize: '12px', color: 'var(--red)', marginTop: '4px' } }, `Point faible — révise les chapitres ${PL300_INFO.domains.find(x => x.id === d)?.chapters.join(', ')}`) : null
     ));
   });
 
@@ -2850,7 +2850,7 @@ function renderProgress() {
     );
     _weakDoms.forEach(function(wd) {
       var wdRow = h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '14px' } },
-        h('span', null, 'Domaine faible detecte : ', h('strong', null, wd.name), ' (' + wd.pct + '%)')
+        h('span', null, 'Domaine faible détecté : ', h('strong', null, wd.name), ' (' + wd.pct + '%)')
       );
       if (wd.ch && CHAPTERS[wd.ch - 1]) {
         wdRow.appendChild(h('button', {
@@ -2936,7 +2936,7 @@ function renderInterview() {
     card.appendChild(header);
     if (isOpen) {
       var body = h('div', { className: 'interview-card-body open' },
-        h('div', { className: 'interview-label' }, 'Reponse ideale'),
+        h('div', { className: 'interview-label' }, 'Réponse idéale'),
         h('div', { style: { whiteSpace: 'pre-wrap', marginBottom: '12px' } }, q.ideal),
         q.traps && q.traps.length > 0 ? h('div', null,
           h('div', { className: 'interview-label', style: { color: 'var(--red)' } }, 'Pieges a eviter'),
@@ -3150,7 +3150,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') {
       S.fcFlipped = false; S.fcIdx = Math.max(0, S.fcIdx - 1); render(); return;
     }
-    // 1 = a revoir (q=1), 2 = difficile (q=3), 3 = facile (q=5)
+    // 1 = à revoir (q=1), 2 = difficile (q=3), 3 = facile (q=5)
     if (S.fcFlipped && '123'.includes(e.key)) {
       const base2 = S.fcShuffled || FLASHCARDS;
       let fc2;
