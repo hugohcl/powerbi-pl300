@@ -627,7 +627,7 @@ const MISSIONS = [
 // ─── Quiz (120+ questions) ───
 const QUIZ = [
   // Ch.1 — Prise en main (15 questions)
-  { q: "Un Data Analyst veut afficher un CA dynamique filtrable. Quelle approche ?", o: ["Colonne calculée", "Mesure = SUM(Sales[SalesAmount])", "CALCULATE sans filtre", "Glisser SalesAmount directement"], a: 1, d: "PQ", ch: 1, w: "Une mesure est recalculée dynamiquement selon les filtres. Une colonne calculée est statique." },
+  { q: "Un Data Analyst veut afficher un CA dynamique filtrable. Quelle approche ?", o: ["Colonne calculée", "Mesure = SUM(Sales[SalesAmount])", "CALCULATE sans filtre", "Glisser SalesAmount directement"], a: 1, d: "MO", ch: 1, w: "Une mesure est recalculée dynamiquement selon les filtres. Une colonne calculée est statique." },
   { q: "DIVIDE(A, B, 0) — le 0 ?", o: ["Multiplie par 0", "Retourne 0 si B=0", "Arrondit à 0", "Ignore NULL"], a: 1, d: "MO", ch: 1, w: "Valeur de remplacement si dénominateur = 0." },
   { q: "Différence entre COUNT et DISTINCTCOUNT ?", o: ["Identiques", "COUNT = avec doublons, DISTINCTCOUNT = uniques", "DISTINCTCOUNT est plus lent", "COUNT ne marche pas sur du texte"], a: 1, d: "MO", ch: 1, w: "COUNT compte toutes les lignes (avec doublons). DISTINCTCOUNT = valeurs uniques." },
   { q: "Quel visuel pour afficher un seul KPI (ex: CA Total) ?", o: ["Bar Chart", "Card", "Table", "Slicer"], a: 1, d: "VA", ch: 1, w: "Card = visuel KPI pour un seul chiffre." },

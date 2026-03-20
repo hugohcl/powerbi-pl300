@@ -201,6 +201,7 @@ function shuf(a) {
 }
 function qHash(q) { return q.q.slice(0, 40); }
 function $(sel) { return document.querySelector(sel); }
+function getTotalMissions() { return CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0); }
 
 // ─── Theme ───
 function initTheme() {
@@ -237,7 +238,7 @@ function render() {
         onInput: (e) => { S.searchQuery = e.target.value; render(); setTimeout(() => { const inp = document.getElementById('search-input'); if (inp) { inp.focus(); inp.selectionStart = inp.selectionEnd = inp.value.length; } }, 10); },
         onKeydown: (e) => { if (e.key === 'Escape') { S.searchOpen = false; render(); } }
       }),
-      h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '6px' } }, 'Echap pour fermer · Cherche dans sections, quiz, flashcards, mesures, glossaire, missions')
+      h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '6px' } }, '\u00C9chap pour fermer \u00B7 Cherche dans sections, quiz, flashcards, mesures, glossaire, missions')
     );
     app.appendChild(searchBox);
     if (S.searchQuery && S.searchQuery.length >= 2) {
@@ -722,7 +723,7 @@ function getProgress() {
     return { ch: ch.id, done: done, total: total, pct: Math.round(done / total * 100) };
   });
   var totalMissions = chProgress.reduce(function(a, c) { return a + c.done; }, 0);
-  var totalMissionsMax = 108;
+  var totalMissionsMax = CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0);
   var fcMastered = FLASHCARDS.filter(function(_, i) {
     var d = sm2Get(i);
     return d.interval >= 7;
@@ -832,11 +833,11 @@ function renderChapterList() {
   wrap.appendChild(h('div', { className: 'stats-grid' },
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Missions'),
-      h('div', { className: 'stat-value' }, `${done}`, h('span', { className: 'stat-sub' }, '/108'))
+      h('div', { className: 'stat-value' }, `${done}`, h('span', { className: 'stat-sub' }, '/' + totalMissionsMax))
     ),
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Progression'),
-      h('div', { className: 'stat-value' }, `${Math.round(done / 108 * 100)}`, h('span', { className: 'stat-sub' }, '%'))
+      h('div', { className: 'stat-value' }, `${Math.round(done / totalMissionsMax * 100)}`, h('span', { className: 'stat-sub' }, '%'))
     )
   ));
 
@@ -882,7 +883,7 @@ function renderChapterDetail(ch) {
   wrap.appendChild(h('div', { style: { marginBottom: '20px' } },
     h('div', { style: { fontSize: '12px', color: 'var(--tx3)', marginBottom: '4px' } }, `Chapitre ${ch.id} — ${ch.domainPL}`),
     h('h2', { style: { fontSize: '22px', fontWeight: '600', marginBottom: '8px' } }, ch.title),
-    h('div', { style: { fontSize: '13px', color: 'var(--tx2)' } }, `Missions ${ch.missions[0]}-${ch.missions[1]} sur 108`)
+    h('div', { style: { fontSize: '13px', color: 'var(--tx2)' } }, `Missions ${ch.missions[0]}-${ch.missions[1]} sur ${getTotalMissions()}`)
   ));
 
   // Objectives as plain text
@@ -961,7 +962,7 @@ function renderChapterDetail(ch) {
         onClick: () => {
           const visible = deepContent.style.display !== 'none';
           deepContent.style.display = visible ? 'none' : 'block';
-          deepToggle.textContent = visible ? 'Masquer' : '\u25B8 En savoir plus';
+          deepToggle.textContent = visible ? '\u25B8 En savoir plus' : 'Masquer';
         }
       }, '\u25B8 En savoir plus');
       wrap.appendChild(deepToggle);
@@ -1142,7 +1143,7 @@ function renderMission(m) {
           save(); render();
         },
         style: { padding: '8px 20px', fontWeight: '500', background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' }
-      }, 'Verifier'));
+      }, 'V\u00e9rifier'));
       // Hint buttons
       if (m.hints && m.hints.length > 0) {
         var hintLvl = S[hintStateKey] || 0;
@@ -1276,7 +1277,7 @@ function renderCaseStudy() {
 
   if (!hasCases) {
     wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } },
-      'Les etudes de cas seront bientot disponibles.'
+      'Les \u00e9tudes de cas seront bient\u00f4t disponibles.'
     ));
     wrap.appendChild(h('button', { onClick: () => { S.caseMode = false; render(); }, style: { marginTop: '12px' } }, '← Retour'));
     return wrap;
@@ -1314,7 +1315,7 @@ function renderCaseStudy() {
     const pct = S.caseTotal > 0 ? S.caseScore / S.caseTotal : 0;
     wrap.appendChild(h('div', { className: 'quiz-result', style: { background: pct >= .7 ? 'var(--green-bg)' : 'var(--red-bg)' } },
       h('div', { className: 'score', style: { color: pct >= .7 ? 'var(--green)' : 'var(--red)' } }, `${S.caseScore}/${S.caseTotal}`),
-      h('div', { style: { fontSize: '14px', marginBottom: '14px' } }, pct >= .7 ? 'Bien joue !' : 'Continue de t\'entrainer.'),
+      h('div', { style: { fontSize: '14px', marginBottom: '14px' } }, pct >= .7 ? 'Bien jou\u00e9 !' : 'Continue de t\'entra\u00eener.'),
       h('button', { onClick: () => { S.caseIdx = null; render(); } }, 'Retour aux cas'),
       h('button', { onClick: () => { S.caseMode = false; S.caseIdx = null; render(); }, style: { marginLeft: '8px' } }, 'Retour au quiz')
     ));
@@ -1631,7 +1632,7 @@ function renderQuiz() {
       domFeedback = h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '14px', padding: '8px 12px', background: 'var(--bg2)', borderRadius: 'var(--radius)' } },
         h('strong', null, domName + ' : ' + pctInt + '%'),
         ' — ',
-        pctInt >= 85 ? 'Excellent ! Ce domaine est bien maitrise.' : pctInt >= 70 ? 'Bien ! ' + (domTips[S.quizFilter] || '') : (domTips[S.quizFilter] || 'Continue de t\'entrainer sur ce domaine.')
+        pctInt >= 85 ? 'Excellent ! Ce domaine est bien ma\u00eetris\u00e9.' : pctInt >= 70 ? 'Bien ! ' + (domTips[S.quizFilter] || '') : (domTips[S.quizFilter] || 'Continue de t\'entra\u00eener sur ce domaine.')
       );
     }
 
@@ -1760,6 +1761,9 @@ function renderQuiz() {
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
+          if (typeof XP_REWARDS !== 'undefined') {
+            addXP(correct ? XP_REWARDS.quiz_correct : XP_REWARDS.quiz_wrong, 'Quiz');
+          }
           if (S.examActive) S.examAnswers[S.qi] = S.multiSel.slice();
           save(); render();
         }
@@ -1816,6 +1820,9 @@ function renderQuiz() {
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
+          if (typeof XP_REWARDS !== 'undefined') {
+            addXP(correct ? XP_REWARDS.quiz_correct : XP_REWARDS.quiz_wrong, 'Quiz');
+          }
           if (S.examActive) S.examAnswers[S.qi] = S.orderSel.slice();
           save(); render();
         }
@@ -2050,9 +2057,9 @@ function getGuidedSteps(ex) {
     steps.push({ text: "Commence par déclarer tes VARiables", hint: "VAR NomVariable = expression" });
     steps.push({ text: "Utilise RETURN pour le résultat final", hint: "RETURN utilise les VARiables déclarées au-dessus" });
   } else {
-    steps.push({ text: "Identifie la fonction DAX principale a utiliser", hint: (ex.hints && ex.hints[0]) || "" });
+    steps.push({ text: "Identifie la fonction DAX principale \u00e0 utiliser", hint: (ex.hints && ex.hints[0]) || "" });
     steps.push({ text: "Quel(s) argument(s) fournir ?", hint: (ex.hints && ex.hints[1]) || "" });
-    steps.push({ text: "Ecris la mesure complete", hint: "Verifie les parentheses et les crochets" });
+    steps.push({ text: "\u00c9cris la mesure compl\u00e8te", hint: "V\u00e9rifie les parenth\u00e8ses et les crochets" });
   }
 
   return steps;
@@ -2087,7 +2094,7 @@ function renderExercises() {
   var wrap = h('div', null);
   var exs = typeof EXERCISES !== 'undefined' ? EXERCISES : [];
   if (exs.length === 0) {
-    wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } }, 'Exercices bientot disponibles.'));
+    wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } }, 'Exercices bient\u00f4t disponibles.'));
     wrap.appendChild(h('button', { onClick: function() { S.exMode = false; render(); } }, '← Retour'));
     return wrap;
   }
@@ -2097,7 +2104,7 @@ function renderExercises() {
   var completedCount = Object.keys(S.exCompleted).length;
   wrap.appendChild(h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
     h('h3', { style: { fontSize: '16px' } }, 'Exercices DAX'),
-    h('span', { style: { fontSize: '14px', color: 'var(--green)', fontWeight: '600' } }, completedCount + '/' + exs.length + ' reussis')
+    h('span', { style: { fontSize: '14px', color: 'var(--green)', fontWeight: '600' } }, completedCount + '/' + exs.length + ' r\u00e9ussis')
   ));
 
   var chFilters = ['all'];
@@ -2168,7 +2175,7 @@ function renderExercises() {
     btnRow.appendChild(h('button', {
       onClick: verifyExercise,
       style: { padding: '10px 28px', fontWeight: '500', background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' }
-    }, 'Verifier'));
+    }, 'V\u00e9rifier'));
     if (!S.exGuided) {
       btnRow.appendChild(h('button', {
         onClick: function() { S.exGuided = true; S.exGuidedStep = 0; S.exGuidedHints = {}; render(); },
@@ -2551,8 +2558,8 @@ function getRecommendations() {
   }
 
   // 4. Suggest exam if progression > 70%
-  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= 108).length;
-  if (missionsDone / 108 > 0.7 && (S.examHistory.length === 0 || S.examHistory[S.examHistory.length - 1].score < 700)) {
+  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= getTotalMissions()).length;
+  if (missionsDone / getTotalMissions() > 0.7 && (S.examHistory.length === 0 || S.examHistory[S.examHistory.length - 1].score < 700)) {
     recs.push({
       text: 'Progression > 70%. Tente un examen blanc pour evaluer ton niveau.',
       action: () => { S.tab = 'quiz'; render(); },
@@ -2589,8 +2596,8 @@ function getPredictiveStats() {
   const ready = estimatedScore >= 700;
 
   // Weeks estimate
-  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= 108).length;
-  const pctDone = missionsDone / 108;
+  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= getTotalMissions()).length;
+  const pctDone = missionsDone / getTotalMissions();
   let weeksEstimate = null;
   if (pctDone > 0.05 && pctDone < 1) {
     // Simple linear projection
@@ -2606,7 +2613,7 @@ function getPredictiveStats() {
 // ═══════════════════════════════════════════════════════════
 function renderProgress() {
   const wrap = h('div', null);
-  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= 108).length;
+  const missionsDone = Object.entries(S.missions).filter(([k, v]) => v && !isNaN(k) && k > 0 && k <= getTotalMissions()).length;
   const knownCards = FLASHCARDS.filter((_, i) => sm2IsMastered(i)).length;
   const totalQuizAnswered = Object.values(S.quizStats).reduce((sum, s) => sum + s.right + s.wrong, 0);
   const totalQuizRight = Object.values(S.quizStats).reduce((sum, s) => sum + s.right, 0);
@@ -2625,7 +2632,7 @@ function renderProgress() {
     ),
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Missions'),
-      h('div', { className: 'stat-value' }, String(missionsDone), h('span', { className: 'stat-sub' }, '/108'))
+      h('div', { className: 'stat-value' }, String(missionsDone), h('span', { className: 'stat-sub' }, '/' + totalMissionsMax))
     ),
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Flashcards'),
@@ -2640,7 +2647,7 @@ function renderProgress() {
       h('div', { className: 'stat-value', style: { color: '#ffc233' } }, icon('flame', 20), ' ' + S.streak, h('span', { className: 'stat-sub' }, ' jours'))
     ),
     h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Temps d\'etude'),
+      h('div', { className: 'stat-label' }, 'Temps d\'\u00e9tude'),
       h('div', { className: 'stat-value' }, String(Math.round(S.xp / 120 * 10) / 10), h('span', { className: 'stat-sub' }, ' h'))
     )
   ));
@@ -2648,16 +2655,16 @@ function renderProgress() {
   // Prochaine révision
   var dueCount = getDueCards().length;
   var revBox = h('div', { className: 'box ' + (dueCount > 0 ? 'box-tip' : 'box-business'), style: { marginBottom: '20px' } },
-    h('span', { className: 'box-label' }, 'Prochaine revision'),
+    h('span', { className: 'box-label' }, 'Prochaine r\u00e9vision'),
     dueCount > 0
-      ? h('span', null, icon('cards', 14), ' ', String(dueCount), ' flashcard' + (dueCount > 1 ? 's' : '') + ' à revoir aujourd\'hui')
+      ? h('span', null, icon('shuffle', 14), ' ', String(dueCount), ' flashcard' + (dueCount > 1 ? 's' : '') + ' à revoir aujourd\'hui')
       : h('span', null, icon('check', 14), ' Aucune flashcard à revoir — bien joué !')
   );
   if (dueCount > 0) {
     revBox.appendChild(h('button', {
-      onClick: function() { S.tab = 'flashcards'; S.fcFilter = 'due'; render(); },
+      onClick: function() { S.tab = 'flash'; S.fcFilter = 'due'; render(); },
       style: { marginTop: '8px', fontSize: '12px', padding: '4px 12px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
-    }, 'Reviser maintenant →'));
+    }, 'R\u00e9viser maintenant \u2192'));
   }
   wrap.appendChild(revBox);
 
@@ -2668,7 +2675,7 @@ function renderProgress() {
       return e.date >= cutoff.toISOString().slice(0, 10) ? sum + e.xp : sum;
     }, 0);
     wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '4px' } }, 'XP des 30 derniers jours'));
-    wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--fg2)', marginBottom: '10px' } }, String(totalXp14) + ' XP gagnes sur les 14 derniers jours'));
+    wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--tx3)', marginBottom: '10px' } }, String(totalXp14) + ' XP gagn\u00e9s sur les 14 derniers jours'));
     var last14 = [];
     var today = new Date();
     for (var d = 13; d >= 0; d--) {
@@ -2690,13 +2697,13 @@ function renderProgress() {
     wrap.appendChild(chart);
     var labels = h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px', padding: '0 2px' } });
     last14.forEach(function(e) {
-      labels.appendChild(h('span', { style: { fontSize: '9px', color: 'var(--fg2)', flex: '1', textAlign: 'center' } }, String(e.day)));
+      labels.appendChild(h('span', { style: { fontSize: '9px', color: 'var(--tx3)', flex: '1', textAlign: 'center' } }, String(e.day)));
     });
     wrap.appendChild(labels);
   } else {
     wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'XP des 30 derniers jours'));
     wrap.appendChild(h('div', { className: 'box box-business', style: { marginBottom: '20px', textAlign: 'center', padding: '24px 16px' } },
-      h('div', { style: { fontSize: '13px', color: 'var(--fg2)' } }, 'Commence à apprendre pour voir ta progression ici.')
+      h('div', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Commence à apprendre pour voir ta progression ici.')
     ));
   }
 
@@ -2767,11 +2774,11 @@ function renderProgress() {
       pred.weakest ? h('div', null, 'Domaine le plus faible : ', h('strong', { style: { color: 'var(--red)' } }, `${DOMAINS[pred.weakest]?.name} (${pred.weakPct}%)`)) : h('div')
     ));
     predBox.appendChild(h('div', { style: { marginTop: '10px', fontSize: '14px', fontWeight: '600', color: pred.ready ? 'var(--green)' : 'var(--red)' } },
-      pred.ready ? 'Pret pour la PL-300 !' : 'Pas encore pret pour la PL-300'
+      pred.ready ? 'Pr\u00eat pour la PL-300 !' : 'Pas encore pr\u00eat pour la PL-300'
     ));
     if (pred.weeksEstimate) {
       predBox.appendChild(h('div', { style: { marginTop: '4px', fontSize: '13px', color: 'var(--tx2)' } },
-        `A ton rythme actuel, tu seras pret dans environ ${pred.weeksEstimate} semaine${pred.weeksEstimate > 1 ? 's' : ''}`
+        `A ton rythme actuel, tu seras pr\u00eat dans environ ${pred.weeksEstimate} semaine${pred.weeksEstimate > 1 ? 's' : ''}`
       ));
     }
     wrap.appendChild(predBox);
@@ -2856,7 +2863,7 @@ function renderProgress() {
         wdRow.appendChild(h('button', {
           onClick: function() { S.tab = 'formation'; S.chapterIdx = wd.ch - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
           style: { marginLeft: '12px', fontSize: '12px', whiteSpace: 'nowrap', padding: '4px 12px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
-        }, 'Reviser Ch.' + wd.ch + ' \u2192'));
+        }, 'R\u00e9viser Ch.' + wd.ch + ' \u2192'));
       }
       weakBox.appendChild(wdRow);
     });
@@ -2880,7 +2887,7 @@ function renderProgress() {
   wrap.appendChild(h('button', {
     onClick: () => {
       if (confirm('Réinitialiser toute la progression ?')) {
-        S.missions = {}; S.known = {}; S.quizStats = {}; S.examHistory = [];
+        S.missions = {}; S.checklist = {}; S.known = {}; S.quizStats = {}; S.examHistory = []; S.exCompleted = {}; S.xp = 0; S.level = 0; S.badges = []; S.streak = 0; S.lastActiveDate = null; S.xpHistory = []; S.interviewReviewed = {};
         save(); render();
       }
     },
@@ -2896,7 +2903,7 @@ function renderProgress() {
 function renderInterview() {
   var wrap = h('div', null);
   if (typeof INTERVIEW === 'undefined' || !Array.isArray(INTERVIEW)) {
-    wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } }, 'Questions d\'entretien bientot disponibles.'));
+    wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } }, 'Questions d\'entretien bient\u00f4t disponibles.'));
     return wrap;
   }
   var categories = [];
@@ -3143,7 +3150,7 @@ document.addEventListener('keydown', (e) => {
     }
     // ArrowRight for next
     if (e.key === 'ArrowRight' && S.fcFlipped) {
-      const fc = S.fcFilter === 'all' ? FLASHCARDS : S.fcFilter === 'review' ? FLASHCARDS.filter((_, i) => !S.known[i] || S.known[i] < 3) : FLASHCARDS.filter(f => f.c === S.fcFilter);
+      const fc = S.fcFilter === 'all' ? FLASHCARDS : S.fcFilter === 'review' ? FLASHCARDS.filter((_, i) => !sm2IsMastered(i)) : S.fcFilter === 'due' ? FLASHCARDS.filter((_, i) => sm2IsDue(i)) : FLASHCARDS.filter(f => f.c === S.fcFilter);
       S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render(); return;
     }
     // ArrowLeft for prev
