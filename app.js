@@ -665,7 +665,8 @@ function icon(name, size) {
     crosshair: '<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>',
     shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
     cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
-    copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
+    copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
   };
   s.innerHTML = paths[name] || paths.xp;
   return s;
@@ -890,6 +891,11 @@ function renderHeader() {
     }
   }
   headerRight.appendChild(pomWrap);
+
+  // Music button
+  var musicBtn = h('button', { className: 'theme-btn', title: 'Ambiance studieuse', onClick: function() { window.open('https://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw', '_blank'); } });
+  musicBtn.appendChild(icon('music', 16));
+  headerRight.appendChild(musicBtn);
 
   // Theme button
   var themeBtn = h('button', { className: 'theme-btn', onClick: toggleTheme });
