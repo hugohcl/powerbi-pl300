@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 // ─── State ───
 const S = {
@@ -84,38 +84,266 @@ const S = {
   },
 };
 
+// ─── Sync config ───
+const SYNC_API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001/api'
+  : '/api';
+let _syncCode = localStorage.getItem('pbi-sync-code') || null;
+let _syncUpdatedAt = parseInt(localStorage.getItem('pbi-sync-updated') || '0');
+let _syncPending = false;
+let _syncDebounceTimer = null;
+
 // ─── Persistence ───
-function save() {
-  const data = { missions: S.missions, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed };
-  try { localStorage.setItem('pbi-pl300', JSON.stringify(data)); } catch(e) {}
+function getSaveData() {
+  return { missions: S.missions, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed };
 }
+
+function save() {
+  const data = getSaveData();
+  try { localStorage.setItem('pbi-pl300', JSON.stringify(data)); } catch(e) {}
+  // Debounced cloud sync (push every 3s max)
+  if (_syncCode) {
+    clearTimeout(_syncDebounceTimer);
+    _syncDebounceTimer = setTimeout(() => syncPush(), 3000);
+  }
+}
+
+function applyData(d) {
+  if (!d) return;
+  S.missions = d.missions || {};
+  // Migration : déplacer les entrées cl-* de missions vers checklist
+  Object.keys(S.missions).forEach(k => {
+    if (k.startsWith('cl-')) {
+      if (!d.checklist) d.checklist = {};
+      d.checklist[k] = S.missions[k];
+      delete S.missions[k];
+    }
+  });
+  S.checklist = d.checklist || {};
+  S.known = d.known || {};
+  S.quizStats = d.quizStats || {};
+  S.examHistory = d.examHistory || [];
+  S.exCompleted = d.exCompleted || {};
+  S.xp = d.xp || 0;
+  S.level = d.level || 0;
+  S.badges = d.badges || [];
+  S.streak = d.streak || 0;
+  S.lastActiveDate = d.lastActiveDate || null;
+  S.xpHistory = d.xpHistory || [];
+  S.interviewReviewed = d.interviewReviewed || {};
+}
+
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem('pbi-pl300'));
-    if (d) {
-      S.missions = d.missions || {};
-      // Migration : déplacer les entrées cl-* de missions vers checklist
-      Object.keys(S.missions).forEach(k => {
-        if (k.startsWith('cl-')) {
-          if (!d.checklist) d.checklist = {};
-          d.checklist[k] = S.missions[k];
-          delete S.missions[k];
-        }
-      });
-      S.checklist = d.checklist || {};
-      S.known = d.known || {};
-      S.quizStats = d.quizStats || {};
-      S.examHistory = d.examHistory || [];
-      S.exCompleted = d.exCompleted || {};
-      S.xp = d.xp || 0;
-      S.level = d.level || 0;
-      S.badges = d.badges || [];
-      S.streak = d.streak || 0;
-      S.lastActiveDate = d.lastActiveDate || null;
-      S.xpHistory = d.xpHistory || [];
-      S.interviewReviewed = d.interviewReviewed || {};
-    }
+    if (d) applyData(d);
   } catch(e) {}
+}
+
+// ─── Cloud Sync ───
+async function syncPush() {
+  if (!_syncCode || _syncPending) return;
+  _syncPending = true;
+  try {
+    const res = await fetch(SYNC_API + '/sync/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: _syncCode, data: getSaveData(), updated_at: _syncUpdatedAt })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      _syncUpdatedAt = json.updated_at;
+      localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
+      if (json.status === 'merged' && json.data) {
+        applyData(json.data);
+        try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
+        render();
+      }
+    }
+  } catch(e) { /* offline — will sync later */ }
+  _syncPending = false;
+}
+
+async function syncPull() {
+  if (!_syncCode) return;
+  try {
+    const res = await fetch(SYNC_API + '/sync/pull/' + _syncCode);
+    if (res.ok) {
+      const json = await res.json();
+      _syncUpdatedAt = json.updated_at;
+      localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
+      applyData(json.data);
+      try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
+      render();
+      showNotification('Progression synchronisée !', 'xp');
+    }
+  } catch(e) { /* offline */ }
+}
+
+async function syncGenerate() {
+  try {
+    const res = await fetch(SYNC_API + '/sync/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: getSaveData() })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      _syncCode = json.code;
+      localStorage.setItem('pbi-sync-code', _syncCode);
+      _syncUpdatedAt = Date.now();
+      localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
+      render();
+      showNotification('Code créé : ' + _syncCode, 'xp');
+      return json.code;
+    }
+  } catch(e) {
+    showNotification('Erreur réseau. Réessaie.', 'xp');
+  }
+  return null;
+}
+
+async function syncConnect(code) {
+  code = code.toUpperCase().trim();
+  try {
+    const res = await fetch(SYNC_API + '/sync/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      _syncCode = json.code;
+      localStorage.setItem('pbi-sync-code', _syncCode);
+      _syncUpdatedAt = json.updated_at;
+      localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
+      applyData(json.data);
+      try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
+      render();
+      showNotification('Connecté ! Progression récupérée.', 'xp');
+      return true;
+    } else {
+      const err = await res.json();
+      showNotification(err.error || 'Code introuvable.', 'xp');
+      return false;
+    }
+  } catch(e) {
+    showNotification('Erreur réseau. Réessaie.', 'xp');
+    return false;
+  }
+}
+
+function syncDisconnect() {
+  _syncCode = null;
+  _syncUpdatedAt = 0;
+  localStorage.removeItem('pbi-sync-code');
+  localStorage.removeItem('pbi-sync-updated');
+  render();
+  showNotification('Déconnecté de la synchro.', 'xp');
+}
+
+function showSyncModal() {
+  // Remove existing modal
+  var existing = document.getElementById('sync-modal');
+  if (existing) { existing.remove(); return; }
+
+  var overlay = h('div', {
+    id: 'sync-modal',
+    className: 'onboarding-overlay',
+    onClick: (e) => { if (e.target.id === 'sync-modal') e.target.remove(); }
+  });
+
+  var card = h('div', { className: 'onboarding-card', style: { textAlign: 'left', maxWidth: '400px' } });
+  card.appendChild(h('h2', { style: { textAlign: 'center', marginBottom: '16px' } }, icon('cloud', 24), ' Synchronisation'));
+
+  if (_syncCode) {
+    // Connected state
+    card.appendChild(h('p', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '12px' } }, 'Ta progression est synchronisée sur tous tes appareils.'));
+    card.appendChild(h('div', { style: { textAlign: 'center', marginBottom: '16px' } },
+      h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginBottom: '4px' } }, 'Ton code de synchro :'),
+      h('div', {
+        id: 'sync-code-display',
+        style: { fontSize: '28px', fontWeight: '700', fontFamily: 'var(--mono)', letterSpacing: '2px', color: 'var(--accent)', padding: '12px', background: 'var(--bg2)', borderRadius: 'var(--radius)', border: '1px solid var(--bd)' }
+      }, _syncCode)
+    ));
+    card.appendChild(h('div', { style: { display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' } },
+      h('button', {
+        onClick: () => {
+          navigator.clipboard.writeText(_syncCode).then(() => showNotification('Code copié !', 'xp'));
+        },
+        style: { padding: '8px 16px', fontSize: '13px' }
+      }, icon('copy', 14), ' Copier'),
+      h('button', {
+        onClick: () => { syncPull(); var m = document.getElementById('sync-modal'); if (m) m.remove(); },
+        style: { padding: '8px 16px', fontSize: '13px', color: 'var(--accent)', borderColor: 'var(--accent)' }
+      }, icon('cloud', 14), ' Forcer la synchro'),
+      h('button', {
+        onClick: () => { syncDisconnect(); var m = document.getElementById('sync-modal'); if (m) m.remove(); },
+        style: { padding: '8px 16px', fontSize: '13px', color: 'var(--red)', borderColor: 'var(--red)' }
+      }, 'Déconnecter')
+    ));
+  } else {
+    // Not connected state
+    card.appendChild(h('p', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '16px', textAlign: 'center' } },
+      'Synchronise ta progression entre tous tes appareils (PC, téléphone, tablette).'
+    ));
+
+    // Option 1: Generate new code
+    card.appendChild(h('div', { style: { marginBottom: '20px' } },
+      h('div', { style: { fontSize: '12px', fontWeight: '600', color: 'var(--accent)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '.5px' } }, 'Premier appareil ?'),
+      h('button', {
+        onClick: async () => {
+          var code = await syncGenerate();
+          if (code) { var m = document.getElementById('sync-modal'); if (m) m.remove(); showSyncModal(); }
+        },
+        style: { width: '100%', padding: '12px', fontSize: '14px', fontWeight: '500', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+      }, 'Créer un code de synchro')
+    ));
+
+    // Option 2: Enter existing code
+    card.appendChild(h('div', null,
+      h('div', { style: { fontSize: '12px', fontWeight: '600', color: 'var(--green)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '.5px' } }, 'Déjà un code ?'),
+      h('input', {
+        id: 'sync-code-input',
+        type: 'text',
+        placeholder: 'XXXX-XXXX',
+        maxLength: 9,
+        style: { width: '100%', padding: '12px', fontSize: '18px', fontFamily: 'var(--mono)', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--bg)', color: 'var(--tx)', outline: 'none', marginBottom: '8px' },
+        onInput: (e) => {
+          var v = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, '');
+          if (v.length > 4 && v.indexOf('-') === -1) v = v.slice(0, 4) + '-' + v.slice(4);
+          e.target.value = v.slice(0, 9);
+        },
+        onKeydown: (e) => {
+          if (e.key === 'Enter') {
+            document.getElementById('sync-connect-btn')?.click();
+          }
+        }
+      }),
+      h('button', {
+        id: 'sync-connect-btn',
+        onClick: async () => {
+          var inp = document.getElementById('sync-code-input');
+          if (inp && inp.value.length === 9) {
+            var ok = await syncConnect(inp.value);
+            if (ok) { var m = document.getElementById('sync-modal'); if (m) m.remove(); }
+          } else {
+            showNotification('Entre un code complet : XXXX-XXXX', 'xp');
+          }
+        },
+        style: { width: '100%', padding: '12px', fontSize: '14px', fontWeight: '500', background: 'var(--green-bg)', color: 'var(--green)', border: '1px solid var(--green)', borderRadius: 'var(--radius)' }
+      }, 'Se connecter')
+    ));
+  }
+
+  // Close button
+  card.appendChild(h('button', {
+    onClick: () => { var m = document.getElementById('sync-modal'); if (m) m.remove(); },
+    style: { width: '100%', marginTop: '16px', padding: '8px', fontSize: '13px', color: 'var(--tx3)' }
+  }, 'Fermer'));
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
 }
 
 // ─── SM-2 Spaced Repetition ───
@@ -331,7 +559,9 @@ function icon(name, size) {
     chevronDown: '<polyline points="6 9 12 15 18 9"/>',
     arrowRight: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
     crosshair: '<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>',
-    shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>'
+    shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+    cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
+    copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
   };
   s.innerHTML = paths[name] || paths.xp;
   return s;
@@ -495,7 +725,14 @@ function renderHeader() {
   headerRight.appendChild(h('button', {
     onClick: () => { S.searchOpen = !S.searchOpen; S.searchQuery = ''; render(); if (S.searchOpen) setTimeout(() => { const inp = document.getElementById('search-input'); if (inp) inp.focus(); }, 50); },
     style: { fontSize: '13px', padding: '4px 12px' }
-  }, iconSearch(), ' Ctrl+K'));
+  }, iconSearch(), isMobile() ? '' : ' Ctrl+K'));
+
+  // Sync button
+  var syncBtn = h('button', {
+    onClick: () => { showSyncModal(); },
+    style: { fontSize: '13px', padding: '4px 12px', color: _syncCode ? 'var(--green)' : 'var(--tx3)' }
+  }, icon('cloud', 16), _syncCode ? '' : '');
+  headerRight.appendChild(syncBtn);
 
   // Focus timer
   var pomWrap = h('div', { style: { position: 'relative' } });
@@ -3225,3 +3462,5 @@ if (!localStorage.getItem('pbi-theme')) {
 }
 render();
 showOnboarding();
+// Auto-sync on load if connected
+if (_syncCode) { syncPull(); }

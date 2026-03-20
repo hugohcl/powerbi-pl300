@@ -410,6 +410,9 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .mission-feedback.correct { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
 .mission-feedback.wrong { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
 
+/* Sync modal */
+#sync-code-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
@@ -417,7 +420,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="data.js?v=1.1.0"></script>
-<script src="app.js?v=1.1.0"></script>
+<script src="data.js?v=1.2.0"></script>
+<script src="app.js?v=1.2.0"></script>
 </body>
 </html>

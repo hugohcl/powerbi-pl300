@@ -1,0 +1,17 @@
+{
+  "name": "pbi-pl300-sync",
+  "version": "1.0.0",
+  "description": "Sync server for Power BI PL-300 learning app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "helmet": "^8.0.0",
+    "express-rate-limit": "^7.5.0"
+  }
+}
