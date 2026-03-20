@@ -73,7 +73,8 @@ const CHAPTERS = [
         code: null,
         result: { headers: ["Composant", "Rôle", "Coût"], rows: [["Desktop", "Création de rapports (local, .pbix)", "Gratuit"], ["Service", "Publication, partage, collaboration (cloud)", "Pro ou PPU"], ["Mobile", "Consultation des rapports sur smartphone/tablette", "Gratuit"]] },
         business: "Tu crées dans Desktop → tu publies dans Service → les utilisateurs consultent sur Service ou Mobile. C'est un flux unidirectionnel.",
-        tip: "Desktop est l'outil où tu passes 90% de ton temps. Service = diffusion uniquement."
+        tip: "Desktop est l'outil où tu passes 90% de ton temps. Service = diffusion uniquement.",
+        deep: "Power BI Desktop est gratuit et sans limite de données en local — c'est l'outil de développement où tu construis le modèle, les mesures DAX et les visuels. Le Service (app.powerbi.com) est le portail cloud de diffusion : il héberge les rapports publiés, gère les droits d'accès (workspaces, RLS) et planifie les refreshs automatiques. La licence Pro (environ 10€/mois) est nécessaire pour publier et partager ; la licence PPU (Premium Per User) ajoute des fonctionnalités avancées comme les dataflows et les pipelines de déploiement. Power BI Mobile est un simple lecteur : il consomme les rapports publiés dans le Service, sans possibilité de modification."
       },
       {
         id: "1.2", title: "Connecter et explorer",

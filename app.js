@@ -865,7 +865,7 @@ function renderChapterList() {
     ));
   });
   wrap.appendChild(nav);
-  wrap.appendChild(h('div', { style: { textAlign: 'center', fontSize: '11px', color: 'var(--tx3)', margin: '24px 0 8px' } }, 'v2.1.0'));
+  wrap.appendChild(h('div', { style: { textAlign: 'center', fontSize: '11px', color: 'var(--tx3)', margin: '24px 0 8px' } }, 'v2.2.0'));
   return wrap;
 }
 
@@ -1527,6 +1527,12 @@ function renderQuiz() {
         if (q.w) {
           reviewCard.appendChild(h('div', { className: 'quiz-explain', style: { marginTop: '10px' } }, q.w));
         }
+        if (q.ch && CHAPTERS[q.ch - 1]) {
+          reviewCard.appendChild(h('button', {
+            onClick: function() { S.tab = 'formation'; S.chapterIdx = q.ch - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
+            style: { marginTop: '8px', fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', cursor: 'pointer', textDecoration: 'underline' }
+          }, 'Revoir Ch.' + q.ch + ' \u2014 ' + CHAPTERS[q.ch - 1].title));
+        }
         wrap.appendChild(reviewCard);
       });
       wrap.appendChild(h('button', {
@@ -1589,6 +1595,12 @@ function renderQuiz() {
         if (!qCorrect && q.w) {
           frc.appendChild(h('div', { className: 'quiz-explain', style: { marginTop: '10px' } }, q.w));
         }
+        if (!qCorrect && q.ch && CHAPTERS[q.ch - 1]) {
+          frc.appendChild(h('button', {
+            onClick: function() { S.tab = 'formation'; S.chapterIdx = q.ch - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
+            style: { marginTop: '8px', fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', cursor: 'pointer', textDecoration: 'underline' }
+          }, 'Revoir Ch.' + q.ch + ' \u2014 ' + CHAPTERS[q.ch - 1].title));
+        }
         wrap.appendChild(frc);
       });
       wrap.appendChild(h('button', {
@@ -1635,6 +1647,33 @@ function renderQuiz() {
         style: { marginLeft: '8px', background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)' }
       }, `Revoir les ${S.quizHistory.length} erreurs`) : null
     ));
+
+    // "Retourner au chapitre" button if score < 70%
+    if (pct < .7 && S.quizHistory.length > 0) {
+      // Find weakest domain from wrong answers
+      var _domStats = {};
+      S.quizHistory.forEach(function(wq) {
+        if (!wq.d) return;
+        if (!_domStats[wq.d]) _domStats[wq.d] = 0;
+        _domStats[wq.d]++;
+      });
+      var _weakestDom = null, _weakestCount = 0;
+      Object.entries(_domStats).forEach(function(entry) {
+        if (entry[1] > _weakestCount) { _weakestDom = entry[0]; _weakestCount = entry[1]; }
+      });
+      var _targetCh = null;
+      if (_weakestDom) {
+        var _domInfo = PL300_INFO.domains.find(function(x) { return x.id === _weakestDom; });
+        if (_domInfo && _domInfo.chapters.length > 0) _targetCh = _domInfo.chapters[0];
+      }
+      if (_targetCh && CHAPTERS[_targetCh - 1]) {
+        wrap.appendChild(h('button', {
+          onClick: function() { S.tab = 'formation'; S.chapterIdx = _targetCh - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
+          style: { marginTop: '16px', width: '100%', padding: '12px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }
+        }, 'Retourner au chapitre : Ch.' + _targetCh + ' \u2014 ' + CHAPTERS[_targetCh - 1].title));
+      }
+    }
+
     return wrap;
   }
 
@@ -1828,6 +1867,19 @@ function renderQuiz() {
   // Explanation
   if (S.shown && !S.examActive) {
     wrap.appendChild(h('div', { className: 'quiz-explain' }, cq.w));
+    // "Revoir cette notion" link on wrong answer
+    var _qt = cq.type || 'single';
+    var _isWrong = _qt === 'multi'
+      ? !(Array.isArray(S.multiSel) && Array.isArray(cq.a) && cq.a.length === S.multiSel.length && cq.a.every(function(a) { return S.multiSel.includes(a); }))
+      : _qt === 'order'
+        ? !(Array.isArray(S.orderSel) && Array.isArray(cq.a) && cq.a.every(function(a, idx) { return S.orderSel[idx] === a; }))
+        : S.sel !== cq.a;
+    if (_isWrong && cq.ch && CHAPTERS[cq.ch - 1]) {
+      wrap.appendChild(h('button', {
+        onClick: function() { S.tab = 'formation'; S.chapterIdx = cq.ch - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
+        style: { marginTop: '8px', fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', cursor: 'pointer', textDecoration: 'underline' }
+      }, 'Revoir Ch.' + cq.ch + ' \u2014 ' + CHAPTERS[cq.ch - 1].title));
+    }
   }
 
   // Next
@@ -2611,24 +2663,41 @@ function renderProgress() {
 
   // XP Activity Chart (14 last days)
   if (S.xpHistory.length > 0) {
-    wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Activite XP (14 derniers jours)'));
+    var totalXp14 = S.xpHistory.reduce(function(sum, e) {
+      var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+      return e.date >= cutoff.toISOString().slice(0, 10) ? sum + e.xp : sum;
+    }, 0);
+    wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '4px' } }, 'XP des 30 derniers jours'));
+    wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--fg2)', marginBottom: '10px' } }, String(totalXp14) + ' XP gagnes sur les 14 derniers jours'));
     var last14 = [];
     var today = new Date();
     for (var d = 13; d >= 0; d--) {
       var dt = new Date(today); dt.setDate(dt.getDate() - d);
       var dateStr = dt.toISOString().slice(0, 10);
       var entry = S.xpHistory.find(function(e) { return e.date === dateStr; });
-      last14.push({ date: dateStr, xp: entry ? entry.xp : 0 });
+      last14.push({ date: dateStr, xp: entry ? entry.xp : 0, day: dt.getDate() });
     }
     var maxXp = Math.max.apply(null, last14.map(function(e) { return e.xp; })) || 1;
-    var chart = h('div', { className: 'xp-chart', style: { marginBottom: '20px' } });
+    var chart = h('div', { className: 'xp-chart', style: { marginBottom: '4px' } });
     last14.forEach(function(e) {
       var pct = Math.round(e.xp / maxXp * 100);
+      var col = h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1' } });
       var bar = h('div', { className: 'xp-chart-bar', style: { height: Math.max(2, pct) + '%' }, title: e.date + ': ' + e.xp + ' XP' });
       if (e.xp === 0) bar.style.background = 'var(--bg3)';
-      chart.appendChild(bar);
+      col.appendChild(bar);
+      chart.appendChild(col);
     });
     wrap.appendChild(chart);
+    var labels = h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px', padding: '0 2px' } });
+    last14.forEach(function(e) {
+      labels.appendChild(h('span', { style: { fontSize: '9px', color: 'var(--fg2)', flex: '1', textAlign: 'center' } }, String(e.day)));
+    });
+    wrap.appendChild(labels);
+  } else {
+    wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'XP des 30 derniers jours'));
+    wrap.appendChild(h('div', { className: 'box box-business', style: { marginBottom: '20px', textAlign: 'center', padding: '24px 16px' } },
+      h('div', { style: { fontSize: '13px', color: 'var(--fg2)' } }, 'Commence a apprendre pour voir ta progression ici.')
+    ));
   }
 
   // Heatmap (28 days)
@@ -2755,6 +2824,44 @@ function renderProgress() {
       weak ? h('div', { style: { fontSize: '12px', color: 'var(--red)', marginTop: '4px' } }, `Point faible — revise les chapitres ${PL300_INFO.domains.find(x => x.id === d)?.chapters.join(', ')}`) : null
     ));
   });
+
+  // Weak domain recommendations
+  var _weakDoms = [];
+  Object.entries(DOMAINS).forEach(function(entry) {
+    var dId = entry[0];
+    var domainQs = QUIZ.filter(function(q) { return q.d === dId; });
+    var dRight = 0, dTotal = 0;
+    domainQs.forEach(function(q) {
+      var st = S.quizStats[qHash(q)];
+      if (st) { dRight += st.right; dTotal += st.right + st.wrong; }
+    });
+    if (dTotal >= 5) {
+      var dPct = Math.round(dRight / dTotal * 100);
+      if (dPct < 70) {
+        var domInfo = PL300_INFO.domains.find(function(x) { return x.id === dId; });
+        var firstCh = domInfo && domInfo.chapters.length > 0 ? domInfo.chapters[0] : null;
+        _weakDoms.push({ id: dId, name: entry[1].name, pct: dPct, ch: firstCh });
+      }
+    }
+  });
+  if (_weakDoms.length > 0) {
+    var weakBox = h('div', { className: 'box box-error', style: { marginTop: '16px', marginBottom: '20px' } },
+      h('span', { className: 'box-label' }, 'Recommandations')
+    );
+    _weakDoms.forEach(function(wd) {
+      var wdRow = h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '14px' } },
+        h('span', null, 'Domaine faible detecte : ', h('strong', null, wd.name), ' (' + wd.pct + '%)')
+      );
+      if (wd.ch && CHAPTERS[wd.ch - 1]) {
+        wdRow.appendChild(h('button', {
+          onClick: function() { S.tab = 'formation'; S.chapterIdx = wd.ch - 1; S.qi = 0; S.sel = null; S.shown = false; render(); },
+          style: { marginLeft: '12px', fontSize: '12px', whiteSpace: 'nowrap', padding: '4px 12px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)' }
+        }, 'Reviser Ch.' + wd.ch + ' \u2192'));
+      }
+      weakBox.appendChild(wdRow);
+    });
+    wrap.appendChild(weakBox);
+  }
 
   // Best exam
   if (S.examHistory.length > 0) {
