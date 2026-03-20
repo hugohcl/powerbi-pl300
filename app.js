@@ -916,7 +916,7 @@ function renderHeader() {
 
   return h('div', { className: 'header' },
     h('div', { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-      h('h1', { style: { whiteSpace: 'nowrap' } }, 'Power BI — Formation + PL-300'),
+      h('h1', { style: { whiteSpace: 'nowrap', cursor: 'pointer' }, onClick: function() { S.chapterIdx = null; S.tab = 'formation'; render(); } }, 'Formation Power BI'),
       h('span', { style: { fontSize: '9px', color: 'var(--tx3)', alignSelf: 'flex-end', marginBottom: '2px' } }, 'v' + APP_VERSION),
       xpSection
     ),
