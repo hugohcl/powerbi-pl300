@@ -462,15 +462,15 @@ function showOnboarding() {
   var card = h('div', { className: 'onboarding-card' },
     h('div', { style: { marginBottom: '16px' } }, icon('award', 32)),
     h('h2', null, 'Bienvenue dans ton parcours PL-300'),
-    h('p', null, 'Cette application te guide de zero a la certification Power BI PL-300.'),
+    h('p', null, 'Cette application te guide de zéro à la certification Power BI PL-300.'),
     h('div', { style: { textAlign: 'left', margin: '20px 0' } },
       h('div', { className: 'onboarding-step' }, icon('book', 16), ' Formation : 7 chapitres avec missions pratiques'),
-      h('div', { className: 'onboarding-step' }, icon('target', 16), ' Quiz PL-300 : entrainement par domaine + examen blanc'),
-      h('div', { className: 'onboarding-step' }, icon('zap', 16), ' Flashcards : repetition espacee (SM-2)'),
-      h('div', { className: 'onboarding-step' }, icon('flag', 16), ' Projet Racing Games : application sur un projet reel'),
+      h('div', { className: 'onboarding-step' }, icon('target', 16), ' Quiz PL-300 : entraînement par domaine + examen blanc'),
+      h('div', { className: 'onboarding-step' }, icon('zap', 16), ' Flashcards : répétition espacée (SM-2)'),
+      h('div', { className: 'onboarding-step' }, icon('flag', 16), ' Projet Racing Games : application sur un projet réel'),
       h('div', { className: 'onboarding-step' }, icon('trophy', 16), ' Objectif : PL-300 Ready (3000 XP)')
     ),
-    h('p', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Tu gagnes des XP a chaque action : missions, quiz, exercices, flashcards.'),
+    h('p', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Tu gagnes des XP à chaque action : missions, quiz, exercices, flashcards.'),
     h('button', {
       onClick: function() {
         localStorage.setItem('pbi-onboarded', '1');
@@ -572,7 +572,7 @@ function renderHeader() {
 
   return h('div', { className: 'header' },
     h('div', { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-      h('h1', null, 'Power BI — Formation + PL-300'),
+      h('h1', { style: { whiteSpace: 'nowrap' } }, 'Power BI — Formation + PL-300'),
       xpSection
     ),
     headerRight
@@ -863,6 +863,7 @@ function renderChapterList() {
     ));
   });
   wrap.appendChild(nav);
+  wrap.appendChild(h('div', { style: { textAlign: 'center', fontSize: '11px', color: 'var(--tx3)', margin: '24px 0 8px' } }, 'v2.0.0'));
   return wrap;
 }
 
@@ -900,7 +901,7 @@ function renderChapterDetail(ch) {
   // Recap
   if (ch.recap) {
     wrap.appendChild(h('div', { className: 'box box-tip' },
-      h('span', { className: 'box-label' }, 'Recap chapitre precedent'),
+      h('span', { className: 'box-label' }, 'Récap chapitre précédent'),
       ch.recap
     ));
   }
@@ -914,7 +915,7 @@ function renderChapterDetail(ch) {
 
     if (sec.theory) {
       wrap.appendChild(h('div', { className: 'box box-theory' },
-        h('span', { className: 'box-label' }, 'Theorie'),
+        h('span', { className: 'box-label' }, 'Théorie'),
         sec.theory
       ));
     }
@@ -991,7 +992,7 @@ function renderChapterDetail(ch) {
   // PL-300 traps
   if (ch.pl300 && ch.pl300.length) {
     wrap.appendChild(h('div', { className: 'box box-pl300' },
-      h('span', { className: 'box-label' }, 'Pieges PL-300'),
+      h('span', { className: 'box-label' }, 'Pièges PL-300'),
       ...ch.pl300.map(p => h('div', { style: { fontSize: '14px', marginBottom: '4px' } }, p))
     ));
   }
@@ -1292,7 +1293,7 @@ function renderCaseStudy() {
   // Case list
   if (S.caseIdx === null) {
     wrap.appendChild(h('button', { onClick: () => { S.caseMode = false; render(); }, style: { marginBottom: '16px', fontSize: '13px' } }, '← Retour au quiz'));
-    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Etudes de cas'));
+    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Études de cas'));
     CASES.forEach((c, i) => {
       wrap.appendChild(h('div', {
         className: 'card', style: { cursor: 'pointer', padding: '16px' },
@@ -1390,16 +1391,16 @@ function renderQuiz() {
   if (S.quizQuestions.length === 0) {
     // Exam strategy
     wrap.appendChild(renderExamStrategy());
-    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Mode entrainement'));
+    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Mode entraînement'));
     wrap.appendChild(h('div', { className: 'pills' },
       ...['all', 'PQ', 'MO', 'VA', 'DE'].map(k =>
         h('button', { className: 'pill', onClick: () => startQuiz(k, 'training'),
           style: k !== 'all' ? { borderColor: DOMAINS[k].color, color: DOMAINS[k].color } : {}
-        }, k === 'all' ? 'Toutes les questions' : `${DOMAINS[k].icon} ${DOMAINS[k].name}`)
+        }, ...(k === 'all' ? ['Toutes les questions'] : [icon(DOMAINS[k].icon, 14), ' ' + DOMAINS[k].name]))
       ),
       h('button', { className: 'pill', onClick: () => { S.caseMode = true; S.caseIdx = null; render(); },
         style: { borderColor: 'var(--purple)', color: 'var(--purple)' }
-      }, 'Etudes de cas'),
+      }, 'Études de cas'),
       h('button', { className: 'pill', onClick: () => { S.exMode = true; S.exIdx = 0; S.exInput = ''; S.exChecked = false; S.exCorrect = false; S.exHintLevel = 0; S.exShowSolution = false; render(); },
         style: { borderColor: 'var(--green)', color: 'var(--green)' }
       }, 'Exercices DAX')
@@ -1471,7 +1472,7 @@ function renderQuiz() {
       if (!dom) return;
       wrap.appendChild(h('div', { style: { marginBottom: '12px' } },
         h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' } },
-          h('span', null, `${dom.icon} ${dom.name}`),
+          h('span', null, icon(dom.icon, 14), ' ' + dom.name),
           h('span', { style: { color: pct >= 70 ? 'var(--green)' : 'var(--red)' } }, `${pct}%`)
         ),
         h('div', { className: 'progress-bar' },
@@ -2374,9 +2375,10 @@ function getRecommendations() {
     const dom = DOMAINS[weakest];
     const chapters = PL300_INFO.domains.find(x => x.id === weakest)?.chapters || [];
     recs.push({
-      text: `Point faible : ${dom.icon} ${dom.name} (${weakPct}%). Revise les chapitres ${chapters.join(', ')}.`,
+      text: `Point faible : ${dom.name} (${weakPct}%). Revise les chapitres ${chapters.join(', ')}.`,
+      iconName: dom.icon,
       action: chapters.length > 0 ? () => { S.tab = 'formation'; S.chapterIdx = chapters[0] - 1; render(); } : null,
-      label: chapters.length > 0 ? `Reviser Ch.${chapters[0]}` : null
+      label: chapters.length > 0 ? `Réviser Ch.${chapters[0]}` : null
     });
   }
 
@@ -2401,7 +2403,7 @@ function getRecommendations() {
     recs.push({
       text: `${dueCount} flashcard${dueCount > 1 ? 's' : ''} a reviser aujourd'hui (repetition espacee).`,
       action: () => { S.tab = 'flash'; S.fcFilter = 'due'; S.fcIdx = 0; S.fcFlipped = false; render(); },
-      label: 'Reviser'
+      label: 'Réviser'
     });
   }
 
@@ -2559,7 +2561,7 @@ function renderProgress() {
     );
     recs.forEach(r => {
       const row = h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '14px' } },
-        h('span', null, r.text)
+        h('span', null, ...(r.iconName ? [icon(r.iconName, 14), ' '] : []), r.text)
       );
       if (r.action && r.label) {
         row.appendChild(h('button', {
@@ -2628,7 +2630,7 @@ function renderProgress() {
 
     wrap.appendChild(h('div', { style: { marginBottom: '14px' } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' } },
-        h('span', null, `${dom.icon} ${dom.name} (${dom.weight})`),
+        h('span', null, icon(dom.icon, 14), ' ' + dom.name + ' (' + dom.weight + ')'),
         h('span', { style: { color: pct >= 70 ? 'var(--green)' : pct > 0 ? 'var(--red)' : 'var(--tx3)' } },
           total > 0 ? `${pct}% (${right}/${total})` : 'Pas encore testé'
         )
