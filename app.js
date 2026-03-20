@@ -1071,6 +1071,7 @@ function renderChapterList() {
   wrap.appendChild(renderRoadmap());
   // Stats
   const done = Object.values(S.missions).filter(Boolean).length;
+  const totalMissionsMax = CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0);
   wrap.appendChild(h('div', { className: 'stats-grid' },
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Missions'),
@@ -2874,7 +2875,7 @@ function renderProgress() {
     ),
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Missions'),
-      h('div', { className: 'stat-value' }, String(missionsDone), h('span', { className: 'stat-sub' }, '/' + totalMissionsMax))
+      h('div', { className: 'stat-value' }, String(missionsDone), h('span', { className: 'stat-sub' }, '/' + getTotalMissions()))
     ),
     h('div', { className: 'stat-card' },
       h('div', { className: 'stat-label' }, 'Flashcards'),
