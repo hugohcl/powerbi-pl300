@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '1.3.8';
+const APP_VERSION = '1.3.9';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -934,19 +934,19 @@ function isMobile() { return window.innerWidth <= 600; }
 
 function renderTabs() {
   const tabs = [
-    ['formation', 'Formation', 'Cours'],
-    ['quiz', 'Quiz PL-300', 'Quiz'],
-    ['flash', 'Flashcards', 'Flash'],
-    ['interview', 'Entretien', 'Entret.'],
-    ['ref', 'Référence', 'Réf.'],
-    ['progress', 'Progression', 'Progrès']
+    ['formation', 'Formation', 'Cours', 'book'],
+    ['quiz', 'Quiz PL-300', 'Quiz', 'target'],
+    ['flash', 'Flashcards', 'Flash', 'zap'],
+    ['interview', 'Entretien', 'Entret.', 'briefcase'],
+    ['ref', 'Référence', 'Réf.', 'search'],
+    ['progress', 'Progression', 'Progrès', 'award']
   ];
   return h('div', { className: 'tabs' },
-    ...tabs.map(([id, label, shortLabel]) =>
+    ...tabs.map(([id, label, shortLabel, iconName]) =>
       h('button', {
         className: 'tab' + (S.tab === id ? ' active' : ''),
         onClick: () => { S.tab = id; render(); }
-      }, isMobile() ? shortLabel : label)
+      }, isMobile() ? icon(iconName, 20) : label)
     )
   );
 }
