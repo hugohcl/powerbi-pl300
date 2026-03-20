@@ -893,7 +893,7 @@ function renderHeader() {
   headerRight.appendChild(pomWrap);
 
   // Music button
-  var musicBtn = h('button', { className: 'theme-btn', title: 'Ambiance studieuse', onClick: function() { window.open('https://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw', '_blank'); } });
+  var musicBtn = h('button', { className: 'theme-btn', title: 'Ambiance studieuse', onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; } });
   musicBtn.appendChild(icon('music', 16));
   headerRight.appendChild(musicBtn);
 
