@@ -422,5 +422,6 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 <div class="app" id="app"></div>
 <script src="data.js?v=1.2.0"></script>
 <script src="app.js?v=1.2.0"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
