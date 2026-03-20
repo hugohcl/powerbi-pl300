@@ -115,4 +115,4 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - Réduire les blocs colorés : le contenu principal doit être en texte brut, pas dans des box
 
 ## Version actuelle
-v1.3.5
+v1.3.6
