@@ -1179,12 +1179,12 @@ function renderMission(m) {
     mission.appendChild(editorDiv);
   }
 
-  // Spoiler (corrige)
+  // Spoiler (corrigé)
   mission.appendChild(h('div', { className: 'spoiler' },
     h('button', { className: 'spoiler-btn', onClick: function() {
       var el = document.getElementById(spoilerId);
       if (el) el.classList.toggle('open');
-    }}, 'Voir le corrige'),
+    }}, 'Voir le corrigé'),
     h('div', { className: 'spoiler-content', id: spoilerId },
       m.hint ? h('div', { style: { marginBottom: '6px', color: 'var(--tx3)', fontSize: '12px' } }, m.hint) : null,
       m.hints && m.hints.length ? h('div', { style: { marginBottom: '6px', color: 'var(--tx3)', fontSize: '12px' } }, m.hints.join(' | ')) : null,
