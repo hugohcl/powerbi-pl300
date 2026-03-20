@@ -61,26 +61,26 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .badge { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 500; }
 
-/* Encadrés formation */
-.box { padding: 14px 18px; border-radius: var(--radius); margin-bottom: 12px; font-size: 14px; border-left: 3px solid; }
-.box-theory { background: #DEEAF6; border-color: #2E75B6; }
-.box-business { background: #E7F3E7; border-color: #1D9E75; }
-.box-tip { background: #FFF3CD; border-color: #F0AD4E; }
-.box-interview { background: #EDE7F6; border-color: #534AB7; }
-.box-error { background: #FDE8E8; border-color: #D85A30; }
-.box-code { background: #F2F2F2; border-color: #999; }
-.box-deep { background: #EBF3FB; border-color: #5B9BD5; }
-.box-pl300 { background: #F3E5F5; border-color: #7B1FA2; }
-[data-theme="dark"] .box-theory { background: var(--accent-bg); }
-[data-theme="dark"] .box-business { background: var(--green-bg); }
-[data-theme="dark"] .box-tip { background: var(--yellow-bg); }
-[data-theme="dark"] .box-interview { background: var(--purple-bg); }
-[data-theme="dark"] .box-error { background: var(--red-bg); }
-[data-theme="dark"] .box-code { background: var(--bg3); }
-[data-theme="dark"] .box-deep { background: var(--blue-light-bg); }
-[data-theme="dark"] .box-pl300 { background: var(--purple-bg); }
+/* Encadres formation — unified neutral style */
+.box { padding: 14px 18px; border-radius: var(--radius); margin-bottom: 12px; font-size: 14px; border-left: 2px solid var(--bd); background: var(--bg2); }
+.box-theory { border-color: #2E75B6; }
+.box-business { border-color: #1D9E75; }
+.box-tip { border-color: #F0AD4E; }
+.box-interview { border-color: #534AB7; }
+.box-error { border-color: #D85A30; }
+.box-code { border-color: #999; }
+.box-deep { border-color: #5B9BD5; }
+.box-pl300 { border-color: #7B1FA2; }
 
-.box-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: block; opacity: .7; }
+.box-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: block; }
+.box-theory .box-label { color: #2E75B6; }
+.box-business .box-label { color: #1D9E75; }
+.box-tip .box-label { color: #F0AD4E; }
+.box-interview .box-label { color: #534AB7; }
+.box-error .box-label { color: #D85A30; }
+.box-code .box-label { color: #999; }
+.box-deep .box-label { color: #5B9BD5; }
+.box-pl300 .box-label { color: #7B1FA2; }
 .code-block { background: var(--bg3); border: 1px solid var(--bd); border-radius: var(--radius); padding: 14px; font-family: var(--mono); font-size: 13px; white-space: pre-wrap; overflow-x: auto; line-height: 1.7; margin-bottom: 12px; position: relative; }
 .copy-btn { position: absolute; top: 8px; right: 8px; font-size: 11px; padding: 3px 8px; opacity: .5; }
 .copy-btn:hover { opacity: 1; }
