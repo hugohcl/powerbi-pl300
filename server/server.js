@@ -10,7 +10,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ─── Middleware ───
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,  // Let the browser handle CSP (inline styles in index.html)
+  crossOriginEmbedderPolicy: false
+}));
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 
