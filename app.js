@@ -885,26 +885,24 @@ function renderChapterDetail(ch) {
     h('div', { style: { fontSize: '13px', color: 'var(--tx2)' } }, `Missions ${ch.missions[0]}-${ch.missions[1]} sur 108`)
   ));
 
-  // Objectives
-  wrap.appendChild(h('div', { className: 'box box-theory' },
-    h('span', { className: 'box-label' }, 'Objectifs'),
+  // Objectives as plain text
+  wrap.appendChild(h('p', { style: { fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)', marginBottom: '16px' } },
     ch.objectives
   ));
 
-  // Interview
-  if (ch.interview) {
-    wrap.appendChild(h('div', { className: 'box box-interview' },
-      h('span', { className: 'box-label' }, 'En entretien'),
-      h('strong', null, ch.interview.q), h('br', null),
-      ch.interview.a
+  // Recap as subtle text
+  if (ch.recap) {
+    wrap.appendChild(h('p', { style: { fontSize: '13px', lineHeight: '1.6', color: 'var(--tx3)', fontStyle: 'italic', marginBottom: '16px' } },
+      'Prérequis : ', ch.recap
     ));
   }
 
-  // Recap
-  if (ch.recap) {
-    wrap.appendChild(h('div', { className: 'box box-tip' },
-      h('span', { className: 'box-label' }, 'Récap chapitre précédent'),
-      ch.recap
+  // Interview as inline Q&A
+  if (ch.interview) {
+    wrap.appendChild(h('div', { style: { fontSize: '13px', lineHeight: '1.6', marginBottom: '20px', padding: '12px 16px', borderRadius: 'var(--radius)', background: 'var(--bg2)' } },
+      h('span', { style: { fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--tx3)', display: 'block', marginBottom: '4px' } }, 'Question d\'entretien'),
+      h('strong', null, ch.interview.q), ' — ',
+      ch.interview.a
     ));
   }
 
@@ -915,11 +913,14 @@ function renderChapterDetail(ch) {
       sec.title
     ));
 
+    // Theory as plain text paragraph
     if (sec.theory) {
-      wrap.appendChild(h('div', { className: 'box box-theory' },
-        h('span', { className: 'box-label' }, 'Théorie'),
-        sec.theory
-      ));
+      wrap.appendChild(h('p', { style: { fontSize: '14px', lineHeight: '1.75', marginBottom: '14px', color: 'var(--tx)' } }, sec.theory));
+    }
+
+    // Business context merged as a second paragraph (no colored box)
+    if (sec.business) {
+      wrap.appendChild(h('p', { style: { fontSize: '14px', lineHeight: '1.75', marginBottom: '14px', color: 'var(--tx2)' } }, sec.business));
     }
 
     if (sec.code) {
@@ -941,17 +942,10 @@ function renderChapterDetail(ch) {
       wrap.appendChild(table);
     }
 
-    if (sec.business) {
-      wrap.appendChild(h('div', { className: 'box box-business' },
-        h('span', { className: 'box-label' }, 'Cas business'),
-        sec.business
-      ));
-    }
-
+    // Tip as subtle italic line (no box)
     if (sec.tip) {
-      wrap.appendChild(h('div', { className: 'box box-tip' },
-        h('span', { className: 'box-label' }, 'Astuce'),
-        sec.tip
+      wrap.appendChild(h('p', { style: { fontSize: '13px', lineHeight: '1.6', color: 'var(--tx3)', fontStyle: 'italic', marginBottom: '14px' } },
+        '\u25B8 ', sec.tip
       ));
     }
 
@@ -961,18 +955,15 @@ function renderChapterDetail(ch) {
     if (sec.id === '2.1') wrap.appendChild(renderDiagram('pq-pipeline'));
 
     if (sec.deep) {
-      const deepContent = h('div', { className: 'box box-deep', style: { display: 'none' } },
-        h('span', { className: 'box-label' }, 'Explication approfondie'),
-        sec.deep
-      );
+      const deepContent = h('div', { style: { display: 'none', fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)', marginBottom: '14px', whiteSpace: 'pre-line' } }, sec.deep);
       const deepToggle = h('button', {
-        style: { fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', marginBottom: '12px' },
+        style: { fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', marginBottom: '14px' },
         onClick: () => {
           const visible = deepContent.style.display !== 'none';
           deepContent.style.display = visible ? 'none' : 'block';
-          deepToggle.textContent = visible ? 'Voir l\'explication approfondie' : 'Masquer';
+          deepToggle.textContent = visible ? 'Masquer' : '\u25B8 En savoir plus';
         }
-      }, 'Voir l\'explication approfondie');
+      }, '\u25B8 En savoir plus');
       wrap.appendChild(deepToggle);
       wrap.appendChild(deepContent);
     }
@@ -1020,11 +1011,10 @@ function renderChapterDetail(ch) {
     ));
   }
 
-  // Bridge
+  // Bridge as plain transition text
   if (ch.bridge) {
-    wrap.appendChild(h('div', { className: 'box box-tip', style: { marginTop: '16px' } },
-      h('span', { className: 'box-label' }, 'Pont vers le chapitre suivant'),
-      ch.bridge
+    wrap.appendChild(h('p', { style: { fontSize: '13px', lineHeight: '1.6', color: 'var(--tx3)', fontStyle: 'italic', marginTop: '20px', marginBottom: '20px' } },
+      '\u2192 ', ch.bridge
     ));
   }
 
