@@ -581,21 +581,23 @@ function renderHeader() {
   );
 }
 
+function isMobile() { return window.innerWidth <= 600; }
+
 function renderTabs() {
   const tabs = [
-    ['formation', 'Formation'],
-    ['quiz', 'Quiz PL-300'],
-    ['flash', 'Flashcards'],
-    ['interview', 'Entretien'],
-    ['ref', 'Référence'],
-    ['progress', 'Progression']
+    ['formation', 'Formation', 'Cours'],
+    ['quiz', 'Quiz PL-300', 'Quiz'],
+    ['flash', 'Flashcards', 'Flash'],
+    ['interview', 'Entretien', 'Entret.'],
+    ['ref', 'Référence', 'Réf.'],
+    ['progress', 'Progression', 'Progrès']
   ];
   return h('div', { className: 'tabs' },
-    ...tabs.map(([id, label]) =>
+    ...tabs.map(([id, label, shortLabel]) =>
       h('button', {
         className: 'tab' + (S.tab === id ? ' active' : ''),
         onClick: () => { S.tab = id; render(); }
-      }, label)
+      }, isMobile() ? shortLabel : label)
     )
   );
 }
@@ -2398,7 +2400,7 @@ function renderFlashcards() {
     ));
   }
 
-  // Keyboard hints
+  // Keyboard hints (desktop) + swipe hint (mobile)
   wrap.appendChild(h('div', { style: { textAlign: 'center', marginTop: '12px', fontSize: '11px', color: 'var(--tx3)' } },
     h('span', { className: 'kbd' }, 'Espace'), ' retourner  ',
     h('span', { className: 'kbd' }, '←'), h('span', { className: 'kbd' }, '→'), ' naviguer  ',
@@ -2406,6 +2408,7 @@ function renderFlashcards() {
     h('span', { className: 'kbd' }, '2'), ' difficile  ',
     h('span', { className: 'kbd' }, '3'), ' facile'
   ));
+  wrap.appendChild(h('div', { className: 'swipe-hint' }, 'Tap pour retourner · Swipe ← → pour naviguer'));
 
   // Restart + Shuffle
   wrap.appendChild(h('div', { style: { textAlign: 'center', marginTop: '12px', display: 'flex', gap: '8px', justifyContent: 'center' } },
@@ -3177,6 +3180,39 @@ document.addEventListener('keydown', (e) => {
 
 // ─── Init ───
 S.searchOpen = false;
+// ═══════════════════════════════════════════════════════════
+// MOBILE SWIPE SUPPORT (flashcards)
+// ═══════════════════════════════════════════════════════════
+(function() {
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (S.tab !== 'flash') return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    // Only count as swipe if horizontal > vertical and fast enough
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5 || dt > 400) return;
+    const base = S.fcShuffled || FLASHCARDS;
+    var fc;
+    if (S.fcFilter === 'all') fc = base;
+    else if (S.fcFilter === 'due') fc = base.filter(function(c) { return sm2IsDue(FLASHCARDS.indexOf(c)); });
+    else if (S.fcFilter === 'review') fc = base.filter(function(c) { return !sm2IsMastered(FLASHCARDS.indexOf(c)); });
+    else fc = base.filter(function(f) { return f.c === S.fcFilter; });
+    if (dx > 0) {
+      // Swipe right = previous
+      S.fcFlipped = false; S.fcIdx = Math.max(0, S.fcIdx - 1); render();
+    } else {
+      // Swipe left = next
+      S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
+    }
+  }, { passive: true });
+})();
+
 S.searchQuery = '';
 load();
 initTheme();
