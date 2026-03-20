@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '1.3.9';
+const APP_VERSION = '1.3.10';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -946,7 +946,9 @@ function renderTabs() {
       h('button', {
         className: 'tab' + (S.tab === id ? ' active' : ''),
         onClick: () => { S.tab = id; render(); }
-      }, isMobile() ? icon(iconName, 20) : label)
+      }, isMobile()
+        ? h('span', { className: 'tab-inner' }, icon(iconName, 20), h('span', { className: 'tab-label' }, shortLabel))
+        : label)
     )
   );
 }
