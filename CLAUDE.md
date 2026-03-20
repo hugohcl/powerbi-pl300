@@ -103,7 +103,14 @@ Les `.box-*` utilisent un fond neutre `var(--bg2)` avec **seulement un border-le
 - **CLI locale** : push directement sur master
 - **Claude Code web** : push sur branche `claude/xxx` → GitHub Actions crée la PR + merge auto (`.github/workflows/auto-merge-claude.yml`)
 - Render auto-deploy on commit sur master
-- Après chaque push, communiquer la version (ex: "v1.3.8 pushée")
+- Après chaque push, communiquer la version (ex: "v1.3.10 pushée")
+
+### Prérequis GitHub Actions (auto-merge)
+Le workflow auto-merge nécessite ces settings GitHub (déjà configurés) :
+1. **Settings → Actions → General → Workflow permissions** : "Read and write permissions"
+2. **Settings → Actions → General** : cocher "Allow GitHub Actions to create and approve pull requests"
+3. **Pas de branch protection rule** sur master (sinon le `GITHUB_TOKEN` ne peut pas merger)
+4. Le workflow utilise `actions/checkout@v4` + `gh pr create` + `gh pr merge --squash --delete-branch`
 
 ## Auto-correction
 Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire la même erreur.
@@ -117,4 +124,4 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - Réduire les blocs colorés : le contenu principal doit être en texte brut, pas dans des box
 
 ## Version actuelle
-v1.3.8
+v1.3.10
