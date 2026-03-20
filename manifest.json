@@ -1,0 +1,11 @@
+{
+  "name": "Power BI — Formation + PL-300",
+  "short_name": "PL-300",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#141419",
+  "theme_color": "#2E75B6",
+  "icons": [
+    { "src": "icon.png", "sizes": "256x256", "type": "image/png" }
+  ]
+}
