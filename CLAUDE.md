@@ -99,6 +99,10 @@ Les `.box-*` utilisent un fond neutre `var(--bg2)` avec **seulement un border-le
 - Bumper dans les **3 fichiers** : `APP_VERSION` dans app.js, sw.js, index.html
 - Un décalage dans sw.js cause du cache stale
 
+## Déploiement
+- Push directement sur master (pas de branches, pas de PR)
+- Render auto-deploy on commit sur master
+
 ## Auto-correction
 Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire la même erreur.
 
