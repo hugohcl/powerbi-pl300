@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Power BI — Formation + PL-300</title>
+<title>Formation Power BI</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
@@ -83,6 +83,20 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .box-deep .box-label { color: #5B9BD5; }
 .box-pl300 .box-label { color: #7B1FA2; }
 .code-block { background: var(--bg3); border: 1px solid var(--bd); border-radius: var(--radius); padding: 16px 18px; font-family: var(--mono); font-size: 13px; white-space: pre-wrap; overflow-x: auto; line-height: 1.7; margin-bottom: 12px; position: relative; }
+.hl-kw { color: #0033B3; font-weight: 600; }
+.hl-fn { color: #9C3587; }
+.hl-str { color: #067D17; }
+.hl-num { color: #1750EB; }
+.hl-com { color: #8C8C8C; font-style: italic; }
+.hl-ref { color: #871094; }
+.hl-op { color: #D85A30; }
+[data-theme="dark"] .hl-kw { color: #6B9FED; }
+[data-theme="dark"] .hl-fn { color: #C586C0; }
+[data-theme="dark"] .hl-str { color: #6AAB73; }
+[data-theme="dark"] .hl-num { color: #6897E6; }
+[data-theme="dark"] .hl-com { color: #6A9955; }
+[data-theme="dark"] .hl-ref { color: #B48EAD; }
+[data-theme="dark"] .hl-op { color: #E8916D; }
 .copy-btn { position: absolute; top: 8px; right: 8px; font-size: 11px; padding: 3px 8px; opacity: .5; }
 .copy-btn:hover { opacity: 1; }
 
@@ -170,12 +184,108 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .collapsible-arrow { transition: transform .2s; font-size: 12px; }
 .collapsible-arrow.open { transform: rotate(90deg); }
 
-/* Responsive */
+/* Responsive — full mobile adaptation */
 @media (max-width: 600px) {
-  .app { padding: 12px; }
-  .tabs { gap: 0; }
-  .tab { padding: 8px 10px; font-size: 12px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .app { padding: 10px 10px 80px; }
+
+  /* Header compact */
+  .header { padding: 6px 0; flex-wrap: wrap; gap: 4px; }
+  .header h1 { font-size: 13px; }
+  .header-xp { gap: 4px; }
+  .header-xp .level-badge { font-size: 10px; }
+  .header-xp .xp-bar { max-width: 60px; }
+
+  /* Bottom tab bar */
+  .tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: var(--bg); border-top: 1px solid var(--bd); border-bottom: none; margin: 0; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,.08); }
+  .tab { padding: 8px 4px; font-size: 10px; flex: 1; text-align: center; border-bottom: none; border-top: 2px solid transparent; }
+  .tab.active { border-bottom: none; border-top-color: var(--accent); }
+
+  /* Touch-friendly targets (min 44px) */
+  button { min-height: 44px; }
+  .pill { min-height: 36px; padding: 6px 14px; font-size: 13px; display: inline-flex; align-items: center; }
+  .pills { gap: 8px; }
+
+  /* Cards */
+  .card { padding: 14px; margin-bottom: 12px; }
+  .card-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+  /* Quiz */
+  .quiz-q { font-size: 15px; }
+  .quiz-opt { padding: 14px 16px; font-size: 15px; min-height: 48px; }
+  .quiz-next { width: 100%; padding: 14px; font-size: 15px; }
+  .quiz-explain { font-size: 13px; }
+  .quiz-meta { font-size: 12px; flex-wrap: wrap; gap: 4px; }
+
+  /* Flashcards */
+  .flashcard { min-height: 220px; padding: 24px 16px; touch-action: pan-y; }
+  .flashcard-text { font-size: 17px; }
+  .flashcard-back .flashcard-text { font-size: 14px; }
+  .flash-actions { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .flash-actions button { flex: 1; min-width: 80px; padding: 12px 8px; font-size: 14px; }
+  .kbd { display: none; }
+
+  /* Stats */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { padding: 10px 12px; }
+  .stat-value { font-size: 22px; }
+
+  /* Formation */
+  .section-title { font-size: 16px; margin: 20px 0 10px; }
+  .box { padding: 12px 14px; font-size: 13px; }
+  .code-block { font-size: 12px; padding: 12px; }
+  .mini-table { font-size: 12px; }
+  .mini-table th, .mini-table td { padding: 4px 6px; }
+
+  /* Chapter nav */
+  .ch-item { padding: 14px 12px; }
+
+  /* Exam */
+  .exam-timer { font-size: 18px; }
+
+  /* Missions */
+  .mission { padding: 14px; }
+
+  /* Badge grid */
+  .badge-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Heatmap */
+  .heatmap { gap: 2px; }
+
+  /* Roadmap */
+  .roadmap { padding: 14px; }
+  .roadmap-phases { flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .roadmap-phases::before { display: none; }
+  .phase-dot { width: 28px; height: 28px; font-size: 11px; }
+
+  /* Pomodoro */
+  .pomodoro-dropdown { right: -50px; min-width: 180px; }
+
+  /* Notification */
+  .notification { right: 8px; left: 8px; max-width: none; }
+
+  /* Onboarding */
+  .onboarding-card { padding: 24px 16px; }
+  .onboarding-card h2 { font-size: 18px; }
+
+  /* DAX editor */
+  .dax-editor { font-size: 13px; min-height: 100px; }
+
+  /* Search */
+  #search-input { font-size: 16px !important; }
+
+  /* Swipe indicator */
+  .swipe-hint { display: block; text-align: center; font-size: 11px; color: var(--tx3); margin-top: 8px; }
+}
+
+/* Hide swipe hint on desktop */
+.swipe-hint { display: none; }
+
+/* Safe area for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 600px) {
+    .tabs { padding-bottom: env(safe-area-inset-bottom); }
+    .app { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  }
 }
 
 /* Animations */
@@ -314,6 +424,9 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .mission-feedback.correct { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
 .mission-feedback.wrong { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
 
+/* Sync modal */
+#sync-code-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
@@ -321,7 +434,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="data.js?v=1.3.2"></script>
+<script src="app.js?v=1.3.2"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
