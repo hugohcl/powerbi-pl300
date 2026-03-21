@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '2.0.6';
+const APP_VERSION = '2.0.7';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -109,7 +109,7 @@ function highlightCode(code) {
 
 // ─── State ───
 const S = {
-  tab: 'formation',
+  tab: 'home',
   // Formation
   chapterIdx: null, // null = chapter list
   // Quiz
@@ -945,48 +945,51 @@ function generateFCQuizOptions(correctIdx) {
 
 // ─── Render ───
 function render() {
-  const app = document.getElementById('app');
-  app.innerHTML = '';
-  app.appendChild(renderHeader());
+  var appEl = document.getElementById('app');
+  appEl.innerHTML = '';
+
+  // Sidebar (always rendered outside .app, as a sibling)
+  var existingSidebar = document.querySelector('.sidebar');
+  if (existingSidebar) existingSidebar.remove();
+  document.body.insertBefore(renderSidebar(), appEl);
 
   // Search overlay
   if (S.searchOpen) {
-    const searchBox = h('div', { style: { marginBottom: '16px', padding: '16px', background: 'var(--bg2)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bd)' } },
+    var searchBox = h('div', { style: { marginBottom: '16px', padding: '16px', background: 'var(--bg2)', borderRadius: 'var(--radius-lg)', border: '0.5px solid var(--bd)' } },
       h('input', {
         id: 'search-input',
         type: 'text',
         placeholder: 'Rechercher dans toute l\'app (DAX, RANKX, mesure...)...',
         value: S.searchQuery || '',
-        style: { width: '100%', padding: '10px 14px', fontSize: '15px', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--bg)', color: 'var(--tx)', fontFamily: 'var(--font)', outline: 'none' },
-        onInput: (e) => { S.searchQuery = e.target.value; render(); setTimeout(() => { const inp = document.getElementById('search-input'); if (inp) { inp.focus(); inp.selectionStart = inp.selectionEnd = inp.value.length; } }, 10); },
-        onKeydown: (e) => { if (e.key === 'Escape') { S.searchOpen = false; render(); } }
+        style: { width: '100%', padding: '10px 14px', fontSize: '15px', border: '0.5px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--surface)', color: 'var(--tx)', fontFamily: 'var(--font)', outline: 'none' },
+        onInput: function(e) { S.searchQuery = e.target.value; render(); setTimeout(function() { var inp = document.getElementById('search-input'); if (inp) { inp.focus(); inp.selectionStart = inp.selectionEnd = inp.value.length; } }, 10); },
+        onKeydown: function(e) { if (e.key === 'Escape') { S.searchOpen = false; render(); } }
       }),
       h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '6px' } }, '\u00C9chap pour fermer \u00B7 Cherche dans sections, quiz, flashcards, mesures, glossaire, missions')
     );
-    app.appendChild(searchBox);
+    appEl.appendChild(searchBox);
     if (S.searchQuery && S.searchQuery.length >= 2) {
-      app.appendChild(renderSearch(S.searchQuery));
+      appEl.appendChild(renderSearch(S.searchQuery));
     }
     return;
   }
 
   // Daily Mix mode
   if (S.dailyMixActive) {
-    app.appendChild(renderDailyMix());
+    appEl.appendChild(renderDailyMix());
     return;
   }
 
-  app.appendChild(renderTabs());
-
   // Add fade-in animation
-  const content = h('div', { className: 'fade-in' });
-  if (S.tab === 'formation') content.appendChild(renderFormation());
+  var content = h('div', { className: 'fade-in' });
+  if (S.tab === 'home') content.appendChild(renderHome());
+  else if (S.tab === 'formation') content.appendChild(renderFormation());
   else if (S.tab === 'quiz') content.appendChild(renderQuiz());
   else if (S.tab === 'flash') content.appendChild(renderFlashcards());
   else if (S.tab === 'interview') content.appendChild(renderInterview());
   else if (S.tab === 'ref') content.appendChild(renderReference());
   else if (S.tab === 'progress') content.appendChild(renderProgress());
-  app.appendChild(content);
+  appEl.appendChild(content);
 }
 
 // ─── SVG Icon helpers ───
@@ -1326,7 +1329,7 @@ function renderHeader() {
 
   return h('div', { className: 'header' },
     h('div', { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-      h('h1', { style: { whiteSpace: 'nowrap', cursor: 'pointer' }, onClick: function() { S.chapterIdx = null; S.tab = 'formation'; render(); } }, 'Formation Power BI'),
+      h('h1', { style: { whiteSpace: 'nowrap', cursor: 'pointer' }, onClick: function() { S.chapterIdx = null; S.tab = 'home'; render(); } }, 'Formation Power BI'),
       h('span', { style: { fontSize: '9px', color: 'var(--tx3)', alignSelf: 'flex-end', marginBottom: '2px' } }, 'v' + APP_VERSION),
       xpSection
     ),
@@ -1337,24 +1340,108 @@ function renderHeader() {
 function isMobile() { return window.innerWidth <= 600; }
 
 function renderTabs() {
-  const tabs = [
-    ['formation', 'Formation', 'Cours', 'book'],
-    ['quiz', 'Quiz PL-300', 'Quiz', 'target'],
-    ['flash', 'Flashcards', 'Flash', 'zap'],
-    ['interview', 'Entretien', 'Entret.', 'briefcase'],
-    ['ref', 'Référence', 'Réf.', 'search'],
-    ['progress', 'Progression', 'Progrès', 'award']
-  ];
-  return h('div', { className: 'tabs' },
-    ...tabs.map(([id, label, shortLabel, iconName]) =>
-      h('button', {
-        className: 'tab' + (S.tab === id ? ' active' : ''),
-        onClick: () => { S.tab = id; render(); }
-      }, isMobile()
-        ? h('span', { className: 'tab-inner' }, icon(iconName, 20), h('span', { className: 'tab-label' }, shortLabel))
-        : label)
+  // Legacy — tabs are now hidden, sidebar is used instead
+  return h('div', { className: 'tabs' });
+}
+
+function makeSidebarSvg(pathD) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 18 18');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.5');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.innerHTML = pathD;
+  return svg;
+}
+
+function renderSidebar() {
+  var sidebar = h('nav', { className: 'sidebar' });
+
+  // Logo
+  var logoIcon = h('div', { className: 'sidebar-logo-icon' });
+  logoIcon.appendChild(makeSidebarSvg('<path d="M3 4h12M3 9h12M3 14h12"/>'));
+  var logo = h('div', { className: 'sidebar-logo' },
+    logoIcon,
+    h('span', { className: 'sidebar-logo-text' }, 'Power BI'),
+    h('span', { className: 'sidebar-version' }, 'v' + APP_VERSION)
+  );
+  sidebar.appendChild(logo);
+
+  // User card
+  var lvl = getLevel(S.xp);
+  var lvlData = LEVELS[lvl];
+  var userName = S.userName || 'Hugo';
+  var initials = userName.charAt(0).toUpperCase();
+  var userCard = h('div', { className: 'sidebar-user' },
+    h('div', { className: 'sidebar-avatar' }, initials),
+    h('div', { className: 'sidebar-user-info' },
+      h('div', { className: 'sidebar-user-name' }, userName),
+      h('div', { className: 'sidebar-user-level' }, lvlData.name)
+    ),
+    h('div', { className: 'sidebar-xp' },
+      icon('xp', 12),
+      String(S.xp)
     )
   );
+  sidebar.appendChild(userCard);
+
+  // Nav items config
+  var navSections = [
+    { label: 'Apprendre', items: [
+      { id: 'home', text: 'Accueil', icon: '<path d="M2 6.5l7-5 7 5V15a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 012 15z"/><path d="M6 16V9h6v7"/>' },
+      { id: 'formation', text: 'Formation', icon: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', badge: Object.entries(S.missions).filter(function(e) { return e[1] && !isNaN(e[0]) && e[0] > 0; }).length + '/' + getTotalMissions() }
+    ]},
+    { label: 'Pratiquer', items: [
+      { id: 'quiz', text: 'Quiz PL-300', icon: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>' },
+      { id: 'flash', text: 'Flashcards', icon: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M5 7h8M5 10h5"/>', badge: String(getDueCards().length), badgeClass: 'orange' },
+      { id: 'interview', text: 'Entretien', icon: '<circle cx="9" cy="6" r="3"/><path d="M3 16c0-3 3-5 6-5s6 2 6 5"/>' }
+    ]},
+    { label: 'Suivre', items: [
+      { id: 'progress', text: 'Progression', icon: '<path d="M2 14l4-7 3.5 4.5 2.5-3 4 5.5"/>' },
+      { id: 'ref', text: 'Référence DAX', icon: '<path d="M3 15.5v-11A2 2 0 015 2.5h10v13H5a2 2 0 01-2-2z"/><path d="M7 7h4M7 10h3"/>' }
+    ]}
+  ];
+
+  navSections.forEach(function(section) {
+    sidebar.appendChild(h('div', { className: 'sidebar-section-label' }, section.label));
+    var nav = h('div', { className: 'sidebar-nav' });
+    section.items.forEach(function(item) {
+      var navItem = h('button', {
+        className: 'nav-item' + (S.tab === item.id ? ' active' : ''),
+        onClick: function() { S.tab = item.id; if (item.id === 'formation') S.chapterIdx = null; render(); }
+      });
+      navItem.appendChild(makeSidebarSvg(item.icon));
+      navItem.appendChild(document.createTextNode(item.text));
+      if (item.badge) {
+        var badgeEl = h('span', { className: 'nav-badge' + (item.badgeClass ? ' ' + item.badgeClass : '') }, item.badge);
+        navItem.appendChild(badgeEl);
+      }
+      nav.appendChild(navItem);
+    });
+    sidebar.appendChild(nav);
+  });
+
+  // Spacer
+  sidebar.appendChild(h('div', { className: 'sidebar-spacer' }));
+
+  // Search shortcut
+  var searchBtn = h('button', { className: 'sidebar-search', onClick: function() { S.searchOpen = true; render(); } });
+  searchBtn.appendChild(makeSidebarSvg('<circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/>'));
+  searchBtn.appendChild(h('span', { className: 'sidebar-search-text' }, 'Rechercher\u2026'));
+  searchBtn.appendChild(h('span', { className: 'sidebar-search-shortcut' }, '\u2318K'));
+  sidebar.appendChild(searchBtn);
+
+  // Bottom actions (theme + music)
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var bottomActions = h('div', { className: 'sidebar-bottom-actions' });
+  var themeBtn = h('button', { onClick: toggleTheme, title: isDark ? 'Mode clair' : 'Mode sombre' });
+  themeBtn.appendChild(isDark ? icon('sun', 16) : icon('moon', 16));
+  bottomActions.appendChild(themeBtn);
+  sidebar.appendChild(bottomActions);
+
+  return sidebar;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1573,6 +1660,154 @@ function renderRoadmap() {
     progressInfo,
     progressBar
   );
+  return wrap;
+}
+
+// ═══════════════════════════════════════════════════════════
+// HOME DASHBOARD (Bento Grid)
+// ═══════════════════════════════════════════════════════════
+function renderHome() {
+  var wrap = h('div', null);
+
+  // Page header
+  var hour = new Date().getHours();
+  var greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+  var userName = S.userName || 'Hugo';
+  wrap.appendChild(h('div', { className: 'page-header' },
+    h('div', { className: 'page-label' }, greeting + ' ' + userName),
+    h('h1', { className: 'page-title' }, 'Tableau de bord')
+  ));
+
+  // Bento grid
+  var bento = h('div', { className: 'bento' });
+
+  // Hero card — Session du jour
+  var dueCards = getDueCards().length;
+  var todayXP = 0;
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var todayEntry = S.xpHistory.find(function(e) { return e.date === todayStr; });
+  if (todayEntry) todayXP = todayEntry.xp;
+  var goalPct = Math.min(100, Math.round(todayXP / S.dailyGoal * 100));
+  var missionsDone = Object.entries(S.missions).filter(function(e) { return e[1] && !isNaN(e[0]) && Number(e[0]) > 0 && Number(e[0]) <= getTotalMissions(); }).length;
+  var nextMission = getTotalMissions() - missionsDone;
+
+  var hero = h('div', { className: 'bento-card bento-hero', onClick: startDailyMix });
+  hero.innerHTML = '';
+  var heroTop = h('div', null,
+    h('div', { className: 'hero-label' }, 'Session du jour'),
+    h('div', { className: 'hero-title' }, 'Reprends où tu en étais'),
+    h('div', { className: 'hero-sub' }, dueCards + ' flashcards \u00B7 quiz ciblés \u00B7 ' + (nextMission > 0 ? '1 mission' : '0 mission') + ' — environ 10 min')
+  );
+  hero.appendChild(heroTop);
+  var heroBottom = h('div', { className: 'hero-bottom' });
+  var heroBtn = h('button', { className: 'hero-btn', onClick: function(e) { e.stopPropagation(); startDailyMix(); } }, 'Commencer');
+  heroBottom.appendChild(heroBtn);
+  var progressWrap = h('div', { className: 'hero-progress-wrap' },
+    h('div', { className: 'hero-bar' },
+      h('div', { className: 'hero-bar-fill', style: { width: goalPct + '%' } })
+    ),
+    h('span', { className: 'hero-xp-label' }, todayXP + '/' + S.dailyGoal + ' XP')
+  );
+  heroBottom.appendChild(progressWrap);
+  hero.appendChild(heroBottom);
+  bento.appendChild(hero);
+
+  // Streak card
+  var streak = h('div', { className: 'bento-card bento-streak' },
+    h('div', { className: 'streak-flame' }, '\uD83D\uDD25'),
+    h('div', { className: 'streak-number' }, String(S.streak || 0)),
+    h('div', { className: 'streak-label' }, (S.streak || 0) <= 1 ? 'jour de streak' : 'jours de streak')
+  );
+  bento.appendChild(streak);
+
+  // 4 stat cards
+  var totalMissions = getTotalMissions();
+  var knownCards = (typeof FLASHCARDS !== 'undefined' ? FLASHCARDS : []).filter(function(_, i) { return sm2IsMastered(i); }).length;
+  var totalFlash = (typeof FLASHCARDS !== 'undefined' ? FLASHCARDS : []).length;
+  var totalQuizAnswered = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right + s.wrong; }, 0);
+  var totalQuizRight = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right; }, 0);
+  var quizPct = totalQuizAnswered > 0 ? Math.round(totalQuizRight / totalQuizAnswered * 100) : 0;
+  var studyHours = (S.studyTime || 0) / 3600;
+
+  var stats = [
+    { bg: 'var(--accent-bg)', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', value: missionsDone, suffix: '/' + totalMissions, label: 'Missions terminées', color: 'var(--accent)' },
+    { bg: '#34c75912', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 8l2 2 4-4"/>', value: knownCards, suffix: '/' + totalFlash, label: 'Flashcards maîtrisées', color: 'var(--green)' },
+    { bg: '#af52de12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>', value: quizPct, suffix: '%', label: 'Taux de réussite quiz', color: 'var(--purple)' },
+    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: studyHours.toFixed(1), suffix: 'h', label: 'Temps d\'étude total', color: 'var(--orange)' }
+  ];
+
+  stats.forEach(function(st) {
+    var statCard = h('div', { className: 'bento-card bento-stat' });
+    var iconWrap = h('div', { className: 'stat-icon', style: { background: st.bg } });
+    var svgEl = makeSidebarSvg(st.iconPath);
+    svgEl.setAttribute('stroke', st.color);
+    iconWrap.appendChild(svgEl);
+    statCard.appendChild(iconWrap);
+    statCard.appendChild(h('div', { className: 'stat-value' },
+      String(st.value),
+      h('span', { style: { fontSize: '16px', color: 'var(--tx3)' } }, st.suffix)
+    ));
+    statCard.appendChild(h('div', { className: 'stat-label' }, st.label));
+    bento.appendChild(statCard);
+  });
+
+  wrap.appendChild(bento);
+
+  // Parcours section
+  var sectionHeader = h('div', { className: 'section-header' },
+    h('h2', { className: 'section-title' }, 'Parcours'),
+    h('a', { className: 'section-link', href: '#', onClick: function(e) { e.preventDefault(); S.tab = 'formation'; S.chapterIdx = null; render(); } }, 'Voir tout \u2192')
+  );
+  wrap.appendChild(sectionHeader);
+
+  var chaptersGrid = h('div', { className: 'chapters-grid' });
+  var prereqs = getChapterPrereqs();
+  CHAPTERS.forEach(function(ch, i) {
+    var isLocked = prereqs[i] && !prereqs[i].unlocked;
+    var done = Object.entries(S.missions).filter(function(e) { return e[1] && Number(e[0]) >= ch.missions[0] && Number(e[0]) <= ch.missions[1]; }).length;
+    var total = ch.missions[1] - ch.missions[0] + 1;
+    var pct = Math.round(done / total * 100);
+
+    var card = h('div', { className: 'chapter-card' + (isLocked ? ' locked' : '') });
+    if (!isLocked) {
+      card.addEventListener('click', function() { S.tab = 'formation'; S.chapterIdx = i; render(); });
+    }
+
+    // Icon
+    var chIcon = h('div', { className: 'ch-icon-apple ' + (isLocked ? 'locked-icon' : 'active-icon') });
+    if (isLocked) {
+      chIcon.textContent = String(i + 1);
+    } else {
+      var chIcons = ['book', 'inbox', 'target', 'crosshair', 'zap', 'timer', 'shield'];
+      chIcon.appendChild(icon(chIcons[i] || 'book', 20));
+    }
+    card.appendChild(chIcon);
+
+    // Info
+    card.appendChild(h('div', { className: 'ch-info' },
+      h('div', { className: 'ch-name' }, 'Ch.' + (i + 1) + ' \u2014 ' + ch.title),
+      h('div', { className: 'ch-sub' }, done + '/' + total + ' missions')
+    ));
+
+    // Progress ring or lock
+    if (isLocked) {
+      var lockDiv = h('div', { className: 'lock-icon' });
+      lockDiv.appendChild(icon('lock', 16));
+      card.appendChild(lockDiv);
+    } else {
+      var ring = h('div', { className: 'ch-ring' });
+      var circumference = 2 * Math.PI * 16;
+      var offset = circumference * (1 - pct / 100);
+      ring.innerHTML = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#e5e5ea" stroke-width="3"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="' + circumference.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 20 20)"/></svg>';
+      var ringLabel = h('span', { className: 'ch-ring-label' }, pct + '%');
+      ring.appendChild(ringLabel);
+      card.appendChild(ring);
+    }
+
+    chaptersGrid.appendChild(card);
+  });
+  wrap.appendChild(chaptersGrid);
+
   return wrap;
 }
 
@@ -2414,77 +2649,118 @@ function renderQuiz() {
 
   // If no quiz started, show menu
   if (S.quizQuestions.length === 0) {
-    // Exam strategy
-    wrap.appendChild(renderExamStrategy());
-    var totalAnswered = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right + s.wrong; }, 0);
-    if (totalAnswered === 0) {
-      wrap.appendChild(h('div', { className: 'box box-tip', style: { marginBottom: '16px' } },
-        h('span', { className: 'box-label' }, 'Bienvenue'),
-        'Sélectionne un domaine et lance-toi. Chaque bonne réponse rapporte 5 XP.'
-      ));
-    }
-    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '16px' } }, 'Mode entraînement'));
-    wrap.appendChild(h('div', { className: 'pills' },
-      ...['all', 'PQ', 'MO', 'VA', 'DE'].map(k =>
-        h('button', { className: 'pill', onClick: () => startQuiz(k, 'training'),
-          style: k !== 'all' ? { borderColor: DOMAINS[k].color, color: DOMAINS[k].color } : {}
-        }, ...(k === 'all' ? ['Toutes les questions'] : [icon(DOMAINS[k].icon, 14), ' ' + DOMAINS[k].name]))
-      ),
-      h('button', { className: 'pill', onClick: () => { S.caseMode = true; S.caseIdx = null; render(); },
-        style: { borderColor: 'var(--purple)', color: 'var(--purple)' }
-      }, 'Études de cas'),
-      h('button', { className: 'pill', onClick: () => { S.exMode = true; S.exIdx = 0; S.exInput = ''; S.exChecked = false; S.exCorrect = false; S.exHintLevel = 0; S.exShowSolution = false; render(); },
-        style: { borderColor: 'var(--green)', color: 'var(--green)' }
-      }, 'Exercices DAX')
+    // Page header
+    wrap.appendChild(h('div', { className: 'page-header' },
+      h('div', { className: 'page-label' }, 'Certification'),
+      h('h1', { className: 'page-title' }, 'Quiz PL-300')
     ));
-    wrap.appendChild(h('div', { className: 'pills', style: { marginBottom: '24px' } },
-      ...CHAPTERS.map(ch =>
-        h('button', { className: 'pill', onClick: () => startQuiz('ch' + ch.id, 'training') }, `Ch.${ch.id}`)
-      )
-    ));
+
+    // Domain pills
+    var pillsDiv = h('div', { className: 'pills' });
+    var domainFilters = [
+      { key: 'all', label: 'Tous les domaines' },
+      { key: 'PQ', label: 'Préparer les données' },
+      { key: 'MO', label: 'Modéliser les données' },
+      { key: 'VA', label: 'Visualiser et analyser' },
+      { key: 'DE', label: 'Déployer et maintenir' }
+    ];
+    domainFilters.forEach(function(df) {
+      pillsDiv.appendChild(h('button', {
+        className: 'pill' + (df.key === 'all' ? ' active' : ''),
+        onClick: function() { startQuiz(df.key, 'training'); }
+      }, df.label));
+    });
+    wrap.appendChild(pillsDiv);
+
+    // Quiz mode cards (Apple bento style)
+    wrap.appendChild(h('div', { className: 'section-label-apple' }, 'Modes d\'entraînement'));
+    var quizBento = h('div', { className: 'quiz-bento' });
+
+    var quizModes = [
+      { title: 'Toutes les questions', sub: 'Entraînement libre sur l\'ensemble du programme', bg: 'var(--accent-bg)', color: 'var(--accent)', count: QUIZ.length, action: function() { startQuiz('all', 'training'); } },
+      { title: 'Études de cas', sub: 'Scénarios métier avec contexte complet', bg: '#af52de10', color: 'var(--purple)', action: function() { S.caseMode = true; S.caseIdx = null; render(); } },
+      { title: 'Exercices DAX', sub: 'Écriture de mesures et formules DAX', bg: '#34c75910', color: 'var(--green)', action: function() { S.exMode = true; S.exIdx = 0; S.exInput = ''; S.exChecked = false; S.exCorrect = false; S.exHintLevel = 0; S.exShowSolution = false; render(); } },
+      { title: 'Par chapitre', sub: 'Chapitres 1 à 7 du parcours', bg: '#ff9f0a10', color: 'var(--orange)', action: function() { /* show chapter pills */ } }
+    ];
+
+    quizModes.forEach(function(qm) {
+      var card = h('div', { className: 'quiz-card-apple', onClick: qm.action });
+      if (qm.count) {
+        card.appendChild(h('div', { className: 'quiz-card-count' }, String(qm.count)));
+      }
+      var iconEl = h('div', { className: 'quiz-card-icon', style: { background: qm.bg } });
+      var svgI = makeSidebarSvg('<path d="M3 5.5h12M3 9h12M3 12.5h8"/>');
+      svgI.setAttribute('stroke', qm.color);
+      iconEl.appendChild(svgI);
+      card.appendChild(iconEl);
+      card.appendChild(h('div', { className: 'quiz-card-title' }, qm.title));
+      card.appendChild(h('div', { className: 'quiz-card-sub' }, qm.sub));
+      quizBento.appendChild(card);
+    });
+    wrap.appendChild(quizBento);
+
+    // Chapter pills (for "Par chapitre")
+    var chPills = h('div', { className: 'pills', style: { marginBottom: '24px' } });
+    CHAPTERS.forEach(function(ch) {
+      chPills.appendChild(h('button', {
+        className: 'pill',
+        onClick: function() { startQuiz('ch' + ch.id, 'training'); }
+      }, 'Ch.' + ch.id));
+    });
+    wrap.appendChild(chPills);
 
     // Review wrong answers
-    const wrongQs = QUIZ.filter(q => {
-      const st = S.quizStats[qHash(q)];
-      return st && st.wrong > st.right;
-    });
+    var wrongQs = QUIZ.filter(function(q) { var st = S.quizStats[qHash(q)]; return st && st.wrong > st.right; });
     if (wrongQs.length > 0) {
       wrap.appendChild(h('button', {
-        onClick: () => { S.quizQuestions = shuf(wrongQs); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizMode = 'training'; render(); },
-        style: { marginBottom: '24px', background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)' }
-      }, `Réviser les erreurs (${wrongQs.length} questions)`));
+        onClick: function() { S.quizQuestions = shuf(wrongQs); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizMode = 'training'; render(); },
+        style: { marginBottom: '24px', background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)', padding: '10px 24px', fontWeight: '500' }
+      }, 'Réviser les erreurs (' + wrongQs.length + ' questions)'));
     }
 
-    // Exam mode
-    wrap.appendChild(h('h3', { style: { fontSize: '16px', marginBottom: '12px', marginTop: '8px' } }, 'Mode Examen PL-300'));
-    wrap.appendChild(h('div', { className: 'box box-pl300', style: { marginBottom: '16px' } },
-      h('span', { className: 'box-label' }, 'Simulation'),
-      '50 questions • 100 minutes • Score /1000 • Seuil : 700'
+    // Exam card (Apple style)
+    wrap.appendChild(h('div', { className: 'section-label-apple' }, 'Examen blanc'));
+    var examCard = h('div', { className: 'exam-card-apple' });
+    var examIconWrap = h('div', { className: 'exam-icon-wrap' });
+    var examSvg = makeSidebarSvg('<path d="M3 3h12v14H3z"/><path d="M7 7h4M7 10h2"/>');
+    examSvg.setAttribute('stroke', '#ffffff');
+    examIconWrap.appendChild(examSvg);
+    examCard.appendChild(examIconWrap);
+    examCard.appendChild(h('div', { className: 'exam-info' },
+      h('div', { className: 'exam-title-apple' }, 'Simulation PL-300'),
+      h('div', { className: 'exam-meta' },
+        h('span', { className: 'exam-meta-item' }, '100 minutes'),
+        h('span', { className: 'exam-meta-item' }, '50 questions'),
+        h('span', { className: 'exam-meta-item' }, 'Score /1000'),
+        h('span', { className: 'exam-meta-item' }, 'Seuil : 700')
+      )
     ));
-    wrap.appendChild(h('button', {
-      onClick: () => startQuiz('all', 'exam'),
-      style: { padding: '12px 32px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' }
-    }, 'Lancer l\'examen'));
+    var examBtn = h('button', { className: 'exam-btn-apple', onClick: function() { startQuiz('all', 'exam'); } });
+    examBtn.appendChild(icon('zap', 14));
+    examBtn.appendChild(document.createTextNode('Lancer l\'examen'));
+    examCard.appendChild(examBtn);
+    wrap.appendChild(examCard);
 
-    // Exam history
-    if (S.examHistory.length) {
-      wrap.appendChild(h('h3', { style: { fontSize: '14px', marginTop: '24px', marginBottom: '12px' } }, 'Historique des examens'));
-    } else {
-      wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '20px', color: 'var(--tx3)', fontSize: '13px', marginTop: '20px' } },
-        'Aucun examen pass\u00e9 pour le moment. Entra\u00eene-toi avec les quiz avant de te lancer !'
+    // Exam history (Apple style)
+    wrap.appendChild(h('div', { className: 'section-label-apple', style: { marginTop: '36px' } }, 'Résultats récents'));
+    if (S.examHistory.length === 0) {
+      wrap.appendChild(h('div', { className: 'empty-state' },
+        h('div', { className: 'empty-circle' }, icon('target', 24)),
+        h('div', { className: 'empty-title' }, 'Aucun résultat pour le moment'),
+        h('div', { className: 'empty-sub' }, 'Entraîne-toi avec les quiz puis lance un examen blanc')
       ));
-    }
-    if (S.examHistory.length) {
-      S.examHistory.slice().reverse().forEach(ex => {
-        const passed = ex.score >= 700;
-        wrap.appendChild(h('div', { className: 'card', style: { padding: '12px 16px' } },
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-            h('span', { style: { fontSize: '13px', color: 'var(--tx3)' } }, ex.date),
-            h('span', { style: { fontSize: '18px', fontWeight: '600', color: passed ? 'var(--green)' : 'var(--red)' } }, `${ex.score}/1000`),
-            h('span', { className: 'badge', style: { background: passed ? 'var(--green-bg)' : 'var(--red-bg)', color: passed ? 'var(--green)' : 'var(--red)' } }, passed ? 'RÉUSSI' : 'ÉCHOUÉ')
-          )
+    } else {
+      var resultsGrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '36px' } });
+      S.examHistory.slice().reverse().slice(0, 6).forEach(function(ex) {
+        var passed = ex.score >= 700;
+        resultsGrid.appendChild(h('div', { style: { background: 'var(--surface)', borderRadius: 'var(--radius)', border: '0.5px solid var(--bd)', padding: '20px', textAlign: 'center' } },
+          h('div', { style: { fontSize: '36px', fontWeight: '800', letterSpacing: '-0.03em', lineHeight: '1', marginBottom: '2px', color: passed ? 'var(--green)' : 'var(--red)' } }, ex.score + '/1000'),
+          h('div', { style: { fontSize: '12px', color: 'var(--tx3)', fontWeight: '500' } }, ex.right + '/' + ex.total + ' bonnes'),
+          h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '8px', fontWeight: '400' } }, ex.date),
+          h('span', { style: { display: 'inline-block', fontSize: '10px', fontWeight: '600', padding: '3px 10px', borderRadius: '8px', marginTop: '8px', background: passed ? '#34c75912' : '#ff3b3012', color: passed ? 'var(--green)' : 'var(--red)' } }, passed ? 'Réussi' : 'Échoué')
         ));
       });
+      wrap.appendChild(resultsGrid);
     }
 
     return wrap;
@@ -3728,38 +4004,101 @@ function renderProgress() {
   const totalQuizRight = Object.values(S.quizStats).reduce((sum, s) => sum + s.right, 0);
   const quizPct = totalQuizAnswered > 0 ? Math.round(totalQuizRight / totalQuizAnswered * 100) : 0;
 
-  // Stats grid
-  var lvlNow = getLevel(S.xp);
-  wrap.appendChild(h('div', { className: 'stats-grid' },
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'XP Total'),
-      h('div', { className: 'stat-value' }, String(S.xp), h('span', { className: 'stat-sub' }, ' XP'))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Niveau'),
-      h('div', { className: 'stat-value' }, LEVELS[lvlNow].name)
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Missions'),
-      h('div', { className: 'stat-value' }, String(missionsDone), h('span', { className: 'stat-sub' }, '/' + getTotalMissions()))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Flashcards'),
-      h('div', { className: 'stat-value' }, String(knownCards), h('span', { className: 'stat-sub' }, '/' + FLASHCARDS.length))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Quiz (taux)'),
-      h('div', { className: 'stat-value' }, String(quizPct), h('span', { className: 'stat-sub' }, '%'))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Streak'),
-      h('div', { className: 'stat-value', style: { color: '#ffc233' } }, icon('flame', 20), ' ' + S.streak, h('span', { className: 'stat-sub' }, ' jours'))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Temps d\'\u00e9tude'),
-      h('div', { className: 'stat-value' }, String(Math.round(S.xp / 120 * 10) / 10), h('span', { className: 'stat-sub' }, ' h'))
-    )
+  // Page header
+  wrap.appendChild(h('div', { className: 'page-header' },
+    h('div', { className: 'page-label' }, 'Suivi'),
+    h('h1', { className: 'page-title' }, 'Progression')
   ));
+
+  // Top bento: Activity Rings + Key Numbers
+  var topBento = h('div', { className: 'top-bento' });
+
+  // Activity Rings card
+  var totalMissionsCount = getTotalMissions();
+  var missionPct = totalMissionsCount > 0 ? missionsDone / totalMissionsCount : 0;
+  var flashPct = FLASHCARDS.length > 0 ? knownCards / FLASHCARDS.length : 0;
+  var todayXPr = 0;
+  var todayStrR = new Date().toISOString().slice(0, 10);
+  var todayEntryR = S.xpHistory.find(function(e) { return e.date === todayStrR; });
+  if (todayEntryR) todayXPr = todayEntryR.xp;
+  var xpDayPct = Math.min(1, todayXPr / S.dailyGoal);
+
+  var ringsCard = h('div', { className: 'bento-card' });
+  var ringsLayout = h('div', { className: 'rings-layout' });
+
+  // SVG rings
+  var c1 = 2 * Math.PI * 70, o1 = c1 * (1 - missionPct);
+  var c2 = 2 * Math.PI * 55, o2 = c2 * (1 - flashPct);
+  var c3 = 2 * Math.PI * 40, o3 = c3 * (1 - xpDayPct);
+  var ringsSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  ringsSvg.setAttribute('class', 'rings-svg');
+  ringsSvg.setAttribute('viewBox', '0 0 160 160');
+  ringsSvg.innerHTML = '<circle cx="80" cy="80" r="70" fill="none" stroke="#e8e8ed" stroke-width="11"/>' +
+    '<circle cx="80" cy="80" r="70" fill="none" stroke="#ff3b30" stroke-width="11" stroke-dasharray="' + c1.toFixed(1) + '" stroke-dashoffset="' + o1.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 80 80)"/>' +
+    '<circle cx="80" cy="80" r="55" fill="none" stroke="#e8e8ed" stroke-width="11"/>' +
+    '<circle cx="80" cy="80" r="55" fill="none" stroke="#34c759" stroke-width="11" stroke-dasharray="' + c2.toFixed(1) + '" stroke-dashoffset="' + o2.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 80 80)"/>' +
+    '<circle cx="80" cy="80" r="40" fill="none" stroke="#e8e8ed" stroke-width="11"/>' +
+    '<circle cx="80" cy="80" r="40" fill="none" stroke="#0071e3" stroke-width="11" stroke-dasharray="' + c3.toFixed(1) + '" stroke-dashoffset="' + o3.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 80 80)"/>';
+  ringsLayout.appendChild(ringsSvg);
+
+  // Legend
+  var legend = h('div', { className: 'rings-legend' },
+    h('div', { className: 'ring-row' },
+      h('div', { className: 'ring-dot', style: { background: '#ff3b30' } }),
+      h('div', { className: 'ring-info' },
+        h('div', { className: 'ring-name' }, 'Missions'),
+        h('div', { className: 'ring-detail' }, 'Chapitres 1 à 7')
+      ),
+      h('div', { className: 'ring-value' }, missionsDone + '/' + totalMissionsCount)
+    ),
+    h('div', { className: 'ring-row' },
+      h('div', { className: 'ring-dot', style: { background: '#34c759' } }),
+      h('div', { className: 'ring-info' },
+        h('div', { className: 'ring-name' }, 'Flashcards'),
+        h('div', { className: 'ring-detail' }, 'Répétition espacée')
+      ),
+      h('div', { className: 'ring-value' }, knownCards + '/' + FLASHCARDS.length)
+    ),
+    h('div', { className: 'ring-row' },
+      h('div', { className: 'ring-dot', style: { background: '#0071e3' } }),
+      h('div', { className: 'ring-info' },
+        h('div', { className: 'ring-name' }, 'XP du jour'),
+        h('div', { className: 'ring-detail' }, 'Objectif quotidien')
+      ),
+      h('div', { className: 'ring-value' }, todayXPr + '/' + S.dailyGoal)
+    )
+  );
+  ringsLayout.appendChild(legend);
+  ringsCard.appendChild(ringsLayout);
+  topBento.appendChild(ringsCard);
+
+  // Key Numbers card
+  var studyHoursP = Math.round(S.xp / 120 * 10) / 10;
+  var keyCard = h('div', { className: 'bento-card', style: { padding: '22px' } },
+    h('div', { className: 'stats-mini' },
+      h('div', { className: 'stat-mini' },
+        h('div', { className: 'stat-mini-value' }, String(S.xp)),
+        h('div', { className: 'stat-mini-label' }, 'XP total')
+      ),
+      h('div', { className: 'stat-mini' },
+        h('div', { className: 'stat-mini-inline' },
+          h('div', { className: 'stat-mini-value' }, String(S.streak || 0)),
+          icon('flame', 20)
+        ),
+        h('div', { className: 'stat-mini-label' }, 'jour' + ((S.streak || 0) > 1 ? 's' : '') + ' de streak')
+      ),
+      h('div', { className: 'stat-mini' },
+        h('div', { className: 'stat-mini-value' }, String(quizPct), h('span', null, '%')),
+        h('div', { className: 'stat-mini-label' }, 'taux quiz')
+      ),
+      h('div', { className: 'stat-mini' },
+        h('div', { className: 'stat-mini-value' }, String(studyHoursP), h('span', null, 'h')),
+        h('div', { className: 'stat-mini-label' }, 'temps d\'étude')
+      )
+    )
+  );
+  topBento.appendChild(keyCard);
+  wrap.appendChild(topBento);
 
   // ── Narrative messages ──
   var narrativeMsgs = getNarrativeMessages();
@@ -3816,32 +4155,32 @@ function renderProgress() {
   ));
   wrap.appendChild(streakBox);
 
-  // ── Ghost Leaderboard ──
+  // ── Ghost Leaderboard (Apple style) ──
   var ghosts = getGhostProfiles();
-  var lbBox = h('div', { style: { marginBottom: '20px' } });
-  lbBox.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Classement'));
+  var lbSection = h('div', { className: 'leaderboard-section' });
+  lbSection.appendChild(h('div', { className: 'section-label-apple' }, 'Classement'));
+  var lbTable = h('div', { className: 'leaderboard' });
+  var rankClasses = ['gold', 'silver', 'bronze'];
+  var avatarColors = ['#ffd60a20', '#0071e310', '#34c75910', 'var(--accent-bg)', '#af52de10'];
+  var avatarTextColors = ['#b8860b', '#0071e3', '#34c759', 'var(--accent)', '#af52de'];
   ghosts.forEach(function(g, i) {
     var isUser = g.isUser;
-    var rankColors = ['#ffc233', '#c0c0c0', '#cd7f32'];
-    lbBox.appendChild(h('div', { style: {
-      display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
-      borderRadius: 'var(--radius)', marginBottom: '4px',
-      background: isUser ? 'var(--accent-bg)' : 'var(--bg2)',
-      border: isUser ? '1px solid var(--accent)' : '1px solid transparent'
-    }},
-      h('div', { style: { width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: i < 3 ? rankColors[i] + '30' : 'var(--bg3)', color: i < 3 ? rankColors[i] : 'var(--tx3)' } }, String(i + 1)),
-      h('div', { style: { width: '28px', height: '28px', borderRadius: '50%', background: isUser ? 'var(--accent)' : 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: isUser ? 'white' : 'var(--tx2)' } }, g.avatar),
-      h('div', { style: { flex: '1' } },
-        h('div', { style: { fontSize: '13px', fontWeight: isUser ? '700' : '500' } }, g.name),
-        g.role ? h('div', { style: { fontSize: '11px', color: 'var(--tx3)' } }, g.role) : null
+    var row = h('div', { className: 'leaderboard-row' + (isUser ? ' me' : '') },
+      h('div', { className: 'lb-rank' + (i < 3 ? ' ' + rankClasses[i] : '') }, String(i + 1)),
+      h('div', { className: 'lb-avatar', style: { background: avatarColors[i % avatarColors.length], color: avatarTextColors[i % avatarTextColors.length] } }, g.avatar),
+      h('div', { className: 'lb-info' },
+        h('div', { className: 'lb-name' }, isUser ? 'Toi' : g.name),
+        g.role ? h('div', { className: 'lb-desc' }, g.role) : null
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-        h('span', { style: { fontSize: '11px', color: '#ffc233' } }, icon('flame', 12), ' ' + g.streak),
-        h('span', { style: { fontSize: '13px', fontWeight: '600', color: isUser ? 'var(--accent)' : 'var(--tx2)' } }, g.xp + ' XP')
+      h('div', { className: 'lb-xp' },
+        icon('xp', 12),
+        ' ' + g.xp + ' XP'
       )
-    ));
+    );
+    lbTable.appendChild(row);
   });
-  wrap.appendChild(lbBox);
+  lbSection.appendChild(lbTable);
+  wrap.appendChild(lbSection);
 
   // Prochaine révision
   var dueCount = getDueCards().length;
@@ -3994,8 +4333,9 @@ function renderProgress() {
     ));
   });
 
-  // Quiz by domain
-  wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', margin: '24px 0 14px' } }, 'Quiz par domaine PL-300'));
+  // Quiz by domain (Apple style cards)
+  wrap.appendChild(h('div', { className: 'section-label-apple', style: { marginTop: '8px' } }, 'Quiz par domaine PL-300'));
+  var domainGrid = h('div', { className: 'domain-grid' });
   Object.entries(DOMAINS).forEach(([d, dom]) => {
     const domainQs = QUIZ.filter(q => q.d === d);
     let right = 0, total = 0;
@@ -4004,24 +4344,19 @@ function renderProgress() {
       if (st) { right += st.right; total += st.right + st.wrong; }
     });
     const pct = total > 0 ? Math.round(right / total * 100) : 0;
-    const weak = total > 5 && pct < 60;
 
-    var domColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#e8a030' : 'var(--red)';
-    var domIndicator = total > 0 ? h('span', { style: { display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: domColor, marginRight: '6px' } }) : null;
-    wrap.appendChild(h('div', { style: { marginBottom: '14px' } },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' } },
-        h('span', null, icon(dom.icon, 14), ' ' + dom.name + ' (' + dom.weight + ')'),
-        h('span', { style: { color: total > 0 ? domColor : 'var(--tx3)', fontWeight: total > 0 ? '600' : '400' } },
-          domIndicator,
-          total > 0 ? `${pct}% (${right}/${total})` : 'Pas encore teste'
-        )
+    domainGrid.appendChild(h('div', { className: 'domain-card' },
+      h('div', { className: 'domain-info' },
+        h('div', { className: 'domain-name' }, dom.name),
+        h('div', { className: 'domain-weight' }, dom.weight + ' de l\'examen')
       ),
-      h('div', { className: 'progress-bar' },
-        h('div', { className: 'progress-fill', style: { width: pct + '%', background: total > 0 ? domColor : 'var(--bd)' } })
+      h('div', { className: 'domain-bar-wrap' },
+        h('div', { className: 'domain-bar-fill', style: { width: pct + '%' } })
       ),
-      weak ? h('div', { style: { fontSize: '12px', color: 'var(--red)', marginTop: '4px' } }, `Point faible — révise les chapitres ${PL300_INFO.domains.find(x => x.id === d)?.chapters.join(', ')}`) : null
+      h('div', { className: 'domain-score' }, total > 0 ? pct + '%' : '\u2014')
     ));
   });
+  wrap.appendChild(domainGrid);
 
   // Weak domain recommendations
   var _weakDoms = [];
