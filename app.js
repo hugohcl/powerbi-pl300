@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.2';
+const APP_VERSION = '3.0.3';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -1001,7 +1001,7 @@ function render() {
   // Pomodoro in top bar
   if (!S.pomodoro.active) {
     var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus' });
-    pomBtn.appendChild(icon('timer', 18));
+    pomBtn.appendChild(icon('timer', 22));
     topActions.appendChild(pomBtn);
   } else {
     var tPomM = Math.floor(S.pomodoro.timeLeft / 60);
@@ -1017,23 +1017,23 @@ function render() {
 
   // Search
   var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher' });
-  searchBtn.appendChild(icon('search', 18));
+  searchBtn.appendChild(icon('search', 22));
   topActions.appendChild(searchBtn);
 
   // Music
   var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
-  musicBtn.appendChild(icon('music', 18));
+  musicBtn.appendChild(icon('music', 22));
   topActions.appendChild(musicBtn);
 
   // Theme
   var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
   var themeBtn = h('button', { onClick: toggleTheme, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
-  themeBtn.appendChild(isDarkMobile ? icon('sun', 18) : icon('moon', 18));
+  themeBtn.appendChild(isDarkMobile ? icon('sun', 22) : icon('moon', 22));
   topActions.appendChild(themeBtn);
 
   // Sync
   var syncBtn = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', style: _syncCode ? { color: 'var(--green)' } : {} });
-  syncBtn.appendChild(icon('cloud', 18));
+  syncBtn.appendChild(icon('cloud', 22));
   topActions.appendChild(syncBtn);
 
   topbar.appendChild(topActions);
