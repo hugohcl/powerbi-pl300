@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.1';
+const APP_VERSION = '3.0.2';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -991,6 +991,54 @@ function render() {
   else if (S.tab === 'progress') content.appendChild(renderProgress());
   appEl.appendChild(content);
 
+  // Mobile top bar (fixed header with utilities)
+  var existingTopbar = document.querySelector('.mobile-topbar');
+  if (existingTopbar) existingTopbar.remove();
+  var topbar = h('div', { className: 'mobile-topbar' });
+  topbar.appendChild(h('div', { className: 'mobile-topbar-title' }, 'Power BI'));
+  var topActions = h('div', { className: 'mobile-topbar-actions' });
+
+  // Pomodoro in top bar
+  if (!S.pomodoro.active) {
+    var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus' });
+    pomBtn.appendChild(icon('timer', 18));
+    topActions.appendChild(pomBtn);
+  } else {
+    var tPomM = Math.floor(S.pomodoro.timeLeft / 60);
+    var tPomS = S.pomodoro.timeLeft % 60;
+    var tPomLabel = tPomM + ':' + String(tPomS).padStart(2, '0');
+    var tPomClass = S.pomodoro.mode === 'work' ? 'pomodoro-active-pill' : 'pomodoro-break-pill';
+    var tPomBtn = h('button', {
+      className: tPomClass,
+      onClick: function() { S.pomodoro.dropdownOpen = !S.pomodoro.dropdownOpen; render(); }
+    }, tPomLabel);
+    topActions.appendChild(tPomBtn);
+  }
+
+  // Search
+  var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher' });
+  searchBtn.appendChild(icon('search', 18));
+  topActions.appendChild(searchBtn);
+
+  // Music
+  var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
+  musicBtn.appendChild(icon('music', 18));
+  topActions.appendChild(musicBtn);
+
+  // Theme
+  var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
+  var themeBtn = h('button', { onClick: toggleTheme, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
+  themeBtn.appendChild(isDarkMobile ? icon('sun', 18) : icon('moon', 18));
+  topActions.appendChild(themeBtn);
+
+  // Sync
+  var syncBtn = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', style: _syncCode ? { color: 'var(--green)' } : {} });
+  syncBtn.appendChild(icon('cloud', 18));
+  topActions.appendChild(syncBtn);
+
+  topbar.appendChild(topActions);
+  document.body.appendChild(topbar);
+
   // Mobile bottom tab bar
   var existingMobileTabs = document.querySelector('.mobile-tabs');
   if (existingMobileTabs) existingMobileTabs.remove();
@@ -1006,7 +1054,7 @@ function render() {
     var tab = h('button', {
       className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
       onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
-    }, icon(mi.iconName, 22), h('span', null, mi.label));
+    }, icon(mi.iconName, 20), h('span', null, mi.label));
     mobileTabs.appendChild(tab);
   });
   document.body.appendChild(mobileTabs);
