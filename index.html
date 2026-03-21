@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Formation Power BI</title>
+<title>DAX Academy</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
@@ -484,8 +484,9 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   animation: splash-icon 0.8s 0.3s cubic-bezier(.175,.885,.32,1.275) both;
 }
 #splash span {
-  margin-top: 24px; font-size: 17px; font-weight: 300; letter-spacing: 1px;
-  color: var(--tx2); opacity: 0;
+  margin-top: 24px; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--tx); opacity: 0;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   animation: splash-text 0.7s 0.8s ease both;
 }
 #splash .splash-line {
@@ -696,8 +697,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
     background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 0.5px solid var(--bd); padding: 6px 0 0;
-    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 0.5px solid var(--bd); padding: 6px 0 4px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom));
     justify-content: space-around;
   }
   [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
@@ -713,10 +714,10 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.3</div><div class="splash-line"></div></div>
+<div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.4</div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=3.0.3"></script>
-<script src="app.js?v=3.0.3"></script>
+<script src="data.js?v=3.0.4"></script>
+<script src="app.js?v=3.0.4"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
