@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.3';
+const APP_VERSION = '3.0.4';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -995,7 +995,8 @@ function render() {
   var existingTopbar = document.querySelector('.mobile-topbar');
   if (existingTopbar) existingTopbar.remove();
   var topbar = h('div', { className: 'mobile-topbar' });
-  topbar.appendChild(h('div', { className: 'mobile-topbar-title' }, 'Power BI'));
+  var topTitle = h('div', { className: 'mobile-topbar-title', style: { cursor: 'pointer' }, onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } }, 'DAX Academy');
+  topbar.appendChild(topTitle);
   var topActions = h('div', { className: 'mobile-topbar-actions' });
 
   // Pomodoro in top bar
@@ -1397,7 +1398,7 @@ function renderHeader() {
 
   return h('div', { className: 'header' },
     h('div', { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-      h('h1', { style: { whiteSpace: 'nowrap', cursor: 'pointer' }, onClick: function() { S.chapterIdx = null; S.tab = 'home'; render(); } }, 'Formation Power BI'),
+      h('h1', { style: { whiteSpace: 'nowrap', cursor: 'pointer' }, onClick: function() { S.chapterIdx = null; S.tab = 'home'; render(); } }, 'DAX Academy'),
       h('span', { style: { fontSize: '9px', color: 'var(--tx3)', alignSelf: 'flex-end', marginBottom: '2px' } }, 'v' + APP_VERSION),
       xpSection
     ),
@@ -1432,7 +1433,7 @@ function renderSidebar() {
   logoIcon.appendChild(makeSidebarSvg('<path d="M3 4h12M3 9h12M3 14h12"/>'));
   var logo = h('div', { className: 'sidebar-logo' },
     logoIcon,
-    h('span', { className: 'sidebar-logo-text' }, 'Power BI'),
+    h('span', { className: 'sidebar-logo-text' }, 'DAX Academy'),
     h('span', { className: 'sidebar-version' }, 'v' + APP_VERSION)
   );
   sidebar.appendChild(logo);
