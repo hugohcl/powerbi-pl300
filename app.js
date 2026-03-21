@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '2.0.7';
+const APP_VERSION = '3.0.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -437,7 +437,7 @@ function showSyncModal() {
         type: 'text',
         placeholder: 'XXXX-XXXX',
         maxLength: 9,
-        style: { width: '100%', padding: '12px', fontSize: '18px', fontFamily: 'var(--mono)', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--bg)', color: 'var(--tx)', outline: 'none', marginBottom: '8px' },
+        style: { width: '100%', padding: '12px', fontSize: '18px', fontFamily: 'var(--mono)', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--surface)', color: 'var(--tx)', outline: 'none', marginBottom: '8px' },
         onInput: (e) => {
           var v = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, '');
           if (v.length > 4 && v.indexOf('-') === -1) v = v.slice(0, 4) + '-' + v.slice(4);
@@ -2357,7 +2357,7 @@ function renderInteractiveMission(im) {
           placeholder: 'Tape la fonction manquante...',
           value: inputVal,
           onInput: function(e) { S[stateKey + '_input'] = e.target.value; },
-          style: { flex: '1', padding: '8px 12px', fontSize: '14px', fontFamily: 'var(--mono)', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--bg)', color: 'var(--tx)' }
+          style: { flex: '1', padding: '8px 12px', fontSize: '14px', fontFamily: 'var(--mono)', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--surface)', color: 'var(--tx)' }
         }),
         h('button', {
           onClick: function() {
@@ -2698,6 +2698,9 @@ function renderQuiz() {
       quizBento.appendChild(card);
     });
     wrap.appendChild(quizBento);
+
+    // Exam strategy (collapsible)
+    wrap.appendChild(renderExamStrategy());
 
     // Chapter pills (for "Par chapitre")
     var chPills = h('div', { className: 'pills', style: { marginBottom: '24px' } });
