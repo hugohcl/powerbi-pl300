@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.0.1';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -990,6 +990,26 @@ function render() {
   else if (S.tab === 'ref') content.appendChild(renderReference());
   else if (S.tab === 'progress') content.appendChild(renderProgress());
   appEl.appendChild(content);
+
+  // Mobile bottom tab bar
+  var existingMobileTabs = document.querySelector('.mobile-tabs');
+  if (existingMobileTabs) existingMobileTabs.remove();
+  var mobileTabs = h('div', { className: 'mobile-tabs' });
+  var mobileItems = [
+    { id: 'home', label: 'Accueil', iconName: 'inbox' },
+    { id: 'formation', label: 'Formation', iconName: 'book' },
+    { id: 'quiz', label: 'Quiz', iconName: 'target' },
+    { id: 'flash', label: 'Flash', iconName: 'zap' },
+    { id: 'progress', label: 'Stats', iconName: 'award' }
+  ];
+  mobileItems.forEach(function(mi) {
+    var tab = h('button', {
+      className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
+      onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
+    }, icon(mi.iconName, 22), h('span', null, mi.label));
+    mobileTabs.appendChild(tab);
+  });
+  document.body.appendChild(mobileTabs);
 }
 
 // ─── SVG Icon helpers ───
@@ -1369,22 +1389,36 @@ function renderSidebar() {
   );
   sidebar.appendChild(logo);
 
-  // User card
+  // User card with XP bar + streak
   var lvl = getLevel(S.xp);
   var lvlData = LEVELS[lvl];
+  var nextLvl = lvl < LEVELS.length - 1 ? LEVELS[lvl + 1] : null;
+  var xpInLevel = S.xp - lvlData.xp;
+  var xpForNext = nextLvl ? (nextLvl.xp - lvlData.xp) : 1;
+  var xpPct = nextLvl ? Math.min(100, Math.round(xpInLevel / xpForNext * 100)) : 100;
   var userName = S.userName || 'Hugo';
   var initials = userName.charAt(0).toUpperCase();
-  var userCard = h('div', { className: 'sidebar-user' },
-    h('div', { className: 'sidebar-avatar' }, initials),
-    h('div', { className: 'sidebar-user-info' },
-      h('div', { className: 'sidebar-user-name' }, userName),
-      h('div', { className: 'sidebar-user-level' }, lvlData.name)
-    ),
-    h('div', { className: 'sidebar-xp' },
-      icon('xp', 12),
-      String(S.xp)
+  var userCard = h('div', { className: 'sidebar-user' });
+  userCard.appendChild(h('div', { className: 'sidebar-avatar' }, initials));
+  var userInfo = h('div', { className: 'sidebar-user-info' },
+    h('div', { className: 'sidebar-user-name' }, userName),
+    h('div', { className: 'sidebar-user-level' }, lvlData.name)
+  );
+  userCard.appendChild(userInfo);
+  var xpWrap = h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' } });
+  var xpLabel = h('div', { className: 'sidebar-xp' }, icon('xp', 12), ' ' + S.xp);
+  xpWrap.appendChild(xpLabel);
+  if (S.streak > 0) {
+    xpWrap.appendChild(h('div', { style: { fontSize: '11px', color: 'var(--orange)', display: 'flex', alignItems: 'center', gap: '2px' } }, icon('flame', 11), String(S.streak)));
+  }
+  userCard.appendChild(xpWrap);
+  // XP progress bar under user card
+  var xpBarRow = h('div', { style: { width: '100%', marginTop: '8px' } },
+    h('div', { style: { height: '3px', borderRadius: '2px', background: 'var(--bd)', overflow: 'hidden' } },
+      h('div', { style: { height: '100%', width: xpPct + '%', borderRadius: '2px', background: 'linear-gradient(90deg, var(--accent), var(--purple))' } })
     )
   );
+  userCard.appendChild(xpBarRow);
   sidebar.appendChild(userCard);
 
   // Nav items config
@@ -1433,12 +1467,63 @@ function renderSidebar() {
   searchBtn.appendChild(h('span', { className: 'sidebar-search-shortcut' }, '\u2318K'));
   sidebar.appendChild(searchBtn);
 
-  // Bottom actions (theme + music)
+  // Pomodoro timer
+  var pomWrap = h('div', { style: { padding: '0 4px', marginTop: '8px' } });
+  if (!S.pomodoro.active) {
+    var pomStartBtn = h('button', {
+      className: 'nav-item',
+      onClick: function() { startPomodoro(); },
+      style: { width: '100%' }
+    });
+    pomStartBtn.appendChild(icon('timer', 18));
+    pomStartBtn.appendChild(document.createTextNode('Focus'));
+    pomWrap.appendChild(pomStartBtn);
+  } else {
+    var pomM = Math.floor(S.pomodoro.timeLeft / 60);
+    var pomS = S.pomodoro.timeLeft % 60;
+    var modeLabels = { work: 'Focus', break: 'Pause', longBreak: 'Pause longue' };
+    var pomClass = S.pomodoro.mode === 'work' ? 'pomodoro-active' : 'pomodoro-break';
+    var pomBtn = h('button', {
+      className: 'nav-item ' + pomClass,
+      onClick: function() { S.pomodoro.dropdownOpen = !S.pomodoro.dropdownOpen; render(); },
+      style: { width: '100%', borderRadius: '10px', padding: '9px 12px', border: S.pomodoro.mode === 'work' ? '1px solid var(--red)' : '1px solid var(--green)', background: S.pomodoro.mode === 'work' ? 'rgba(255,59,48,0.08)' : 'rgba(52,199,89,0.08)' }
+    });
+    pomBtn.appendChild(icon('timer', 18));
+    pomBtn.appendChild(h('span', { id: 'pomodoro-time' }, pomM + ':' + String(pomS).padStart(2, '0') + ' ' + modeLabels[S.pomodoro.mode]));
+    pomWrap.appendChild(pomBtn);
+    if (S.pomodoro.dropdownOpen) {
+      var dropdown = h('div', { style: { padding: '12px', background: 'var(--surface)', borderRadius: '12px', border: '0.5px solid var(--bd)', marginTop: '6px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' } });
+      dropdown.appendChild(h('div', { style: { fontSize: '24px', fontWeight: '700', fontFamily: 'var(--mono)', textAlign: 'center', marginBottom: '4px' } }, pomM + ':' + String(pomS).padStart(2, '0')));
+      dropdown.appendChild(h('div', { style: { textAlign: 'center', fontSize: '12px', color: 'var(--tx3)', marginBottom: '10px' } }, 'Cycle ' + (S.pomodoro.cycle + 1) + '/4'));
+      var pomBtns = h('div', { style: { display: 'flex', gap: '4px', justifyContent: 'center' } });
+      pomBtns.appendChild(h('button', { onClick: function() { pausePomodoro(); }, style: { fontSize: '11px', padding: '4px 10px' } }, S.pomodoro.paused ? 'Reprendre' : 'Pause'));
+      pomBtns.appendChild(h('button', { onClick: function() { resetPomodoro(); }, style: { fontSize: '11px', padding: '4px 10px' } }, 'Reset'));
+      pomBtns.appendChild(h('button', { onClick: function() { stopPomodoro(); }, style: { fontSize: '11px', padding: '4px 10px', color: 'var(--red)', borderColor: 'var(--red)' } }, 'Stop'));
+      dropdown.appendChild(pomBtns);
+      pomWrap.appendChild(dropdown);
+    }
+  }
+  sidebar.appendChild(pomWrap);
+
+  // Bottom actions (theme, music, sync)
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var bottomActions = h('div', { className: 'sidebar-bottom-actions' });
+
+  // Theme toggle
   var themeBtn = h('button', { onClick: toggleTheme, title: isDark ? 'Mode clair' : 'Mode sombre' });
   themeBtn.appendChild(isDark ? icon('sun', 16) : icon('moon', 16));
   bottomActions.appendChild(themeBtn);
+
+  // Music button
+  var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Ambiance studieuse' });
+  musicBtn.appendChild(icon('music', 16));
+  bottomActions.appendChild(musicBtn);
+
+  // Sync button
+  var syncBtn = h('button', { onClick: function() { showSyncModal(); }, title: 'Synchroniser', style: _syncCode ? { color: 'var(--green)' } : {} });
+  syncBtn.appendChild(icon('cloud', 16));
+  bottomActions.appendChild(syncBtn);
+
   sidebar.appendChild(bottomActions);
 
   return sidebar;
