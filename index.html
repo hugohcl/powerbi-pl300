@@ -69,7 +69,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .sidebar-logo-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0071e3, #40a0ff); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sidebar-logo-text { font-size: 15px; font-weight: 700; color: var(--tx); letter-spacing: -0.01em; }
 .sidebar-version { font-size: 10px; color: var(--tx3); font-weight: 500; background: var(--bg3); padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
-.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 20px; border-radius: 12px; background: var(--bg3); }
+.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 20px; border-radius: 12px; background: var(--bg3); flex-wrap: wrap; }
 .sidebar-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
 .sidebar-user-info { flex: 1; min-width: 0; }
 .sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--tx); }
@@ -651,22 +651,41 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .bento-stat { grid-column: span 6; }
   .top-bento, .bottom-bento, .domain-grid { grid-template-columns: 1fr; }
 }
+/* Mobile bottom tab bar */
+.mobile-tabs { display: none; }
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .app { margin-left: 0; padding: 16px; }
+  .app { margin-left: 0; padding: 16px 16px 90px; }
   .page-title { font-size: 28px; }
   .chapters-grid { grid-template-columns: 1fr; }
   .quiz-bento { grid-template-columns: 1fr 1fr; }
   .exam-card-apple { flex-direction: column; text-align: center; }
   .exam-card-apple .exam-meta { justify-content: center; flex-wrap: wrap; }
+  .mobile-tabs {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--bd); padding: 6px 0;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    justify-content: space-around;
+  }
+  [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
+  .mobile-tab {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 4px 8px; font-size: 9px; font-weight: 500; color: var(--tx3);
+    background: none; border: none; cursor: pointer; min-height: 44px;
+    justify-content: center; border-radius: 0;
+  }
+  .mobile-tab.active { color: var(--accent); }
+  .mobile-tab svg { width: 22px; height: 22px; }
 }
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-line"></div></div>
+<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.1</div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=3.0.0"></script>
-<script src="app.js?v=3.0.0"></script>
+<script src="data.js?v=3.0.1"></script>
+<script src="app.js?v=3.0.1"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
