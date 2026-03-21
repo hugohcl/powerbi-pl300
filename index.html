@@ -189,14 +189,16 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .app { padding: 10px 10px 80px; }
 
   /* Header compact */
-  .header { padding: 6px 0; flex-wrap: wrap; gap: 4px; }
+  .header { padding: 4px 0; flex-wrap: wrap; gap: 2px; }
   .header h1 { font-size: 13px; }
   .header-xp { gap: 4px; }
   .header-xp .level-badge { font-size: 10px; }
   .header-xp .xp-bar { max-width: 60px; }
+  .header-right button, .header-right .theme-btn { min-height: 34px; padding: 2px 10px; }
+  .header-right .pomodoro-btn { padding: 2px 8px; }
 
   /* Bottom tab bar */
-  .tabs { position: fixed; bottom: 50px; left: 0; right: 0; z-index: 200; background: var(--bg); border-top: 1px solid var(--bd); border-bottom: none; margin: 0; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,.08); }
+  .tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: var(--bg); border-top: 1px solid var(--bd); border-bottom: none; margin: 0; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,.08); }
   .tab { padding: 6px 4px 4px; font-size: 10px; flex: 1; text-align: center; border-bottom: none; border-top: none; display: flex; align-items: center; justify-content: center; color: var(--tx3); }
   .tab.active { border-bottom: none; color: var(--accent); }
   .tab-inner { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -286,7 +288,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   @media (max-width: 600px) {
     .tabs { padding-bottom: env(safe-area-inset-bottom); }
-    .app { padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+    .app { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   }
 }
 
@@ -491,8 +493,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="data.js?v=2.0.1"></script>
-<script src="app.js?v=2.0.1"></script>
+<script src="data.js?v=2.0.2"></script>
+<script src="app.js?v=2.0.2"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
