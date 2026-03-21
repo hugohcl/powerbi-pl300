@@ -136,4 +136,4 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - **TOUJOURS rebaser sur master avant chaque push** — après un squash-merge, la branche locale diverge. Faire systématiquement `git fetch origin master && git reset --soft origin/master && git commit && git push --force-with-lease` pour garantir un commit propre basé sur le dernier master
 
 ## Version actuelle
-v3.0.6
+v3.0.7
