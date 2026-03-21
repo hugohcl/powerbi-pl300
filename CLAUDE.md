@@ -133,6 +133,7 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - Ne pas créer de missions qui répètent mot pour mot ce que la section theory/deep explique déjà — les missions doivent ajouter un défi pratique
 - Les accents français sont obligatoires partout (corrigé, résultat, sélectionne, réponse, etc.)
 - Réduire les blocs colorés : le contenu principal doit être en texte brut, pas dans des box
+- **TOUJOURS rebaser sur master avant chaque push** — après un squash-merge, la branche locale diverge. Faire systématiquement `git fetch origin master && git reset --soft origin/master && git commit && git push --force-with-lease` pour garantir un commit propre basé sur le dernier master
 
 ## Version actuelle
-v1.3.11
+v2.0.2
