@@ -656,7 +656,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .mobile-topbar, .mobile-tabs { display: none; }
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .app { margin-left: 0; padding: 64px 16px 80px; }
+  .app { margin-left: 0; padding: 64px 16px 90px; }
   .page-title { font-size: 28px; }
   .chapters-grid { grid-template-columns: 1fr; }
   .quiz-bento { grid-template-columns: 1fr 1fr; }
@@ -673,7 +673,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     align-items: center; justify-content: space-between;
   }
   [data-theme="dark"] .mobile-topbar { background: rgba(28,28,30,0.88); }
-  .mobile-topbar-title { font-size: 17px; font-weight: 700; color: var(--tx); }
+  .mobile-topbar-logo { width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: transform 0.15s; }
+  .mobile-topbar-logo:active { transform: scale(0.9); }
   .mobile-topbar-actions { display: flex; gap: 6px; align-items: center; }
   .mobile-topbar-actions button {
     width: 40px; height: 40px; border: none; background: none; cursor: pointer;
@@ -697,8 +698,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
     background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 0.5px solid var(--bd); padding: 6px 0 4px;
-    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+    border-top: 0.5px solid var(--bd); padding: 6px 0 6px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
     justify-content: space-around;
   }
   [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
@@ -714,10 +715,10 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.4</div><div class="splash-line"></div></div>
+<div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.5</div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=3.0.4"></script>
-<script src="app.js?v=3.0.4"></script>
+<script src="data.js?v=3.0.5"></script>
+<script src="app.js?v=3.0.5"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.4';
+const APP_VERSION = '3.0.5';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -995,8 +995,8 @@ function render() {
   var existingTopbar = document.querySelector('.mobile-topbar');
   if (existingTopbar) existingTopbar.remove();
   var topbar = h('div', { className: 'mobile-topbar' });
-  var topTitle = h('div', { className: 'mobile-topbar-title', style: { cursor: 'pointer' }, onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } }, 'DAX Academy');
-  topbar.appendChild(topTitle);
+  var topLogo = h('img', { className: 'mobile-topbar-logo', src: 'icon.png', alt: 'DAX Academy', onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } });
+  topbar.appendChild(topLogo);
   var topActions = h('div', { className: 'mobile-topbar-actions' });
 
   // Pomodoro in top bar
@@ -4876,6 +4876,35 @@ S.searchOpen = false;
 S.searchQuery = '';
 load();
 initTheme();
+
+// ─── Swipe between tabs (mobile) ───
+(function() {
+  var tabOrder = ['home', 'formation', 'quiz', 'flash', 'progress'];
+  var startX = 0, startY = 0, swiping = false;
+  document.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (!swiping) return;
+    swiping = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    var idx = tabOrder.indexOf(S.tab);
+    if (idx === -1) return;
+    if (dx < 0 && idx < tabOrder.length - 1) {
+      S.tab = tabOrder[idx + 1];
+      if (S.tab === 'formation') S.chapterIdx = null;
+      render();
+    } else if (dx > 0 && idx > 0) {
+      S.tab = tabOrder[idx - 1];
+      if (S.tab === 'formation') S.chapterIdx = null;
+      render();
+    }
+  }, { passive: true });
+})();
 // Default dark mode if no preference saved
 if (!localStorage.getItem('pbi-theme')) {
   document.documentElement.setAttribute('data-theme', 'dark');
