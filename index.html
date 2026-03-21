@@ -432,12 +432,67 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
+
+/* Daily Mix CTA */
+.daily-mix-cta { padding: 20px 24px; border-radius: var(--radius-lg); border: 2px solid var(--accent); background: var(--accent-bg); margin-bottom: 16px; }
+[data-theme="dark"] .daily-mix-cta { border-color: var(--accent); background: rgba(46,117,182,.08); }
+
+/* Daily Mix complete */
+.daily-mix-complete { text-align: center; padding: 48px 24px; }
+
+/* Weekly Challenge */
+.weekly-challenge-card { padding: 16px 20px; border-radius: var(--radius-lg); border: 1px solid var(--bd); background: var(--bg); margin-bottom: 16px; }
+.weekly-challenge-card.completed { border-color: var(--green); background: var(--green-bg); }
+
+/* Skill Tree */
+.skill-tree { padding: 20px 24px; border-radius: var(--radius-lg); border: 1px solid var(--bd); background: var(--bg); margin-bottom: 16px; }
+.skill-tree-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 8px; position: relative; }
+.skill-tree-row::before { content: ''; position: absolute; top: -8px; left: 50%; width: 2px; height: 8px; background: var(--bd); }
+.skill-tree-row:first-child::before { display: none; }
+.skill-node { flex: 1; max-width: 160px; padding: 12px; border-radius: var(--radius); border: 1px solid var(--bd); background: var(--bg2); cursor: pointer; text-align: center; transition: all var(--transition); }
+.skill-node:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.skill-node.done { border-color: var(--green); background: var(--green-bg); }
+.skill-node.locked { opacity: .4; cursor: not-allowed; }
+.skill-node.locked:hover { transform: none; border-color: var(--bd); box-shadow: none; }
+.skill-node-num { font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.skill-node.done .skill-node-num { color: var(--green); }
+.skill-node-title { font-size: 11px; font-weight: 500; color: var(--tx2); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skill-node-bar { height: 3px; border-radius: 2px; background: var(--bg3); overflow: hidden; }
+.skill-node-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width .3s; }
+.skill-node-fill.green { background: var(--green); }
+.skill-node-lock { margin-top: 4px; color: var(--tx3); }
+
+/* Celebration overlay */
+.celebration-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.7); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
+.celebration-card { background: var(--bg); border-radius: var(--radius-lg); padding: 48px 40px; max-width: 420px; width: 90%; text-align: center; z-index: 2; position: relative; }
+.celebration-icon { font-size: 48px; margin-bottom: 16px; color: var(--accent); }
+
+/* Confetti */
+.confetti-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 1; }
+.confetti-piece { position: absolute; top: -10px; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 3s ease-in forwards; }
+@keyframes confettiFall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Chapter locked */
+.ch-locked { opacity: .45; cursor: not-allowed; }
+.ch-locked:hover { transform: none; box-shadow: none; }
+
+/* Responsive skill-tree */
+@media (max-width: 600px) {
+  .skill-tree-row { gap: 6px; }
+  .skill-node { padding: 8px 6px; }
+  .skill-node-num { font-size: 14px; }
+  .skill-node-title { font-size: 10px; }
+  .daily-mix-cta { padding: 14px 16px; }
+}
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="data.js?v=1.3.16"></script>
-<script src="app.js?v=1.3.16"></script>
+<script src="data.js?v=2.0.1"></script>
+<script src="app.js?v=2.0.1"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
