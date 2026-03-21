@@ -489,12 +489,31 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .skill-node-title { font-size: 10px; }
   .daily-mix-cta { padding: 14px 16px; }
 }
+/* Splash Screen */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.4s ease;
+}
+#splash img {
+  width: 80px; height: 80px; border-radius: 20px;
+  animation: splash-in 0.6s ease both;
+}
+#splash span {
+  margin-top: 20px; font-size: 17px; font-weight: 300; letter-spacing: 0.5px;
+  color: var(--tx2);
+  animation: splash-in 0.6s 0.2s ease both;
+}
+#splash.hide { opacity: 0; pointer-events: none; }
+@keyframes splash-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 </style>
 </head>
 <body>
+<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=2.0.4"></script>
-<script src="app.js?v=2.0.4"></script>
+<script src="data.js?v=2.0.5"></script>
+<script src="app.js?v=2.0.5"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
