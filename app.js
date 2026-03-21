@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '1.3.16';
+const APP_VERSION = '2.0.1';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -176,6 +176,26 @@ const S = {
   // Interview tab
   interviewFilter: 'all',
   interviewReviewed: {},
+  // Daily Mix
+  dailyMixActive: false,
+  dailyMixSteps: [],
+  dailyMixIdx: 0,
+  dailyMixScore: 0,
+  dailyMixTotal: 0,
+  dailyMixFlipped: false,
+  dailyMixSel: null,
+  dailyMixShown: false,
+  // Streak enhanced
+  streakFreezes: 1,
+  dailyGoal: 50, // XP per day
+  // Weekly challenge
+  weeklyChallenge: null,
+  weeklyChallengeDate: null,
+  // Flashcard QCM mode
+  fcQuizMode: true,
+  fcQuizOptions: [],
+  fcQuizSel: null,
+  fcQuizShown: false,
   // Pomodoro
   pomodoro: {
     active: false,
@@ -199,7 +219,7 @@ let _syncDebounceTimer = null;
 
 // ─── Persistence ───
 function getSaveData() {
-  return { missions: S.missions, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed };
+  return { missions: S.missions, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog };
 }
 
 function save() {
@@ -235,6 +255,11 @@ function applyData(d) {
   S.lastActiveDate = d.lastActiveDate || null;
   S.xpHistory = d.xpHistory || [];
   S.interviewReviewed = d.interviewReviewed || {};
+  S.streakFreezes = d.streakFreezes != null ? d.streakFreezes : 1;
+  S.dailyGoal = d.dailyGoal || 50;
+  S.weeklyChallenge = d.weeklyChallenge || null;
+  S.weeklyChallengeDate = d.weeklyChallengeDate || null;
+  S.weeklyQuizLog = d.weeklyQuizLog || [];
 }
 
 function load() {
@@ -533,6 +558,15 @@ function shuf(a) {
   return b;
 }
 function qHash(q) { return q.q.slice(0, 40); }
+function trackQuizAnswer() {
+  var today = new Date().toISOString().slice(0, 10);
+  if (!S.weeklyQuizLog) S.weeklyQuizLog = [];
+  var last = S.weeklyQuizLog.length > 0 ? S.weeklyQuizLog[S.weeklyQuizLog.length - 1] : null;
+  if (last && last.date === today) last.count++;
+  else S.weeklyQuizLog.push({ date: today, count: 1 });
+  // Keep 14 days max
+  if (S.weeklyQuizLog.length > 14) S.weeklyQuizLog = S.weeklyQuizLog.slice(-14);
+}
 function $(sel) { return document.querySelector(sel); }
 function getTotalMissions() { return CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0); }
 
@@ -551,6 +585,362 @@ function toggleTheme() {
     localStorage.setItem('pbi-theme', 'dark');
   }
   render();
+}
+
+// ─── Daily Mix ───
+function composeDailyMix() {
+  var steps = [];
+  // 1. Add due flashcards (up to 3)
+  var due = getDueCards();
+  var fcPick = shuf(due).slice(0, 3);
+  fcPick.forEach(function(idx) {
+    steps.push({ type: 'flashcard', idx: idx, card: FLASHCARDS[idx] });
+  });
+  // 2. Add weak quiz questions (up to 5)
+  var weakQs = QUIZ.filter(function(q) {
+    var st = S.quizStats[qHash(q)];
+    return st && st.wrong > st.right;
+  });
+  if (weakQs.length < 5) {
+    // Fill with random unanswered questions
+    var unanswered = QUIZ.filter(function(q) { return !S.quizStats[qHash(q)]; });
+    weakQs = weakQs.concat(shuf(unanswered).slice(0, 5 - weakQs.length));
+  }
+  shuf(weakQs).slice(0, 5).forEach(function(q) {
+    steps.push({ type: 'quiz', question: q });
+  });
+  // 3. Add next mission from current chapter (1)
+  var prog = getProgress();
+  var incompleteCh = prog.chProgress.find(function(c) { return c.pct < 100; });
+  if (incompleteCh) {
+    var ch = CHAPTERS[incompleteCh.ch - 1];
+    for (var i = ch.missions[0]; i <= ch.missions[1]; i++) {
+      if (!S.missions[i]) {
+        var mission = MISSIONS.find(function(m) { return m.id === i; });
+        if (mission) { steps.push({ type: 'mission', mission: mission }); break; }
+      }
+    }
+  }
+  return shuf(steps);
+}
+
+function startDailyMix() {
+  S.dailyMixSteps = composeDailyMix();
+  S.dailyMixIdx = 0;
+  S.dailyMixScore = 0;
+  S.dailyMixTotal = S.dailyMixSteps.length;
+  S.dailyMixActive = true;
+  S.dailyMixFlipped = false;
+  S.dailyMixSel = null;
+  S.dailyMixShown = false;
+  render();
+}
+
+function renderDailyMix() {
+  var wrap = h('div', { className: 'fade-in' });
+  var steps = S.dailyMixSteps;
+  if (S.dailyMixIdx >= steps.length) {
+    // Session complete
+    var pct = S.dailyMixTotal > 0 ? Math.round(S.dailyMixScore / S.dailyMixTotal * 100) : 0;
+    wrap.appendChild(h('div', { className: 'daily-mix-complete' },
+      h('div', { style: { fontSize: '48px', marginBottom: '16px' } }, icon('trophy', 48)),
+      h('h2', { style: { fontSize: '22px', marginBottom: '8px' } }, 'Session terminee !'),
+      h('div', { style: { fontSize: '32px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' } }, S.dailyMixScore + '/' + S.dailyMixTotal),
+      h('div', { style: { fontSize: '14px', color: 'var(--tx2)', marginBottom: '24px' } },
+        pct >= 80 ? 'Excellent travail !' : pct >= 50 ? 'Bien joue, continue !' : 'Continue de progresser !'),
+      h('button', {
+        onClick: function() { S.dailyMixActive = false; render(); },
+        style: { padding: '12px 32px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+      }, 'Retour')
+    ));
+    addXP(20, 'Daily Mix');
+    return wrap;
+  }
+
+  var step = steps[S.dailyMixIdx];
+  // Progress bar
+  wrap.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' } },
+    h('button', { onClick: function() { S.dailyMixActive = false; render(); }, style: { fontSize: '13px', padding: '4px 10px' } }, '← Quitter'),
+    h('div', { style: { flex: '1' } },
+      h('div', { className: 'exam-bar' },
+        h('div', { className: 'exam-bar-fill', style: { width: Math.round((S.dailyMixIdx / steps.length) * 100) + '%' } })
+      )
+    ),
+    h('span', { style: { fontSize: '13px', color: 'var(--tx3)', whiteSpace: 'nowrap' } }, (S.dailyMixIdx + 1) + '/' + steps.length)
+  ));
+
+  // Step type badge
+  var typeLabels = { flashcard: 'Flashcard', quiz: 'Quiz', mission: 'Mission' };
+  var typeColors = { flashcard: '#F0AD4E', quiz: 'var(--purple)', mission: 'var(--accent)' };
+  wrap.appendChild(h('div', { style: { marginBottom: '12px' } },
+    h('span', { className: 'badge', style: { background: typeColors[step.type] + '20', color: typeColors[step.type] } }, typeLabels[step.type])
+  ));
+
+  if (step.type === 'flashcard') {
+    var card = step.card;
+    var cardEl = h('div', {
+      className: 'flashcard' + (S.dailyMixFlipped ? ' flashcard-back' : ''),
+      style: { background: S.dailyMixFlipped ? 'var(--bg2)' : 'var(--bg)' },
+      onClick: function() { S.dailyMixFlipped = !S.dailyMixFlipped; render(); }
+    },
+      h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
+        h('div', { className: 'flashcard-label' }, S.dailyMixFlipped ? 'Reponse' : 'Question'),
+        h('div', { className: 'flashcard-text' }, S.dailyMixFlipped ? card.b : card.f)
+      )
+    );
+    wrap.appendChild(cardEl);
+    if (S.dailyMixFlipped) {
+      wrap.appendChild(h('div', { className: 'flash-actions' },
+        h('button', { className: 'review', onClick: function() {
+          sm2Update(step.idx, 1); S.dailyMixFlipped = false; S.dailyMixIdx++; render();
+        }}, 'A revoir'),
+        h('button', { onClick: function() {
+          sm2Update(step.idx, 3); S.dailyMixScore++; S.dailyMixFlipped = false; S.dailyMixIdx++; render();
+        }, style: { borderColor: '#F0AD4E', color: '#F0AD4E' } }, 'Difficile'),
+        h('button', { className: 'know', onClick: function() {
+          sm2Update(step.idx, 5); S.dailyMixScore++; S.dailyMixFlipped = false; S.dailyMixIdx++; render();
+        }}, 'Facile')
+      ));
+    }
+  } else if (step.type === 'quiz') {
+    var q = step.question;
+    wrap.appendChild(h('p', { className: 'quiz-q' }, q.q));
+    var opts = h('div', { className: 'quiz-options' });
+    q.o.forEach(function(o, i) {
+      var cls = 'quiz-opt';
+      if (S.dailyMixShown && i === q.a) cls += ' correct';
+      else if (S.dailyMixShown && i === S.dailyMixSel && i !== q.a) cls += ' wrong';
+      opts.appendChild(h('button', {
+        className: cls,
+        onClick: function() {
+          if (S.dailyMixShown) return;
+          S.dailyMixSel = i; S.dailyMixShown = true;
+          if (i === q.a) S.dailyMixScore++;
+          var hash = qHash(q);
+          if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
+          S.quizStats[hash][i === q.a ? 'right' : 'wrong']++;
+          trackQuizAnswer();
+          addXP(i === q.a ? XP_REWARDS.quiz_correct : XP_REWARDS.quiz_wrong, 'Quiz');
+          save(); render();
+        }
+      }, h('span', { className: 'letter' }, String.fromCharCode(65 + i)), o));
+    });
+    wrap.appendChild(opts);
+    if (S.dailyMixShown && q.w) {
+      wrap.appendChild(h('div', { className: 'quiz-explain' }, q.w));
+    }
+    if (S.dailyMixShown) {
+      wrap.appendChild(h('button', { className: 'quiz-next', onClick: function() {
+        S.dailyMixShown = false; S.dailyMixSel = null; S.dailyMixIdx++; render();
+      }}, 'Suivante →'));
+    }
+  } else if (step.type === 'mission') {
+    var m = step.mission;
+    wrap.appendChild(h('div', { className: 'mission' },
+      h('div', { className: 'mission-header' },
+        h('span', { className: 'mission-num' }, '#' + m.id),
+        m.title ? h('span', { style: { fontSize: '13px', fontWeight: '500' } }, m.title) : null
+      ),
+      h('div', { className: 'mission-text' }, m.text),
+      h('div', { style: { marginTop: '12px', display: 'flex', gap: '8px' } },
+        h('button', {
+          onClick: function() {
+            if (!S.missions[m.id]) { S.missions[m.id] = true; addXP(XP_REWARDS.mission, 'Mission'); S.dailyMixScore++; }
+            S.dailyMixIdx++; save(); render();
+          },
+          style: { background: 'var(--green-bg)', color: 'var(--green)', borderColor: 'var(--green)' }
+        }, 'Fait !'),
+        h('button', { onClick: function() { S.dailyMixIdx++; render(); }, style: { color: 'var(--tx3)' } }, 'Passer')
+      )
+    ));
+  }
+  return wrap;
+}
+
+// ─── Weekly Challenge ───
+function getWeeklyChallenge() {
+  var today = new Date();
+  var monday = new Date(today);
+  monday.setDate(today.getDate() - (today.getDay() || 7) + 1);
+  var weekId = monday.toISOString().slice(0, 10);
+  if (S.weeklyChallengeDate === weekId && S.weeklyChallenge) return S.weeklyChallenge;
+  // Generate new challenge
+  var challenges = [
+    { id: 'flash10', title: 'Maitre des cartes', desc: 'Maitrise 10 nouvelles flashcards cette semaine', target: 10, metric: 'flashcards', icon: 'zap', xpBonus: 100 },
+    { id: 'quiz30', title: 'Machine a quiz', desc: 'Reponds a 30 questions de quiz', target: 30, metric: 'quiz_answers', icon: 'target', xpBonus: 80 },
+    { id: 'mission8', title: 'Completeur', desc: 'Termine 8 missions cette semaine', target: 8, metric: 'missions', icon: 'check', xpBonus: 120 },
+    { id: 'streak5', title: 'Regulier', desc: 'Maintiens un streak de 5+ jours', target: 5, metric: 'streak', icon: 'flame', xpBonus: 75 },
+    { id: 'dax5', title: 'DAX Warrior', desc: 'Complete 5 exercices DAX', target: 5, metric: 'dax_exercises', icon: 'award', xpBonus: 100 },
+    { id: 'xp200', title: 'Grind XP', desc: 'Gagne 200 XP cette semaine', target: 200, metric: 'weekly_xp', icon: 'xp', xpBonus: 60 }
+  ];
+  var challenge = challenges[Math.floor(Math.random() * challenges.length)];
+  challenge.weekId = weekId;
+  challenge.completed = false;
+  S.weeklyChallenge = challenge;
+  S.weeklyChallengeDate = weekId;
+  save();
+  return challenge;
+}
+
+function getWeeklyChallengeProgress(challenge) {
+  if (!challenge) return 0;
+  var weekStart = new Date(challenge.weekId);
+  var m = challenge.metric;
+  if (m === 'streak') return Math.min(S.streak, challenge.target);
+  if (m === 'weekly_xp') {
+    return S.xpHistory.filter(function(e) { return e.date >= challenge.weekId; }).reduce(function(s, e) { return s + e.xp; }, 0);
+  }
+  // For quiz_answers, count answers logged this week
+  if (m === 'quiz_answers') {
+    var weeklyAnswers = 0;
+    if (S.weeklyQuizLog) {
+      S.weeklyQuizLog.forEach(function(entry) { if (entry.date >= challenge.weekId) weeklyAnswers += entry.count; });
+    }
+    return Math.min(weeklyAnswers, challenge.target);
+  }
+  if (m === 'flashcards') {
+    return FLASHCARDS.filter(function(_, i) { return sm2IsMastered(i); }).length;
+  }
+  if (m === 'missions') {
+    return Object.values(S.missions).filter(Boolean).length;
+  }
+  if (m === 'dax_exercises') {
+    return Object.keys(S.exCompleted).length;
+  }
+  return 0;
+}
+
+// ─── Ghost Leaderboard ───
+function getGhostProfiles() {
+  var totalMissions = getTotalMissions();
+  var myProgress = Object.values(S.missions).filter(Boolean).length / totalMissions;
+  var myXP = S.xp;
+  return [
+    { name: 'Marie L.', role: 'Reconversion DA', xp: Math.round(myXP * 1.3 + 200), streak: 12, level: 4, avatar: 'M' },
+    { name: 'Alex T.', role: 'Junior Analyst', xp: Math.round(myXP * 0.85 + 100), streak: 5, level: 3, avatar: 'A' },
+    { name: 'Toi', role: '', xp: myXP, streak: S.streak, level: S.level, avatar: '★', isUser: true },
+    { name: 'Karim B.', role: 'Etudiant M2', xp: Math.round(myXP * 0.65 + 50), streak: 3, level: 2, avatar: 'K' },
+    { name: 'Julie R.', role: 'Comptable', xp: Math.round(myXP * 0.4), streak: 1, level: 1, avatar: 'J' }
+  ].sort(function(a, b) { return b.xp - a.xp; });
+}
+
+// ─── Narrative Messages ───
+function getNarrativeMessages() {
+  var msgs = [];
+  // Weekly XP comparison
+  var today = new Date();
+  var thisWeekXP = 0, lastWeekXP = 0;
+  S.xpHistory.forEach(function(e) {
+    var d = new Date(e.date);
+    var daysDiff = Math.round((today - d) / 86400000);
+    if (daysDiff < 7) thisWeekXP += e.xp;
+    else if (daysDiff < 14) lastWeekXP += e.xp;
+  });
+  if (lastWeekXP > 0 && thisWeekXP > lastWeekXP) {
+    msgs.push({ text: 'Semaine en feu ! +' + thisWeekXP + ' XP vs ' + lastWeekXP + ' la semaine derniere', type: 'positive' });
+  } else if (lastWeekXP > 0 && thisWeekXP < lastWeekXP * 0.5) {
+    msgs.push({ text: 'Ralentissement detecte. ' + thisWeekXP + ' XP cette semaine vs ' + lastWeekXP + ' la semaine derniere', type: 'warning' });
+  }
+  // Flashcard mastery
+  var mastered = FLASHCARDS.filter(function(_, i) { return sm2IsMastered(i); }).length;
+  var pct = Math.round(mastered / FLASHCARDS.length * 100);
+  if (pct > 0 && pct < 100) {
+    msgs.push({ text: 'Tu maitrises ' + pct + '% des flashcards (' + mastered + '/' + FLASHCARDS.length + ')', type: 'info' });
+  }
+  // Streak record
+  if (S.streak >= 7) {
+    msgs.push({ text: 'Streak de ' + S.streak + ' jours ! Continue comme ca.', type: 'positive' });
+  }
+  // Exam progress
+  if (S.examHistory.length >= 2) {
+    var scores = S.examHistory.map(function(e) { return e.score; });
+    var lastScore = scores[scores.length - 1];
+    var prevScore = scores[scores.length - 2];
+    if (lastScore > prevScore) {
+      msgs.push({ text: 'Score exam en hausse : ' + prevScore + ' → ' + lastScore + '/1000', type: 'positive' });
+    }
+  }
+  // Daily goal
+  var todayXP = 0;
+  var todayStr = today.toISOString().slice(0, 10);
+  var todayEntry = S.xpHistory.find(function(e) { return e.date === todayStr; });
+  if (todayEntry) todayXP = todayEntry.xp;
+  if (todayXP >= S.dailyGoal) {
+    msgs.push({ text: 'Objectif du jour atteint ! (' + todayXP + '/' + S.dailyGoal + ' XP)', type: 'positive' });
+  } else {
+    msgs.push({ text: 'Objectif du jour : ' + todayXP + '/' + S.dailyGoal + ' XP', type: 'info' });
+  }
+  return msgs;
+}
+
+// ─── Celebration overlay ───
+function showCelebration(title, subtitle, type) {
+  var overlay = h('div', { className: 'celebration-overlay', id: 'celebration' });
+  var particles = h('div', { className: 'confetti-container' });
+  var colors = ['#2E75B6', '#1D9E75', '#F0AD4E', '#534AB7', '#D85A30', '#ffc233'];
+  for (var i = 0; i < 50; i++) {
+    var p = h('div', { className: 'confetti-piece', style: {
+      left: Math.random() * 100 + '%',
+      animationDelay: Math.random() * 2 + 's',
+      animationDuration: (2 + Math.random() * 2) + 's',
+      background: colors[Math.floor(Math.random() * colors.length)],
+      transform: 'rotate(' + Math.random() * 360 + 'deg)'
+    }});
+    particles.appendChild(p);
+  }
+  overlay.appendChild(particles);
+  var iconName = type === 'badge' ? 'award' : type === 'level' ? 'trophy' : 'xp';
+  var card = h('div', { className: 'celebration-card' },
+    h('div', { className: 'celebration-icon badge-unlock' }, icon(iconName, 48)),
+    h('h2', { style: { fontSize: '24px', fontWeight: '700', marginBottom: '8px' } }, title),
+    h('div', { style: { fontSize: '15px', color: 'var(--tx2)', marginBottom: '24px' } }, subtitle),
+    h('button', {
+      onClick: function() { var el = document.getElementById('celebration'); if (el) el.remove(); },
+      style: { padding: '12px 32px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+    }, 'Continuer')
+  );
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
+// ─── Skill Tree ───
+function getChapterPrereqs() {
+  // Define prerequisite relationships: ch -> [prerequisite chapters]
+  return {
+    1: [],
+    2: [1],
+    3: [1],
+    4: [3],
+    5: [4],
+    6: [4, 5],
+    7: [1]
+  };
+}
+function isChapterUnlocked(chId) {
+  var prereqs = getChapterPrereqs();
+  var reqs = prereqs[chId] || [];
+  if (reqs.length === 0) return true;
+  return reqs.every(function(reqId) {
+    var ch = CHAPTERS[reqId - 1];
+    if (!ch) return true;
+    var done = 0;
+    for (var i = ch.missions[0]; i <= ch.missions[1]; i++) { if (S.missions[i]) done++; }
+    var total = ch.missions[1] - ch.missions[0] + 1;
+    return done / total >= 0.5; // Unlock when 50% of prereq is done
+  });
+}
+
+// ─── Flashcard QCM helpers ───
+function generateFCQuizOptions(correctIdx) {
+  var correct = FLASHCARDS[correctIdx];
+  var distractors = FLASHCARDS.filter(function(fc, i) { return i !== correctIdx && fc.c === correct.c; });
+  if (distractors.length < 3) {
+    distractors = FLASHCARDS.filter(function(fc, i) { return i !== correctIdx; });
+  }
+  var picked = shuf(distractors).slice(0, 3).map(function(fc) { return fc.b; });
+  var options = shuf(picked.concat([correct.b]));
+  var correctOptionIdx = options.indexOf(correct.b);
+  return { options: options, correct: correctOptionIdx };
 }
 
 // ─── Render ───
@@ -577,6 +967,12 @@ function render() {
     if (S.searchQuery && S.searchQuery.length >= 2) {
       app.appendChild(renderSearch(S.searchQuery));
     }
+    return;
+  }
+
+  // Daily Mix mode
+  if (S.dailyMixActive) {
+    app.appendChild(renderDailyMix());
     return;
   }
 
@@ -697,7 +1093,7 @@ function addXP(amount, source) {
   var newLvl = getLevel(S.xp);
   if (newLvl > S.level) {
     S.level = newLvl;
-    showNotification('Niveau ' + LEVELS[newLvl].name + ' atteint !', 'level');
+    showCelebration('Niveau ' + LEVELS[newLvl].name + ' !', 'Tu as atteint le niveau ' + (newLvl + 1) + '/' + LEVELS.length, 'level');
   }
   // Show XP notif
   showNotification('+' + amount + ' XP' + (source ? ' (' + source + ')' : ''), 'xp');
@@ -713,8 +1109,16 @@ function updateStreak() {
     var last = new Date(S.lastActiveDate);
     var now = new Date(today);
     var diff = Math.round((now - last) / 86400000);
-    if (diff === 1) S.streak++;
-    else if (diff > 1) S.streak = 1;
+    if (diff === 1) {
+      S.streak++;
+    } else if (diff === 2 && S.streakFreezes > 0 && S.streak > 0) {
+      // Streak freeze: preserve streak but consume a freeze
+      S.streakFreezes--;
+      S.streak++;
+      showNotification('Streak freeze utilise ! Streak sauvegarde.', 'xp');
+    } else if (diff > 1) {
+      S.streak = 1;
+    }
   } else {
     S.streak = 1;
   }
@@ -771,7 +1175,7 @@ function checkBadges() {
     }
     if (earned) {
       S.badges.push(b.id);
-      showNotification('Badge : ' + b.name + ' !', 'badge-notif');
+      showCelebration('Badge debloque !', b.name + ' — ' + b.desc, 'badge');
     }
   });
 }
@@ -1179,21 +1583,116 @@ function renderFormation() {
 
 function renderChapterList() {
   const wrap = h('div', null);
+
+  // ── Daily Mix CTA (primary action) ──
+  var todayXP = 0;
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var todayEntry = S.xpHistory.find(function(e) { return e.date === todayStr; });
+  if (todayEntry) todayXP = todayEntry.xp;
+  var goalPct = Math.min(100, Math.round(todayXP / S.dailyGoal * 100));
+
+  var dailyMixCard = h('div', { className: 'daily-mix-cta' },
+    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+      h('div', null,
+        h('div', { style: { fontSize: '16px', fontWeight: '700', marginBottom: '4px' } }, 'Session du jour'),
+        h('div', { style: { fontSize: '13px', color: 'var(--tx2)' } },
+          getDueCards().length + ' flashcards + quiz cibles + mission — 10 min')
+      ),
+      h('button', {
+        onClick: startDailyMix,
+        style: { padding: '12px 24px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)', whiteSpace: 'nowrap' }
+      }, 'Commencer')
+    ),
+    h('div', { style: { marginTop: '10px' } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--tx3)', marginBottom: '4px' } },
+        h('span', null, 'Objectif du jour'),
+        h('span', null, todayXP + '/' + S.dailyGoal + ' XP')
+      ),
+      h('div', { className: 'progress-bar' },
+        h('div', { className: 'progress-fill' + (goalPct >= 100 ? ' green' : ''), style: { width: goalPct + '%' } })
+      )
+    )
+  );
+  wrap.appendChild(dailyMixCard);
+
+  // ── Weekly Challenge ──
+  var challenge = getWeeklyChallenge();
+  if (challenge) {
+    var cProgress = getWeeklyChallengeProgress(challenge);
+    var cPct = Math.min(100, Math.round(cProgress / challenge.target * 100));
+    var cDone = cPct >= 100;
+    wrap.appendChild(h('div', { className: 'weekly-challenge-card' + (cDone ? ' completed' : '') },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' } },
+        icon(challenge.icon, 18),
+        h('div', null,
+          h('div', { style: { fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.5px', color: cDone ? 'var(--green)' : 'var(--accent)' } }, 'Defi de la semaine'),
+          h('div', { style: { fontSize: '14px', fontWeight: '500' } }, challenge.title)
+        ),
+        cDone ? h('span', { style: { marginLeft: 'auto', fontSize: '12px', fontWeight: '600', color: 'var(--green)' } }, 'Complete !') : null
+      ),
+      h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '8px' } }, challenge.desc),
+      h('div', { className: 'progress-bar' },
+        h('div', { className: 'progress-fill' + (cDone ? ' green' : ''), style: { width: cPct + '%' } })
+      ),
+      h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '4px', textAlign: 'right' } },
+        cProgress + '/' + challenge.target + (cDone ? ' — +' + challenge.xpBonus + ' XP bonus' : ''))
+    ));
+    // Auto-award weekly challenge XP
+    if (cDone && !challenge.completed) {
+      challenge.completed = true;
+      S.weeklyChallenge = challenge;
+      addXP(challenge.xpBonus, 'Defi semaine');
+      save();
+    }
+  }
+
   // Roadmap
   wrap.appendChild(renderRoadmap());
-  // Stats
+
+  // ── Skill Tree (non-linear) ──
+  var prereqs = getChapterPrereqs();
+  var skillTreeWrap = h('div', { className: 'skill-tree' });
+  skillTreeWrap.appendChild(h('div', { style: { fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--tx3)', marginBottom: '12px' } }, 'Arbre de competences'));
+
+  // Render chapters as a non-linear tree
+  var rows = [
+    [1],       // Row 1: Introduction
+    [2, 3, 7], // Row 2: Power Query, Modelling, Service (parallel)
+    [4],       // Row 3: DAX (needs 3)
+    [5],       // Row 4: Time Intelligence (needs 4)
+    [6]        // Row 5: Advanced (needs 4, 5)
+  ];
+
+  rows.forEach(function(rowChIds) {
+    var row = h('div', { className: 'skill-tree-row' });
+    rowChIds.forEach(function(chId) {
+      var ch = CHAPTERS[chId - 1];
+      var done = 0, total = ch.missions[1] - ch.missions[0] + 1;
+      for (var i = ch.missions[0]; i <= ch.missions[1]; i++) { if (S.missions[i]) done++; }
+      var pct = Math.round(done / total * 100);
+      var unlocked = isChapterUnlocked(chId);
+      var nodeClass = 'skill-node' + (pct === 100 ? ' done' : unlocked ? ' unlocked' : ' locked');
+
+      var node = h('div', {
+        className: nodeClass,
+        onClick: function() { if (unlocked) { S.chapterIdx = chId - 1; render(); } }
+      },
+        h('div', { className: 'skill-node-num' }, String(chId)),
+        h('div', { className: 'skill-node-title' }, ch.title.split(' ').slice(0, 2).join(' ')),
+        h('div', { className: 'skill-node-bar' },
+          h('div', { className: 'skill-node-fill' + (pct === 100 ? ' green' : ''), style: { width: pct + '%' } })
+        ),
+        !unlocked ? h('div', { className: 'skill-node-lock' }, icon('lock', 12)) : null
+      );
+      row.appendChild(node);
+    });
+    skillTreeWrap.appendChild(row);
+  });
+  wrap.appendChild(skillTreeWrap);
+
+  // ── Chapter list (classic) ──
   const done = Object.values(S.missions).filter(Boolean).length;
   const totalMissionsMax = CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0);
-  wrap.appendChild(h('div', { className: 'stats-grid' },
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Missions'),
-      h('div', { className: 'stat-value' }, `${done}`, h('span', { className: 'stat-sub' }, '/' + totalMissionsMax))
-    ),
-    h('div', { className: 'stat-card' },
-      h('div', { className: 'stat-label' }, 'Progression'),
-      h('div', { className: 'stat-value' }, `${Math.round(done / totalMissionsMax * 100)}`, h('span', { className: 'stat-sub' }, '%'))
-    )
-  ));
 
   const nav = h('div', { className: 'ch-nav' });
   CHAPTERS.forEach((ch, idx) => {
@@ -1201,10 +1700,11 @@ function renderChapterList() {
     const total = to - from + 1;
     const completed = Array.from({ length: total }, (_, i) => S.missions[from + i]).filter(Boolean).length;
     const pct = Math.round(completed / total * 100);
+    var unlocked = isChapterUnlocked(ch.id);
 
     nav.appendChild(h('div', {
-      className: 'ch-item' + (completed === total ? ' completed' : ''),
-      onClick: () => { S.chapterIdx = idx; render(); }
+      className: 'ch-item' + (completed === total ? ' completed' : '') + (!unlocked ? ' ch-locked' : ''),
+      onClick: function() { if (unlocked) { S.chapterIdx = idx; render(); } }
     },
       h('div', { className: 'ch-num' }, `${ch.id}`),
       h('span', { className: 'ch-domain', style: { color: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color : 'var(--tx3)', background: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color + '18' : 'var(--bg3)' } }, ch.domain || 'Intro'),
@@ -1216,6 +1716,7 @@ function renderChapterList() {
           )
         )
       ),
+      !unlocked ? icon('lock', 14) : null,
       h('div', { className: 'ch-progress' }, `${completed}/${total}`)
     ));
   });
@@ -1395,6 +1896,17 @@ function renderChapterDetail(ch) {
     }
   }
 
+  // Interactive missions
+  if (typeof INTERACTIVE_MISSIONS !== 'undefined') {
+    var interactiveMissions = INTERACTIVE_MISSIONS.filter(function(im) { return im.ch === ch.id; });
+    if (interactiveMissions.length > 0) {
+      wrap.appendChild(h('div', { className: 'section-title' }, 'Missions interactives'));
+      interactiveMissions.forEach(function(im) {
+        wrap.appendChild(renderInteractiveMission(im));
+      });
+    }
+  }
+
   // Quiz de validation du chapitre
   const chQuizQs = QUIZ.filter(q => q.ch === ch.id);
   if (chQuizQs.length > 0) {
@@ -1551,6 +2063,166 @@ function renderMission(m) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// INTERACTIVE MISSIONS
+// ═══════════════════════════════════════════════════════════
+function renderInteractiveMission(im) {
+  var stateKey = '_im_' + im.id;
+  var done = S.missions[im.id];
+  var card = h('div', { className: 'mission' + (done ? ' mission-done' : '') });
+  var typeBadge = im.type === 'find_error' ? 'TROUVE L\'ERREUR' : im.type === 'fill_blank' ? 'COMPLETE' : 'ORDONNE';
+  var typeColor = im.type === 'find_error' ? 'var(--red)' : im.type === 'fill_blank' ? 'var(--purple)' : 'var(--accent)';
+
+  card.appendChild(h('div', { className: 'mission-header' },
+    h('span', { className: 'mission-type', style: { background: typeColor + '18', color: typeColor } }, typeBadge),
+    im.title ? h('span', { style: { fontSize: '13px', fontWeight: '500', marginLeft: '8px' } }, im.title) : null,
+    h('div', { style: { flex: '1' } }),
+    done ? h('span', { style: { fontSize: '12px', color: 'var(--green)' } }, icon('check', 14), ' Fait') : null
+  ));
+  card.appendChild(h('div', { className: 'mission-text', style: { marginBottom: '12px' } }, im.text));
+
+  if (im.type === 'find_error' && !done) {
+    // Show code with line numbers, click to select error line
+    var codeBlock = h('div', { className: 'code-block', style: { cursor: 'pointer' } });
+    codeBlock.innerHTML = highlightCode(im.code);
+    card.appendChild(codeBlock);
+    var selectedLine = S[stateKey + '_line'];
+    var checked = S[stateKey + '_checked'];
+    if (!checked) {
+      card.appendChild(h('div', { style: { fontSize: '13px', color: 'var(--tx3)', marginBottom: '8px' } }, 'Identifie le probleme dans ce code.'));
+      card.appendChild(h('button', {
+        onClick: function() {
+          S[stateKey + '_checked'] = true;
+          S.missions[im.id] = true;
+          addXP(im.xp || 20, 'Mission interactive');
+          save(); render();
+        },
+        style: { padding: '8px 20px', fontWeight: '500', background: typeColor, color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+      }, 'J\'ai trouve !'));
+    }
+    if (checked || done) {
+      card.appendChild(h('div', { className: 'mission-feedback correct', style: { marginTop: '8px' } },
+        h('strong', null, 'Explication : '), im.errorExplanation
+      ));
+      card.appendChild(h('div', { style: { marginTop: '8px' } },
+        h('div', { style: { fontSize: '12px', fontWeight: '600', color: 'var(--green)', marginBottom: '4px' } }, 'Version corrigee :'),
+        Object.assign(h('div', { className: 'code-block' }), { innerHTML: highlightCode(im.solution) })
+      ));
+    }
+  } else if (im.type === 'fill_blank' && !done) {
+    // Show template with blanks
+    card.appendChild(h('div', { className: 'code-block', style: { fontSize: '14px' } },
+      h('span', null, im.template.replace(/_____/g, '______'))
+    ));
+    var inputVal = S[stateKey + '_input'] || '';
+    var checked2 = S[stateKey + '_checked'];
+    if (!checked2) {
+      card.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginTop: '8px' } },
+        h('input', {
+          type: 'text',
+          placeholder: 'Tape la fonction manquante...',
+          value: inputVal,
+          onInput: function(e) { S[stateKey + '_input'] = e.target.value; },
+          style: { flex: '1', padding: '8px 12px', fontSize: '14px', fontFamily: 'var(--mono)', border: '1px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--bg)', color: 'var(--tx)' }
+        }),
+        h('button', {
+          onClick: function() {
+            var input = (S[stateKey + '_input'] || '').trim().toUpperCase();
+            S[stateKey + '_checked'] = true;
+            var correct = im.blanks.some(function(b) { return input === b.toUpperCase(); });
+            S[stateKey + '_correct'] = correct;
+            if (correct) { S.missions[im.id] = true; addXP(im.xp || 15, 'Mission interactive'); }
+            save(); render();
+          },
+          style: { padding: '8px 20px', fontWeight: '500', background: typeColor, color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+        }, 'Verifier')
+      ));
+      if (im.hints && im.hints.length > 0) {
+        card.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--tx3)', fontStyle: 'italic', marginTop: '6px' } }, 'Indice : ' + im.hints[0]));
+      }
+    }
+    if (checked2) {
+      if (S[stateKey + '_correct']) {
+        card.appendChild(h('div', { className: 'mission-feedback correct', style: { marginTop: '8px' } }, icon('check', 14), ' Correct ! La reponse est : ' + im.blanks[0]));
+      } else {
+        card.appendChild(h('div', { className: 'mission-feedback wrong', style: { marginTop: '8px' } }, 'La bonne reponse etait : ' + im.blanks[0]));
+        card.appendChild(h('button', { onClick: function() { S[stateKey + '_checked'] = false; S[stateKey + '_input'] = ''; render(); }, style: { marginTop: '6px', fontSize: '12px' } }, 'Reessayer'));
+      }
+    }
+  } else if (im.type === 'order_steps' && !done) {
+    // Drag-and-drop ordering (simplified: click to build order)
+    var userOrder = S[stateKey + '_order'] || [];
+    var remaining = im.steps.filter(function(_, i) { return userOrder.indexOf(i) === -1; });
+    card.appendChild(h('div', { style: { fontSize: '13px', color: 'var(--tx3)', marginBottom: '8px' } }, 'Clique les etapes dans le bon ordre :'));
+    // Show selected order
+    if (userOrder.length > 0) {
+      var selectedDiv = h('div', { style: { marginBottom: '10px' } });
+      userOrder.forEach(function(stepIdx, pos) {
+        selectedDiv.appendChild(h('div', { className: 'guided-step active', style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+          h('span', { className: 'step-number done' }, String(pos + 1)),
+          h('span', null, im.steps[stepIdx]),
+          h('button', {
+            onClick: function() { S[stateKey + '_order'] = userOrder.filter(function(_, i) { return i !== pos; }); render(); },
+            style: { marginLeft: 'auto', fontSize: '11px', color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer' }
+          }, 'x')
+        ));
+      });
+      card.appendChild(selectedDiv);
+    }
+    // Show remaining choices
+    if (remaining.length > 0) {
+      var choicesDiv = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' } });
+      im.steps.forEach(function(step, i) {
+        if (userOrder.indexOf(i) !== -1) return;
+        choicesDiv.appendChild(h('button', {
+          onClick: function() {
+            if (!S[stateKey + '_order']) S[stateKey + '_order'] = [];
+            S[stateKey + '_order'].push(i);
+            render();
+          },
+          style: { fontSize: '13px', padding: '6px 12px' }
+        }, step));
+      });
+      card.appendChild(choicesDiv);
+    }
+    // Check button
+    if (userOrder.length === im.steps.length) {
+      var isCorrect = im.correctOrder.every(function(v, i) { return userOrder[i] === v; });
+      if (!S[stateKey + '_checked']) {
+        card.appendChild(h('button', {
+          onClick: function() {
+            S[stateKey + '_checked'] = true;
+            if (isCorrect) { S.missions[im.id] = true; addXP(im.xp || 20, 'Mission interactive'); }
+            save(); render();
+          },
+          style: { padding: '8px 20px', fontWeight: '500', background: typeColor, color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+        }, 'Verifier l\'ordre'));
+      } else {
+        if (isCorrect) {
+          card.appendChild(h('div', { className: 'mission-feedback correct', style: { marginTop: '8px' } }, icon('check', 14), ' Ordre correct !'));
+        } else {
+          card.appendChild(h('div', { className: 'mission-feedback wrong', style: { marginTop: '8px' } }, 'Pas dans le bon ordre. ' + im.solution));
+          card.appendChild(h('button', { onClick: function() { S[stateKey + '_order'] = []; S[stateKey + '_checked'] = false; render(); }, style: { marginTop: '6px', fontSize: '12px' } }, 'Reessayer'));
+        }
+      }
+    }
+  }
+
+  // Show solution for completed interactive missions
+  if (done && im.solution) {
+    card.appendChild(h('div', { className: 'spoiler' },
+      h('button', { className: 'spoiler-btn', onClick: function() {
+        var el = document.getElementById('sp-' + im.id);
+        if (el) el.classList.toggle('open');
+      }}, 'Voir la solution'),
+      h('div', { className: 'spoiler-content', id: 'sp-' + im.id },
+        h('div', null, h('strong', null, 'Solution : '), im.solution)
+      )
+    ));
+  }
+  return card;
+}
+
+// ═══════════════════════════════════════════════════════════
 // QUIZ TAB
 // ═══════════════════════════════════════════════════════════
 function startQuiz(filter, mode) {
@@ -1580,8 +2252,13 @@ function startQuiz(filter, mode) {
       }
     }, 1000);
   } else {
-    qs = shuf(qs);
+    // Quiz adaptatif: prioritize weak questions
+    var weakQs = qs.filter(function(q) { var st = S.quizStats[qHash(q)]; return st && st.wrong > st.right; });
+    var otherQs = qs.filter(function(q) { var st = S.quizStats[qHash(q)]; return !st || st.wrong <= st.right; });
+    // Put weak questions first, then shuffle the rest
+    qs = shuf(weakQs).concat(shuf(otherQs));
     S.examActive = false;
+    S._quizRetryPool = []; // Pool of wrong questions to re-ask
   }
 
   S.quizQuestions = qs;
@@ -1697,6 +2374,7 @@ function renderCaseStudy() {
         const hash = qHash(cq);
         if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
         S.quizStats[hash][i === cq.a ? 'right' : 'wrong']++;
+        trackQuizAnswer();
         save(); render();
       }
     },
@@ -2115,6 +2793,7 @@ function renderQuiz() {
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
+          trackQuizAnswer();
           if (typeof XP_REWARDS !== 'undefined') {
             addXP(correct ? XP_REWARDS.quiz_correct : XP_REWARDS.quiz_wrong, 'Quiz');
           }
@@ -2174,6 +2853,7 @@ function renderQuiz() {
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
+          trackQuizAnswer();
           if (typeof XP_REWARDS !== 'undefined') {
             addXP(correct ? XP_REWARDS.quiz_correct : XP_REWARDS.quiz_wrong, 'Quiz');
           }
@@ -2249,7 +2929,23 @@ function renderQuiz() {
     wrap.appendChild(h('button', {
       className: 'quiz-next',
       onClick: () => {
-        if (isLast) {
+        // Adaptive: queue wrong answers for re-ask (training only)
+        if (!S.examActive && S._quizRetryPool) {
+          var cqCurrent = S.quizQuestions[S.qi];
+          var wasWrong = false;
+          if (cqCurrent) {
+            var qt2 = cqCurrent.type || 'single';
+            if (qt2 === 'single') wasWrong = S.sel !== cqCurrent.a;
+            else if (qt2 === 'multi') wasWrong = !(Array.isArray(S.multiSel) && Array.isArray(cqCurrent.a) && cqCurrent.a.length === S.multiSel.length && cqCurrent.a.every(function(a) { return S.multiSel.includes(a); }));
+          }
+          if (wasWrong && !cqCurrent._isRetry) {
+            // Re-insert this question 3 positions later
+            var retryQ = Object.assign({}, cqCurrent, { _isRetry: true });
+            var insertAt = Math.min(S.qi + 4, S.quizQuestions.length);
+            S.quizQuestions.splice(insertAt, 0, retryQ);
+          }
+        }
+        if (isLast && !(S._quizRetryPool && S.qi < S.quizQuestions.length - 1)) {
           if (S.examActive) { finishExam(); return; }
           S.qi++;
         } else {
@@ -2721,35 +3417,93 @@ function renderFlashcards() {
     h('span', null, `Ch.${card.ch} · ${sm2Label} · ${reviewLabel}`)
   ));
 
-  // Card
-  const cardEl = h('div', {
-    className: 'flashcard' + (S.fcFlipped ? ' flashcard-back' : ''),
-    style: { background: S.fcFlipped ? 'var(--bg2)' : 'var(--bg)' },
-    onClick: () => { S.fcFlipped = !S.fcFlipped; render(); }
-  },
-    h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
-      h('div', { className: 'flashcard-label' }, S.fcFlipped ? 'Réponse' : 'Question'),
-      h('div', { className: 'flashcard-text' }, S.fcFlipped ? card.b : card.f)
-    )
-  );
-  wrap.appendChild(cardEl);
+  // Mode toggle (QCM vs Classic)
+  wrap.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'flex-end' } },
+    h('button', {
+      onClick: function() { S.fcQuizMode = false; S.fcQuizSel = null; S.fcQuizShown = false; render(); },
+      style: { fontSize: '11px', padding: '3px 10px', background: !S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: !S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (!S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
+    }, 'Classique'),
+    h('button', {
+      onClick: function() { S.fcQuizMode = true; S.fcQuizSel = null; S.fcQuizShown = false; var qd = generateFCQuizOptions(globalIdx); S.fcQuizOptions = qd.options; S._fcQuizCorrect = qd.correct; render(); },
+      style: { fontSize: '11px', padding: '3px 10px', background: S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
+    }, 'QCM')
+  ));
 
-  // Actions (SM-2 quality buttons)
-  if (S.fcFlipped) {
-    wrap.appendChild(h('div', { className: 'flash-actions' },
-      h('button', { className: 'review', onClick: () => {
-        sm2Update(globalIdx, 1);
-        S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
-      }}, 'A revoir'),
-      h('button', { onClick: () => {
-        sm2Update(globalIdx, 3);
-        S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
-      }, style: { borderColor: '#F0AD4E', color: '#F0AD4E' } }, 'Difficile'),
-      h('button', { className: 'know', onClick: () => {
-        sm2Update(globalIdx, 5);
-        S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
-      }}, 'Facile')
+  if (S.fcQuizMode) {
+    // QCM mode: show question, 4 options
+    wrap.appendChild(h('div', { className: 'flashcard', style: { minHeight: '120px' } },
+      h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
+        h('div', { className: 'flashcard-label' }, 'Question'),
+        h('div', { className: 'flashcard-text' }, card.f)
+      )
     ));
+    // Generate options if not yet
+    if (!S.fcQuizOptions || S.fcQuizOptions.length === 0) {
+      var qd = generateFCQuizOptions(globalIdx);
+      S.fcQuizOptions = qd.options;
+      S._fcQuizCorrect = qd.correct;
+    }
+    var qOpts = h('div', { className: 'quiz-options', style: { marginTop: '12px' } });
+    S.fcQuizOptions.forEach(function(opt, i) {
+      var cls = 'quiz-opt';
+      if (S.fcQuizShown && i === S._fcQuizCorrect) cls += ' correct';
+      else if (S.fcQuizShown && i === S.fcQuizSel && i !== S._fcQuizCorrect) cls += ' wrong';
+      qOpts.appendChild(h('button', {
+        className: cls,
+        onClick: function() {
+          if (S.fcQuizShown) return;
+          S.fcQuizSel = i;
+          S.fcQuizShown = true;
+          var quality = i === S._fcQuizCorrect ? 5 : 1;
+          sm2Update(globalIdx, quality);
+          render();
+        }
+      }, h('span', { className: 'letter' }, String.fromCharCode(65 + i)), opt));
+    });
+    wrap.appendChild(qOpts);
+    if (S.fcQuizShown) {
+      wrap.appendChild(h('button', { className: 'quiz-next', onClick: function() {
+        S.fcQuizSel = null; S.fcQuizShown = false; S.fcQuizOptions = [];
+        S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1);
+        var nextGlobalIdx = FLASHCARDS.indexOf(fc[S.fcIdx]);
+        if (nextGlobalIdx >= 0) {
+          var nd = generateFCQuizOptions(nextGlobalIdx);
+          S.fcQuizOptions = nd.options; S._fcQuizCorrect = nd.correct;
+        }
+        render();
+      }}, 'Suivante →'));
+    }
+  } else {
+    // Classic mode
+    const cardEl = h('div', {
+      className: 'flashcard' + (S.fcFlipped ? ' flashcard-back' : ''),
+      style: { background: S.fcFlipped ? 'var(--bg2)' : 'var(--bg)' },
+      onClick: () => { S.fcFlipped = !S.fcFlipped; render(); }
+    },
+      h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
+        h('div', { className: 'flashcard-label' }, S.fcFlipped ? 'Reponse' : 'Question'),
+        h('div', { className: 'flashcard-text' }, S.fcFlipped ? card.b : card.f)
+      )
+    );
+    wrap.appendChild(cardEl);
+
+    // Actions (SM-2 quality buttons)
+    if (S.fcFlipped) {
+      wrap.appendChild(h('div', { className: 'flash-actions' },
+        h('button', { className: 'review', onClick: () => {
+          sm2Update(globalIdx, 1);
+          S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
+        }}, 'A revoir'),
+        h('button', { onClick: () => {
+          sm2Update(globalIdx, 3);
+          S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
+        }, style: { borderColor: '#F0AD4E', color: '#F0AD4E' } }, 'Difficile'),
+        h('button', { className: 'know', onClick: () => {
+          sm2Update(globalIdx, 5);
+          S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
+        }}, 'Facile')
+      ));
+    }
   }
 
   // Keyboard hints (desktop) + swipe hint (mobile)
@@ -3007,6 +3761,88 @@ function renderProgress() {
     )
   ));
 
+  // ── Narrative messages ──
+  var narrativeMsgs = getNarrativeMessages();
+  if (narrativeMsgs.length > 0) {
+    var narrativeBox = h('div', { style: { marginBottom: '20px' } });
+    narrativeMsgs.slice(0, 3).forEach(function(msg) {
+      var msgColor = msg.type === 'positive' ? 'var(--green)' : msg.type === 'warning' ? 'var(--red)' : 'var(--accent)';
+      var msgBg = msg.type === 'positive' ? 'var(--green-bg)' : msg.type === 'warning' ? 'var(--red-bg)' : 'var(--accent-bg)';
+      narrativeBox.appendChild(h('div', { style: {
+        padding: '10px 14px', borderRadius: 'var(--radius)', marginBottom: '6px',
+        background: msgBg, borderLeft: '3px solid ' + msgColor, fontSize: '13px', color: 'var(--tx)'
+      }}, msg.text));
+    });
+    wrap.appendChild(narrativeBox);
+  }
+
+  // ── Streak enhanced ──
+  var streakBox = h('div', { style: { display: 'flex', gap: '12px', marginBottom: '20px' } });
+  // Streak card
+  streakBox.appendChild(h('div', { className: 'stat-card', style: { flex: '1', textAlign: 'center' } },
+    h('div', { style: { fontSize: '32px', color: '#ffc233' } }, icon('flame', 32)),
+    h('div', { style: { fontSize: '28px', fontWeight: '700', color: '#ffc233' } }, String(S.streak)),
+    h('div', { style: { fontSize: '12px', color: 'var(--tx3)' } }, 'jours de streak'),
+    S.streakFreezes > 0
+      ? h('div', { style: { fontSize: '11px', color: 'var(--accent)', marginTop: '4px' } }, icon('shield', 12), ' ' + S.streakFreezes + ' freeze dispo')
+      : h('div', { style: { fontSize: '11px', color: 'var(--red)', marginTop: '4px' } }, 'Aucun freeze !'),
+    S.streakFreezes === 0 && S.streak >= 3
+      ? h('button', {
+          onClick: function() { if (S.xp >= 50) { S.xp -= 50; S.streakFreezes++; save(); render(); showNotification('-50 XP : streak freeze achete !', 'xp'); } else { showNotification('Pas assez d\'XP (50 requis)', 'xp'); } },
+          style: { marginTop: '6px', fontSize: '11px', padding: '4px 10px' }
+        }, 'Acheter (50 XP)')
+      : null
+  ));
+  // Daily goal card
+  var todayXP2 = 0;
+  var todayStr2 = new Date().toISOString().slice(0, 10);
+  var todayEntry2 = S.xpHistory.find(function(e) { return e.date === todayStr2; });
+  if (todayEntry2) todayXP2 = todayEntry2.xp;
+  var goalPct2 = Math.min(100, Math.round(todayXP2 / S.dailyGoal * 100));
+  streakBox.appendChild(h('div', { className: 'stat-card', style: { flex: '1', textAlign: 'center' } },
+    h('div', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '8px' } }, 'Objectif du jour'),
+    h('div', { style: { fontSize: '28px', fontWeight: '700', color: goalPct2 >= 100 ? 'var(--green)' : 'var(--accent)' } }, todayXP2 + '/' + S.dailyGoal),
+    h('div', { className: 'progress-bar', style: { marginTop: '8px' } },
+      h('div', { className: 'progress-fill' + (goalPct2 >= 100 ? ' green' : ''), style: { width: goalPct2 + '%' } })
+    ),
+    h('div', { style: { display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '8px' } },
+      [30, 50, 100].map(function(g) {
+        return h('button', {
+          onClick: function() { S.dailyGoal = g; save(); render(); },
+          style: { fontSize: '10px', padding: '2px 8px', background: S.dailyGoal === g ? 'var(--accent)' : 'var(--bg)', color: S.dailyGoal === g ? 'white' : 'var(--tx3)', border: '1px solid ' + (S.dailyGoal === g ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
+        }, g + ' XP');
+      })
+    )
+  ));
+  wrap.appendChild(streakBox);
+
+  // ── Ghost Leaderboard ──
+  var ghosts = getGhostProfiles();
+  var lbBox = h('div', { style: { marginBottom: '20px' } });
+  lbBox.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Classement'));
+  ghosts.forEach(function(g, i) {
+    var isUser = g.isUser;
+    var rankColors = ['#ffc233', '#c0c0c0', '#cd7f32'];
+    lbBox.appendChild(h('div', { style: {
+      display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+      borderRadius: 'var(--radius)', marginBottom: '4px',
+      background: isUser ? 'var(--accent-bg)' : 'var(--bg2)',
+      border: isUser ? '1px solid var(--accent)' : '1px solid transparent'
+    }},
+      h('div', { style: { width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: i < 3 ? rankColors[i] + '30' : 'var(--bg3)', color: i < 3 ? rankColors[i] : 'var(--tx3)' } }, String(i + 1)),
+      h('div', { style: { width: '28px', height: '28px', borderRadius: '50%', background: isUser ? 'var(--accent)' : 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: isUser ? 'white' : 'var(--tx2)' } }, g.avatar),
+      h('div', { style: { flex: '1' } },
+        h('div', { style: { fontSize: '13px', fontWeight: isUser ? '700' : '500' } }, g.name),
+        g.role ? h('div', { style: { fontSize: '11px', color: 'var(--tx3)' } }, g.role) : null
+      ),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+        h('span', { style: { fontSize: '11px', color: '#ffc233' } }, icon('flame', 12), ' ' + g.streak),
+        h('span', { style: { fontSize: '13px', fontWeight: '600', color: isUser ? 'var(--accent)' : 'var(--tx2)' } }, g.xp + ' XP')
+      )
+    ));
+  });
+  wrap.appendChild(lbBox);
+
   // Prochaine révision
   var dueCount = getDueCards().length;
   var revBox = h('div', { className: 'box ' + (dueCount > 0 ? 'box-tip' : 'box-business'), style: { marginBottom: '20px' } },
@@ -3242,7 +4078,7 @@ function renderProgress() {
   wrap.appendChild(h('button', {
     onClick: () => {
       if (confirm('Réinitialiser toute la progression ?')) {
-        S.missions = {}; S.checklist = {}; S.known = {}; S.quizStats = {}; S.examHistory = []; S.exCompleted = {}; S.xp = 0; S.level = 0; S.badges = []; S.streak = 0; S.lastActiveDate = null; S.xpHistory = []; S.interviewReviewed = {};
+        S.missions = {}; S.checklist = {}; S.known = {}; S.quizStats = {}; S.examHistory = []; S.exCompleted = {}; S.xp = 0; S.level = 0; S.badges = []; S.streak = 0; S.lastActiveDate = null; S.xpHistory = []; S.interviewReviewed = {}; S.streakFreezes = 1; S.weeklyChallenge = null; S.weeklyChallengeDate = null;
         save(); render();
       }
     },

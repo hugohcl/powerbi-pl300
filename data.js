@@ -624,6 +624,75 @@ const MISSIONS = [
   { id: 108, ch: 7, type: "pl300", text: "RLS France, % CA avec ALL(Territory). Correct ?\n  A) Oui\n  B) Non — ALL supprime RLS\n  C) CALCULATE incompatible\n  D) Oui si Both", hint: "ALL supprime RLS.", solution: "B — Non, ALL supprime le RLS.\n\nANALYSE DÉTAILLÉE :\nUn utilisateur avec RLS 'France' ne devrait voir que les données France. La mesure % CA utilise ALL(Territory) au dénominateur pour calculer le total global.\n\nLE PROBLÈME : ALL(Territory) supprime TOUS les filtres sur la table Territory, Y COMPRIS le filtre RLS [countryregioncode] = \"France\". Le dénominateur inclut donc le CA de tous les pays, ce qui est une FUITE DE DONNÉES : l'utilisateur France peut déduire le CA global.\n\nA) Oui → FAUX. Le résultat est techniquement un pourcentage correct, mais l'utilisateur voit indirectement le CA global (fuite).\nB) Non — ALL supprime RLS → CORRECT. C'est un problème de sécurité.\nC) CALCULATE incompatible → FAUX. CALCULATE fonctionne parfaitement avec RLS.\nD) Oui si Both → FAUX. La direction de filtre n'a rien à voir avec le problème.\n\nSOLUTION : utiliser ALLSELECTED(Territory) au lieu de ALL(Territory). ALLSELECTED supprime les filtres du visuel mais GARDE le filtre RLS et les slicers. Le dénominateur sera le CA France (pas le CA global).\n\nERREUR FRÉQUENTE : utiliser ALL partout sans penser aux implications RLS. Règle : si ton rapport utilise RLS, remplace SYSTÉMATIQUEMENT ALL par ALLSELECTED dans les mesures de %.", why: "ALL supprime TOUT y compris RLS. ALLSELECTED garde les filtres externes (slicers, RLS). C'est LE piège de sécurité le plus testé à l'examen PL-300." }
 ];
 
+// ─── Interactive Missions (find_error, fill_blank, order_steps) ───
+var INTERACTIVE_MISSIONS = [
+  {
+    id: 'interactive_1', type: 'find_error', ch: 4, title: 'Trouve l\'erreur DAX',
+    text: 'Cette mesure est censee calculer le CA par categorie. Trouve l\'erreur :',
+    code: 'CA Categorie = \nCALCULATE(\n  SUM(Sales[SalesAmount]),\n  FILTER(ALL(Product), Product[Category] = "Bikes")\n)',
+    errorLine: 3,
+    errorExplanation: 'FILTER(ALL(Product), ...) supprime TOUS les filtres sur Product, y compris les slicers. Si l\'objectif est de calculer le CA Bikes tout en gardant les autres filtres actifs, il faut utiliser KEEPFILTERS ou simplement Product[Category] = "Bikes" comme filtre direct dans CALCULATE.',
+    solution: 'CA Categorie = \nCALCULATE(\n  SUM(Sales[SalesAmount]),\n  Product[Category] = "Bikes"\n)',
+    xp: 20
+  },
+  {
+    id: 'interactive_2', type: 'find_error', ch: 5, title: 'Trouve l\'erreur Time Intelligence',
+    text: 'Cette mesure YTD ne fonctionne pas. Pourquoi ?',
+    code: 'CA YTD = \nTOTALYTD(\n  SUM(Sales[SalesAmount]),\n  Sales[OrderDate]\n)',
+    errorLine: 3,
+    errorExplanation: 'TOTALYTD requiert une colonne d\'une TABLE DE DATES marquee comme table de dates. Sales[OrderDate] est dans la table de faits, pas dans la table de dates. Il faut utiliser DateTable[Date].',
+    solution: 'CA YTD = \nTOTALYTD(\n  SUM(Sales[SalesAmount]),\n  DateTable[Date]\n)',
+    xp: 20
+  },
+  {
+    id: 'interactive_3', type: 'fill_blank', ch: 4, title: 'Complete la formule',
+    text: 'Complete la mesure qui calcule le pourcentage du CA total :',
+    template: '% CA = DIVIDE([CA Total], CALCULATE([CA Total], _____(Territory)), 0)',
+    blanks: ['ALL'],
+    hints: ['La fonction qui supprime tous les filtres sur une table'],
+    solution: '% CA = DIVIDE([CA Total], CALCULATE([CA Total], ALL(Territory)), 0)',
+    xp: 15
+  },
+  {
+    id: 'interactive_4', type: 'fill_blank', ch: 3, title: 'Complete la formule',
+    text: 'Complete la mesure qui recupere le nom de la categorie depuis la table liee :',
+    template: 'Categorie = _____(Product[CategoryName])',
+    blanks: ['RELATED'],
+    hints: ['Fonction pour acceder a une colonne dans une table liee (cote 1)'],
+    solution: 'Categorie = RELATED(Product[CategoryName])',
+    xp: 15
+  },
+  {
+    id: 'interactive_5', type: 'order_steps', ch: 2, title: 'Ordonne les etapes',
+    text: 'Remets dans l\'ordre les etapes de nettoyage Power Query :',
+    steps: [
+      'Verifier et corriger les types de donnees',
+      'Supprimer les colonnes inutiles',
+      'Filtrer les lignes invalides',
+      'Remplacer les valeurs NULL',
+      'Fusionner avec d\'autres tables (Merge)',
+      'Fermer et appliquer'
+    ],
+    correctOrder: [0, 1, 2, 3, 4, 5],
+    solution: '1. Types → 2. Colonnes → 3. Filtres → 4. NULL → 5. Merge → 6. Appliquer',
+    xp: 20
+  },
+  {
+    id: 'interactive_6', type: 'order_steps', ch: 7, title: 'Ordonne les etapes',
+    text: 'Remets dans l\'ordre les etapes de deploiement Power BI Service :',
+    steps: [
+      'Publier le rapport depuis Desktop',
+      'Configurer les credentials de la source',
+      'Planifier le refresh automatique',
+      'Assigner les roles RLS aux utilisateurs',
+      'Tester le rapport dans le navigateur'
+    ],
+    correctOrder: [0, 1, 2, 4, 3],
+    solution: '1. Publier → 2. Credentials → 3. Refresh → 4. Tester → 5. RLS',
+    xp: 20
+  }
+];
+
 // ─── Quiz (120+ questions) ───
 const QUIZ = [
   // Ch.1 — Prise en main (15 questions)
