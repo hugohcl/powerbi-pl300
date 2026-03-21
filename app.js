@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '2.0.5';
+const APP_VERSION = '2.0.6';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -4421,6 +4421,6 @@ if (_syncCode) { syncPull(); }
   setTimeout(function() {
     sp.classList.add('hide');
     sessionStorage.setItem('pbi-splashed', '1');
-    setTimeout(function() { sp.style.display = 'none'; }, 400);
-  }, 1200);
+    setTimeout(function() { sp.style.display = 'none'; }, 600);
+  }, 2500);
 })();

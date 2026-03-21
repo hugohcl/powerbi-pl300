@@ -494,26 +494,43 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   position: fixed; inset: 0; z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: var(--bg);
-  transition: opacity 0.4s ease;
+  transition: opacity 0.6s cubic-bezier(.4,0,.2,1);
 }
 #splash img {
   width: 80px; height: 80px; border-radius: 20px;
-  animation: splash-in 0.6s ease both;
+  opacity: 0; transform: scale(0.8);
+  animation: splash-icon 0.8s 0.3s cubic-bezier(.175,.885,.32,1.275) both;
 }
 #splash span {
-  margin-top: 20px; font-size: 17px; font-weight: 300; letter-spacing: 0.5px;
-  color: var(--tx2);
-  animation: splash-in 0.6s 0.2s ease both;
+  margin-top: 24px; font-size: 17px; font-weight: 300; letter-spacing: 1px;
+  color: var(--tx2); opacity: 0;
+  animation: splash-text 0.7s 0.8s ease both;
+}
+#splash .splash-line {
+  width: 0; height: 1px; background: var(--bd);
+  margin-top: 32px;
+  animation: splash-line 0.8s 1.2s ease both;
 }
 #splash.hide { opacity: 0; pointer-events: none; }
-@keyframes splash-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes splash-icon {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-text {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes splash-line {
+  from { width: 0; }
+  to { width: 60px; }
+}
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span></div>
+<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=2.0.5"></script>
-<script src="app.js?v=2.0.5"></script>
+<script src="data.js?v=2.0.6"></script>
+<script src="app.js?v=2.0.6"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
