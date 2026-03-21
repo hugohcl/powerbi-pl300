@@ -270,7 +270,6 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 /* Safe area for notched phones */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   @media (max-width: 600px) {
-    .tabs { padding-bottom: env(safe-area-inset-bottom); }
     .app { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   }
 }
@@ -295,7 +294,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
 
 /* DAX Exercises */
-.dax-editor { font-family: var(--mono); font-size: 14px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--bd); background: var(--bg); color: var(--tx); width: 100%; min-height: 80px; resize: vertical; line-height: 1.6; }
+.dax-editor { font-family: var(--mono); font-size: 14px; padding: 16px; border-radius: var(--radius); border: 0.5px solid var(--bd); background: var(--surface); color: var(--tx); width: 100%; min-height: 80px; resize: vertical; line-height: 1.6; }
 .dax-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); outline: none; }
 .dax-correct { border-color: var(--green) !important; background: rgba(29,158,117,0.05); }
 .dax-wrong { border-color: var(--red) !important; background: rgba(216,90,48,0.05); }
@@ -331,7 +330,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .pomodoro-btn { font-size: 12px; padding: 4px 10px; border-radius: 16px; cursor: pointer; }
 .pomodoro-active { background: rgba(216,90,48,0.1); color: var(--red); border: 1px solid var(--red); }
 .pomodoro-break { background: rgba(29,158,117,0.1); color: var(--green); border: 1px solid var(--green); }
-.pomodoro-dropdown { position: absolute; right: 0; top: 40px; background: var(--bg); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 16px; min-width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 100; }
+.pomodoro-dropdown { position: absolute; right: 0; top: 40px; background: var(--surface); border: 0.5px solid var(--bd); border-radius: var(--radius-lg); padding: 16px; min-width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 100; }
 
 /* XP Bar */
 .xp-bar { height: 4px; background: var(--bg3); border-radius: 2px; flex: 1; max-width: 120px; overflow: hidden; }
@@ -341,7 +340,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .header-xp { display: flex; align-items: center; gap: 8px; }
 
 /* Notifications */
-.notification { position: fixed; top: 16px; right: 16px; padding: 12px 20px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--bd); box-shadow: 0 4px 16px rgba(0,0,0,.15); z-index: 9999; animation: notifIn .3s ease; font-size: 13px; max-width: 300px; }
+.notification { position: fixed; top: 16px; right: 16px; padding: 12px 20px; border-radius: var(--radius); background: var(--surface); border: 0.5px solid var(--bd); box-shadow: 0 4px 16px rgba(0,0,0,.15); z-index: 9999; animation: notifIn .3s ease; font-size: 13px; max-width: 300px; }
 .notification.xp { border-left: 3px solid var(--accent); }
 .notification.level { border-left: 3px solid var(--purple); background: var(--purple-bg); }
 .notification.badge-notif { border-left: 3px solid var(--green); background: var(--green-bg); }
@@ -350,7 +349,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 
 /* Onboarding */
 .onboarding-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.6); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
-.onboarding-card { background: var(--bg); border-radius: var(--radius-lg); padding: 40px; max-width: 500px; width: 90%; text-align: center; border-top: 3px solid var(--accent); }
+.onboarding-card { background: var(--surface); border-radius: var(--radius-lg); padding: 40px; max-width: 500px; width: 90%; text-align: center; border-top: 3px solid var(--accent); }
 .onboarding-card h2 { font-size: 22px; margin-bottom: 16px; }
 .onboarding-card p { font-size: 14px; color: var(--tx2); line-height: 1.7; margin-bottom: 12px; }
 .onboarding-step { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; text-align: left; }
@@ -426,11 +425,11 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .daily-mix-complete { text-align: center; padding: 48px 24px; }
 
 /* Weekly Challenge */
-.weekly-challenge-card { padding: 16px 20px; border-radius: var(--radius-lg); border: 1px solid var(--bd); background: var(--bg); margin-bottom: 16px; }
+.weekly-challenge-card { padding: 16px 20px; border-radius: var(--radius-lg); border: 0.5px solid var(--bd); background: var(--surface); margin-bottom: 16px; }
 .weekly-challenge-card.completed { border-color: var(--green); background: var(--green-bg); }
 
 /* Skill Tree */
-.skill-tree { padding: 20px 24px; border-radius: var(--radius-lg); border: 1px solid var(--bd); background: var(--bg); margin-bottom: 16px; }
+.skill-tree { padding: 20px 24px; border-radius: var(--radius-lg); border: 0.5px solid var(--bd); background: var(--surface); margin-bottom: 16px; }
 .skill-tree-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 8px; position: relative; }
 .skill-tree-row::before { content: ''; position: absolute; top: -8px; left: 50%; width: 2px; height: 8px; background: var(--bd); }
 .skill-tree-row:first-child::before { display: none; }
@@ -449,7 +448,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 
 /* Celebration overlay */
 .celebration-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.7); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
-.celebration-card { background: var(--bg); border-radius: var(--radius-lg); padding: 48px 40px; max-width: 420px; width: 90%; text-align: center; z-index: 2; position: relative; }
+.celebration-card { background: var(--surface); border-radius: var(--radius-lg); padding: 48px 40px; max-width: 420px; width: 90%; text-align: center; z-index: 2; position: relative; }
 .celebration-icon { font-size: 48px; margin-bottom: 16px; color: var(--accent); }
 
 /* Confetti */
@@ -666,8 +665,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 <body>
 <div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=2.0.7"></script>
-<script src="app.js?v=2.0.7"></script>
+<script src="data.js?v=3.0.0"></script>
+<script src="app.js?v=3.0.0"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
