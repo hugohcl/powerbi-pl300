@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Formation Power BI</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -655,7 +655,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .mobile-topbar, .mobile-tabs { display: none; }
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .app { margin-left: 0; padding: 56px 16px 72px; }
+  .app { margin-left: 0; padding: 64px 16px 80px; }
   .page-title { font-size: 28px; }
   .chapters-grid { grid-template-columns: 1fr; }
   .quiz-bento { grid-template-columns: 1fr 1fr; }
@@ -667,28 +667,28 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 0.5px solid var(--bd);
-    padding: 0 12px; height: 44px;
+    padding: 0 16px; height: 52px;
     padding-top: env(safe-area-inset-top);
     align-items: center; justify-content: space-between;
   }
   [data-theme="dark"] .mobile-topbar { background: rgba(28,28,30,0.88); }
-  .mobile-topbar-title { font-size: 15px; font-weight: 700; color: var(--tx); }
-  .mobile-topbar-actions { display: flex; gap: 2px; align-items: center; }
+  .mobile-topbar-title { font-size: 17px; font-weight: 700; color: var(--tx); }
+  .mobile-topbar-actions { display: flex; gap: 6px; align-items: center; }
   .mobile-topbar-actions button {
-    width: 36px; height: 36px; border: none; background: none; cursor: pointer;
+    width: 40px; height: 40px; border: none; background: none; cursor: pointer;
     border-radius: 50%; color: var(--tx2); display: flex; align-items: center;
     justify-content: center; transition: all 0.15s;
   }
   .mobile-topbar-actions button:active { background: rgba(0,0,0,0.06); transform: scale(0.92); }
   [data-theme="dark"] .mobile-topbar-actions button:active { background: rgba(255,255,255,0.08); }
   .mobile-topbar .pomodoro-active-pill {
-    font-size: 12px; font-weight: 600; font-family: var(--mono);
-    padding: 4px 10px; border-radius: 20px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: var(--mono);
+    padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer;
     background: rgba(255,59,48,0.1); color: var(--red);
   }
   .mobile-topbar .pomodoro-break-pill {
-    font-size: 12px; font-weight: 600; font-family: var(--mono);
-    padding: 4px 10px; border-radius: 20px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: var(--mono);
+    padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer;
     background: rgba(52,199,89,0.1); color: var(--green);
   }
   /* Bottom tabs */
@@ -696,27 +696,27 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
     background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 0.5px solid var(--bd); padding: 4px 0 2px;
-    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    border-top: 0.5px solid var(--bd); padding: 6px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
     justify-content: space-around;
   }
   [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
   .mobile-tab {
-    display: flex; flex-direction: column; align-items: center; gap: 1px;
-    padding: 2px 8px; font-size: 9px; font-weight: 500; color: var(--tx3);
-    background: none; border: none; cursor: pointer; min-height: 40px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 4px 8px; font-size: 10px; font-weight: 500; color: var(--tx3);
+    background: none; border: none; cursor: pointer; min-height: 44px;
     justify-content: center; border-radius: 0;
   }
   .mobile-tab.active { color: var(--accent); }
-  .mobile-tab svg { width: 20px; height: 20px; }
+  .mobile-tab svg { width: 22px; height: 22px; }
 }
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.2</div><div class="splash-line"></div></div>
+<div id="splash"><img src="icon.png" alt=""><span>Formation Power BI</span><div class="splash-version" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;">v3.0.3</div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
-<script src="data.js?v=3.0.2"></script>
-<script src="app.js?v=3.0.2"></script>
+<script src="data.js?v=3.0.3"></script>
+<script src="app.js?v=3.0.3"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
