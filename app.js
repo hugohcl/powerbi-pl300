@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.0.10';
+const APP_VERSION = '3.0.11';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -1429,8 +1429,7 @@ function renderSidebar() {
   var sidebar = h('nav', { className: 'sidebar' });
 
   // Logo
-  var logoIcon = h('div', { className: 'sidebar-logo-icon' });
-  logoIcon.appendChild(makeSidebarSvg('<path d="M3 4h12M3 9h12M3 14h12"/>'));
+  var logoIcon = h('img', { src: 'icon.png', alt: 'DAX Academy', style: { width: '36px', height: '36px', borderRadius: '8px' } });
   var logo = h('div', { className: 'sidebar-logo' },
     logoIcon,
     h('span', { className: 'sidebar-logo-text' }, 'DAX Academy'),
@@ -2047,7 +2046,7 @@ function renderChapterList() {
         onClick: function() { if (unlocked) { S.chapterIdx = chId - 1; render(); } }
       },
         h('div', { className: 'skill-node-num' }, String(chId)),
-        h('div', { className: 'skill-node-title' }, ch.title.split(' ').slice(0, 2).join(' ')),
+        h('div', { className: 'skill-node-title' }, ch.title),
         h('div', { className: 'skill-node-bar' },
           h('div', { className: 'skill-node-fill' + (pct === 100 ? ' green' : ''), style: { width: pct + '%' } })
         ),
