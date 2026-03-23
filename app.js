@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '4.1.0';
+const APP_VERSION = '4.2.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -208,10 +208,10 @@ const S = {
   },
 };
 
-// ─── Sync config ───
-const SYNC_API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-  ? 'http://localhost:3001/api'
-  : '/api';
+// ─── Supabase config ───
+const SUPABASE_URL = 'https://ciajqbaufrypvewzcwof.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpYWpxYmF1ZnJ5cHZld3pjd29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzE5MzgsImV4cCI6MjA4OTg0NzkzOH0.6REuqCgb5XBqANsS0BVNtYf0ggGK6pKBWBhS7S5-UIc';
+const _supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 let _syncCode = localStorage.getItem('pbi-sync-code') || null;
 let _syncUpdatedAt = parseInt(localStorage.getItem('pbi-sync-updated') || '0');
 let _syncPending = false;
@@ -269,95 +269,93 @@ function load() {
   } catch(e) {}
 }
 
-// ─── Cloud Sync ───
+// ─── Cloud Sync (Supabase) ───
 async function syncPush() {
-  if (!_syncCode || _syncPending) return;
+  if (!_syncCode || _syncPending || !_supabase) return;
   _syncPending = true;
   try {
-    const res = await fetch(SYNC_API + '/sync/push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: _syncCode, data: getSaveData(), updated_at: _syncUpdatedAt })
+    var now = Date.now();
+    var { error } = await _supabase.from('users').upsert({
+      code: _syncCode,
+      data: getSaveData(),
+      updated_at: now
     });
-    if (res.ok) {
-      const json = await res.json();
-      _syncUpdatedAt = json.updated_at;
+    if (!error) {
+      _syncUpdatedAt = now;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
-      if (json.status === 'merged' && json.data) {
-        applyData(json.data);
-        try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
-        render();
-      }
     }
-  } catch(e) { /* offline — will sync later */ }
+  } catch(e) { /* offline */ }
   _syncPending = false;
 }
 
 async function syncPull() {
-  if (!_syncCode) return;
+  if (!_syncCode || !_supabase) return;
   try {
-    const res = await fetch(SYNC_API + '/sync/pull/' + _syncCode);
-    if (res.ok) {
-      const json = await res.json();
-      _syncUpdatedAt = json.updated_at;
+    var { data: row, error } = await _supabase.from('users').select('data, updated_at').eq('code', _syncCode).single();
+    if (!error && row) {
+      _syncUpdatedAt = row.updated_at;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
-      applyData(json.data);
-      try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
+      applyData(row.data);
+      try { localStorage.setItem('pbi-pl300', JSON.stringify(row.data)); } catch(e) {}
       render();
-      showNotification('Progression synchronisée !', 'xp');
+      showNotification('Progression synchronis\u00e9e !', 'xp');
     }
   } catch(e) { /* offline */ }
 }
 
+function _generateCode() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  for (var i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  code += '-';
+  for (var j = 0; j < 4; j++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 async function syncGenerate() {
+  if (!_supabase) { showNotification('Supabase non disponible.', 'xp'); return null; }
   try {
-    const res = await fetch(SYNC_API + '/sync/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: getSaveData() })
+    var code = _generateCode();
+    var now = Date.now();
+    var { error } = await _supabase.from('users').insert({
+      code: code, data: getSaveData(), updated_at: now, created_at: now
     });
-    if (res.ok) {
-      const json = await res.json();
-      _syncCode = json.code;
+    if (!error) {
+      _syncCode = code;
       localStorage.setItem('pbi-sync-code', _syncCode);
-      _syncUpdatedAt = Date.now();
+      _syncUpdatedAt = now;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
       render();
-      showNotification('Code créé : ' + _syncCode, 'xp');
-      return json.code;
+      showNotification('Code cr\u00e9\u00e9 : ' + _syncCode, 'xp');
+      return code;
     }
   } catch(e) {
-    showNotification('Erreur réseau. Réessaie.', 'xp');
+    showNotification('Erreur r\u00e9seau. R\u00e9essaie.', 'xp');
   }
   return null;
 }
 
 async function syncConnect(code) {
+  if (!_supabase) return false;
   code = code.toUpperCase().trim();
   try {
-    const res = await fetch(SYNC_API + '/sync/connect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code })
-    });
-    if (res.ok) {
-      const json = await res.json();
-      _syncCode = json.code;
+    var { data: row, error } = await _supabase.from('users').select('code, data, updated_at').eq('code', code).single();
+    if (!error && row) {
+      _syncCode = row.code;
       localStorage.setItem('pbi-sync-code', _syncCode);
-      _syncUpdatedAt = json.updated_at;
+      _syncUpdatedAt = row.updated_at;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
-      applyData(json.data);
-      try { localStorage.setItem('pbi-pl300', JSON.stringify(json.data)); } catch(e) {}
+      applyData(row.data);
+      try { localStorage.setItem('pbi-pl300', JSON.stringify(row.data)); } catch(e) {}
       render();
-      showNotification('Connecté ! Progression récupérée.', 'xp');
+      showNotification('Connect\u00e9 ! Progression r\u00e9cup\u00e9r\u00e9e.', 'xp');
       return true;
     } else {
-      const err = await res.json();
-      showNotification(err.error || 'Code introuvable.', 'xp');
+      showNotification('Code introuvable.', 'xp');
       return false;
     }
   } catch(e) {
-    showNotification('Erreur réseau. Réessaie.', 'xp');
+    showNotification('Erreur r\u00e9seau. R\u00e9essaie.', 'xp');
     return false;
   }
 }
@@ -5177,9 +5175,9 @@ async function sendChatMessage() {
   renderChatPanel();
 
   try {
-    var resp = await fetch(SYNC_API + '/chat', {
+    var resp = await fetch(SUPABASE_URL + '/functions/v1/dax-tutor', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({ message: msg, context: getChatContext(), history: _chatMessages.slice(-10) })
     });
     var data = await resp.json();
