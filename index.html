@@ -42,7 +42,7 @@
   --accent-bg: #0071e320; --green-bg: #34c75918; --red-bg: #ff3b3018;
   --purple-bg: #af52de18; --yellow-bg: #ff9f0a18; --blue-light-bg: #0071e318;
 }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--bg); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: var(--font); background: var(--bg); color: var(--tx); line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
 button { font-family: var(--font); cursor: pointer; border: 0.5px solid var(--bd); background: var(--surface); color: var(--tx); border-radius: var(--radius); padding: 6px 14px; font-size: 13px; transition: all var(--transition); }
@@ -727,7 +727,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-top: 0.5px solid var(--bd); padding: 6px 0 0;
-    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
     justify-content: space-around;
   }
   [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
@@ -770,8 +770,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 <div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=4.4.1"></script>
-<script type="module" src="app.js?v=4.4.1"></script>
+<script src="data.js?v=4.4.2"></script>
+<script type="module" src="app.js?v=4.4.2"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

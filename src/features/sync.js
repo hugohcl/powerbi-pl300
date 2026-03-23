@@ -38,7 +38,6 @@ export async function syncPull() {
       applyData(row.data);
       try { localStorage.setItem('pbi-pl300', JSON.stringify(row.data)); } catch(e) {}
       render();
-      showNotification('Progression synchronis\u00e9e !', 'xp');
     }
   } catch(e) { /* offline */ }
 }
