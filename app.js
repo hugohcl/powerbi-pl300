@@ -150,11 +150,8 @@ function mainRender() {
   topbar.appendChild(topLogo);
   var topActions = h('div', { className: 'mobile-topbar-actions' });
 
-  if (!S.pomodoro.active) {
-    var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus', 'aria-label': 'D\u00e9marrer le mode focus' });
-    pomBtn.appendChild(icon('timer', 22));
-    topActions.appendChild(pomBtn);
-  } else {
+  // Pomodoro pill (only when active)
+  if (S.pomodoro.active) {
     var tPomM = Math.floor(S.pomodoro.timeLeft / 60);
     var tPomS = S.pomodoro.timeLeft % 60;
     var tPomLabel = tPomM + ':' + String(tPomS).padStart(2, '0');
@@ -166,22 +163,48 @@ function mainRender() {
     topActions.appendChild(tPomBtn);
   }
 
+  // Search button (always visible)
   var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher', 'aria-label': 'Rechercher' });
   searchBtn.appendChild(icon('search', 22));
   topActions.appendChild(searchBtn);
 
-  var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
-  musicBtn.appendChild(icon('music', 22));
-  topActions.appendChild(musicBtn);
+  // More button + dropdown
+  var moreWrap = h('div', { className: 'topbar-more-wrap' });
+  var moreBtn = h('button', {
+    onClick: function(e) { e.stopPropagation(); S.topbarMenuOpen = !S.topbarMenuOpen; render(); },
+    title: 'Plus', 'aria-label': 'Plus d\'options'
+  });
+  moreBtn.appendChild(icon('moreH', 22));
+  moreWrap.appendChild(moreBtn);
 
-  var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
-  var themeBtn = h('button', { onClick: toggleTheme, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
-  themeBtn.appendChild(isDarkMobile ? icon('sun', 22) : icon('moon', 22));
-  topActions.appendChild(themeBtn);
+  if (S.topbarMenuOpen) {
+    var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
+    var dropdown = h('div', { className: 'topbar-dropdown' });
 
-  var syncBtnM = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', 'aria-label': 'Synchronisation cloud', style: getSyncCode() ? { color: 'var(--green)' } : {} });
-  syncBtnM.appendChild(icon('cloud', 22));
-  topActions.appendChild(syncBtnM);
+    var menuItems = [
+      { iconName: isDarkMobile ? 'sun' : 'moon', label: isDarkMobile ? 'Mode clair' : 'Mode sombre', action: function() { toggleTheme(); S.topbarMenuOpen = false; } },
+      { iconName: 'timer', label: 'Mode focus', action: function() { S.topbarMenuOpen = false; startPomodoro(); } },
+      { iconName: 'music', label: 'Musique', action: function() { S.topbarMenuOpen = false; window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; } },
+      { iconName: 'cloud', label: 'Synchronisation', action: function() { S.topbarMenuOpen = false; showSyncModal(); }, style: getSyncCode() ? { color: 'var(--green)' } : {} }
+    ];
+
+    menuItems.forEach(function(mi) {
+      var row = h('button', { className: 'topbar-dropdown-item', onClick: mi.action, style: mi.style || {} });
+      row.appendChild(icon(mi.iconName, 18));
+      row.appendChild(h('span', null, mi.label));
+      dropdown.appendChild(row);
+    });
+
+    moreWrap.appendChild(dropdown);
+
+    // Close on outside click
+    setTimeout(function() {
+      var closeHandler = function() { S.topbarMenuOpen = false; render(); document.removeEventListener('click', closeHandler); };
+      document.addEventListener('click', closeHandler);
+    }, 0);
+  }
+
+  topActions.appendChild(moreWrap);
 
   topbar.appendChild(topActions);
   document.body.appendChild(topbar);
