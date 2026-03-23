@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '4.2.0';
+const APP_VERSION = '4.2.1';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
