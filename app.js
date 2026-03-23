@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.4.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -4406,11 +4406,81 @@ function renderProgress() {
     ));
   }
 
-  // Heatmap (28 days)
-  wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Heatmap d\'activite (28 jours)'));
-  var heatmapGrid = h('div', { className: 'heatmap', style: { marginBottom: '20px', maxWidth: '250px' } });
+  // ── Domain Radar Chart (SVG) ──
+  var ds = getDomainStats();
+  var domKeys = Object.keys(DOMAINS);
+  var hasAnyStats = domKeys.some(function(k) { return ds[k] && ds[k].total > 0; });
+  if (hasAnyStats) {
+    wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Ma\u00eetrise par domaine PL-300'));
+    var radarSize = 200, radarCenter = 100, radarRadius = 80;
+    var radarSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    radarSvg.setAttribute('viewBox', '0 0 200 200');
+    radarSvg.setAttribute('width', '200');
+    radarSvg.setAttribute('height', '200');
+    radarSvg.style.display = 'block';
+    radarSvg.style.margin = '0 auto 20px';
+
+    // Background rings
+    [0.25, 0.5, 0.75, 1].forEach(function(scale) {
+      var points = domKeys.map(function(_, i) {
+        var angle = (Math.PI * 2 * i / domKeys.length) - Math.PI / 2;
+        return (radarCenter + Math.cos(angle) * radarRadius * scale).toFixed(1) + ',' + (radarCenter + Math.sin(angle) * radarRadius * scale).toFixed(1);
+      }).join(' ');
+      var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', points);
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', 'var(--bd)');
+      poly.setAttribute('stroke-width', '0.5');
+      radarSvg.appendChild(poly);
+    });
+
+    // Data polygon
+    var dataPoints = domKeys.map(function(k, i) {
+      var pct = ds[k] ? ds[k].pct / 100 : 0;
+      var angle = (Math.PI * 2 * i / domKeys.length) - Math.PI / 2;
+      return (radarCenter + Math.cos(angle) * radarRadius * pct).toFixed(1) + ',' + (radarCenter + Math.sin(angle) * radarRadius * pct).toFixed(1);
+    }).join(' ');
+    var dataPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    dataPoly.setAttribute('points', dataPoints);
+    dataPoly.setAttribute('fill', 'var(--accent)');
+    dataPoly.setAttribute('fill-opacity', '0.15');
+    dataPoly.setAttribute('stroke', 'var(--accent)');
+    dataPoly.setAttribute('stroke-width', '2');
+    radarSvg.appendChild(dataPoly);
+
+    // Labels
+    domKeys.forEach(function(k, i) {
+      var angle = (Math.PI * 2 * i / domKeys.length) - Math.PI / 2;
+      var lx = radarCenter + Math.cos(angle) * (radarRadius + 16);
+      var ly = radarCenter + Math.sin(angle) * (radarRadius + 16);
+      var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', lx.toFixed(1));
+      txt.setAttribute('y', ly.toFixed(1));
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('dominant-baseline', 'middle');
+      txt.setAttribute('font-size', '8');
+      txt.setAttribute('fill', 'var(--tx3)');
+      txt.textContent = (ds[k] ? ds[k].pct : 0) + '%';
+      radarSvg.appendChild(txt);
+    });
+
+    wrap.appendChild(radarSvg);
+
+    // Legend
+    var radarLegend = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '20px' } });
+    domKeys.forEach(function(k) {
+      radarLegend.appendChild(h('span', { style: { fontSize: '11px', color: 'var(--tx2)' } },
+        DOMAINS[k].name + ' (' + (ds[k] ? ds[k].pct : 0) + '%)'
+      ));
+    });
+    wrap.appendChild(radarLegend);
+  }
+
+  // Heatmap (90 days)
+  wrap.appendChild(h('h3', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '10px' } }, 'Heatmap d\'activit\u00e9 (90 jours)'));
+  var heatmapGrid = h('div', { className: 'heatmap', style: { marginBottom: '20px' } });
   var todayHeat = new Date();
-  for (var hd = 27; hd >= 0; hd--) {
+  for (var hd = 89; hd >= 0; hd--) {
     var hdt = new Date(todayHeat); hdt.setDate(hdt.getDate() - hd);
     var hdStr = hdt.toISOString().slice(0, 10);
     var hEntry = S.xpHistory.find(function(e) { return e.date === hdStr; });
