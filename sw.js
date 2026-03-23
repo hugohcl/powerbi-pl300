@@ -1,9 +1,28 @@
-const CACHE_NAME = 'pl300-v4.3.2';
+const CACHE_NAME = 'pl300-v4.4.1';
 const ASSETS = [
   './',
   './index.html',
-  './app.js?v=4.3.2',
-  './data.js?v=4.3.2',
+  './app.js?v=4.4.1',
+  './data.js?v=4.4.1',
+  './src/core/state.js',
+  './src/core/render.js',
+  './src/core/icons.js',
+  './src/data/highlight.js',
+  './src/features/gamification.js',
+  './src/features/sync.js',
+  './src/features/flashcards.js',
+  './src/features/quiz.js',
+  './src/features/missions.js',
+  './src/features/exercises.js',
+  './src/features/pomodoro.js',
+  './src/features/chat.js',
+  './src/features/search.js',
+  './src/ui/sidebar.js',
+  './src/ui/home.js',
+  './src/ui/formation.js',
+  './src/ui/progress.js',
+  './src/ui/reference.js',
+  './src/ui/interview.js',
   './icon.png',
   './manifest.json'
 ];
