@@ -86,7 +86,7 @@ function mainRender() {
         placeholder: 'Rechercher dans toute l\'app (DAX, RANKX, mesure...)...',
         value: S.searchQuery || '',
         style: { width: '100%', padding: '10px 14px', fontSize: '15px', border: '0.5px solid var(--bd)', borderRadius: 'var(--radius)', background: 'var(--surface)', color: 'var(--tx)', fontFamily: 'var(--font)', outline: 'none' },
-        onInput: function(e) { S.searchQuery = e.target.value; render(); setTimeout(function() { var inp = document.getElementById('search-input'); if (inp) { inp.focus(); inp.selectionStart = inp.selectionEnd = inp.value.length; } }, 10); },
+        onInput: function(e) { S.searchQuery = e.target.value; clearTimeout(window._searchDebounce); window._searchDebounce = setTimeout(function() { render(); setTimeout(function() { var inp = document.getElementById('search-input'); if (inp) { inp.focus(); inp.selectionStart = inp.selectionEnd = inp.value.length; } }, 10); }, 200); },
         onKeydown: function(e) { if (e.key === 'Escape') { S.searchOpen = false; render(); } }
       }),
       h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '6px' } }, '\u00C9chap pour fermer \u00B7 Cherche dans sections, quiz, flashcards, mesures, glossaire, missions')
