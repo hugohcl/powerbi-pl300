@@ -88,8 +88,11 @@ export function renderHeader() {
   headerRight.appendChild(musicBtn);
 
   // Theme button
-  var themeBtn = h('button', { className: 'theme-btn', onClick: toggleTheme });
-  themeBtn.appendChild(isDark ? icon('sun', 16) : icon('moon', 16));
+  var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  var themeIcon = currentTheme === 'dark' ? 'sun' : currentTheme === 'high-contrast' ? 'eye' : 'moon';
+  var themeTitle = currentTheme === 'dark' ? 'Mode clair' : currentTheme === 'high-contrast' ? 'Mode clair' : 'Mode sombre';
+  var themeBtn = h('button', { className: 'theme-btn', onClick: toggleTheme, title: themeTitle });
+  themeBtn.appendChild(icon(themeIcon, 16));
   headerRight.appendChild(themeBtn);
 
   // XP bar section
@@ -266,12 +269,14 @@ export function renderSidebar() {
   sidebar.appendChild(pomWrap);
 
   // Bottom actions (theme, music, sync)
-  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var curTheme = document.documentElement.getAttribute('data-theme') || 'light';
   var bottomActions = h('div', { className: 'sidebar-bottom-actions' });
 
   // Theme toggle
-  var themeBtn = h('button', { onClick: toggleTheme, title: isDark ? 'Mode clair' : 'Mode sombre' });
-  themeBtn.appendChild(isDark ? icon('sun', 16) : icon('moon', 16));
+  var tIcon = curTheme === 'dark' ? 'sun' : curTheme === 'high-contrast' ? 'eye' : 'moon';
+  var tTitle = curTheme === 'dark' ? 'Contraste élevé' : curTheme === 'high-contrast' ? 'Mode clair' : 'Mode sombre';
+  var themeBtn = h('button', { onClick: toggleTheme, title: tTitle });
+  themeBtn.appendChild(icon(tIcon, 16));
   bottomActions.appendChild(themeBtn);
 
   // Music button

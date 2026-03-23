@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '4.4.2';
+export const APP_VERSION = '4.5.0';
 
 // ─── Render proxy ───
 let _renderFn = null;
@@ -45,19 +45,21 @@ export function $(sel) { return document.querySelector(sel); }
 export function getTotalMissions() { return window.CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0); }
 
 // ─── Theme ───
+const THEMES = ['light', 'dark', 'high-contrast'];
 export function initTheme() {
   const saved = localStorage.getItem('pbi-theme');
-  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  if (saved === 'dark' || saved === 'high-contrast') document.documentElement.setAttribute('data-theme', saved);
 }
 export function toggleTheme() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  if (isDark) {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const idx = THEMES.indexOf(current);
+  const next = THEMES[(idx + 1) % THEMES.length];
+  if (next === 'light') {
     document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('pbi-theme', 'light');
   } else {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    localStorage.setItem('pbi-theme', 'dark');
+    document.documentElement.setAttribute('data-theme', next);
   }
+  localStorage.setItem('pbi-theme', next);
   render();
 }
 
