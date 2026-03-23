@@ -284,12 +284,29 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .slide-back { animation: slideInLeft .3s cubic-bezier(0.4, 0, 0.2, 1); }
 .slide-up { animation: slideUp .3s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (prefers-reduced-motion: reduce) { .fade-in, .slide-forward, .slide-back, .slide-up { animation: none; } }
+/* Stagger animation for lists */
+@keyframes staggerIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.stagger-item { opacity: 0; animation: staggerIn .3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* Quiz feedback */
 .quiz-opt { transition: all .15s ease; }
 .quiz-opt:not(.correct):not(.wrong):hover { transform: translateX(4px); border-color: var(--accent); }
-.flashcard { transition: all .2s ease; }
+@keyframes quizCorrect { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes quizWrong { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+.quiz-opt.correct { animation: quizCorrect .3s ease; }
+.quiz-opt.wrong { animation: quizWrong .3s ease; }
+
+/* Flashcard flip */
+.flashcard { transition: all .2s ease; perspective: 800px; }
 .flashcard:active { transform: scale(.98); }
+@keyframes cardFlip { 0% { transform: rotateY(0deg); opacity: 1; } 50% { transform: rotateY(90deg); opacity: 0.5; } 100% { transform: rotateY(0deg); opacity: 1; } }
+.flashcard.flipping { animation: cardFlip .4s ease; }
+
+/* Mission hover */
 .mission { transition: all .15s ease; }
-.mission:hover { border-color: var(--bd2); }
+.mission:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+@media (prefers-reduced-motion: reduce) { .stagger-item, .quiz-opt.correct, .quiz-opt.wrong, .flashcard.flipping { animation: none; opacity: 1; } }
 .ch-item { transition: all .15s ease; }
 .pill { transition: all .15s ease; }
 

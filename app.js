@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.1.1';
+const APP_VERSION = '3.2.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -1928,7 +1928,7 @@ function renderHome() {
     var total = ch.missions[1] - ch.missions[0] + 1;
     var pct = Math.round(done / total * 100);
 
-    var card = h('div', { className: 'chapter-card' + (isLocked ? ' locked' : '') });
+    var card = h('div', { className: 'chapter-card stagger-item' + (isLocked ? ' locked' : ''), style: { animationDelay: (i * 50) + 'ms' } });
     if (!isLocked) {
       card.addEventListener('click', function() { S.tab = 'formation'; S.chapterIdx = i; render(); });
     }
@@ -3169,7 +3169,13 @@ function renderQuiz() {
       dom ? h('span', { className: 'badge', style: { background: dom.color + '15', color: dom.color } }, dom.name) : null,
       h('span', { style: { fontSize: '11px', color: 'var(--tx3)' } }, `Ch.${cq.ch}`)
     ),
-    !S.examActive ? h('span', { style: { fontSize: '13px', color: 'var(--tx2)' } }, `${S.qi + 1}/${S.quizQuestions.length} · ${S.score}/${S.total}`) : null
+    !S.examActive ? h('span', { style: { fontSize: '13px', color: 'var(--tx2)' } }, `${S.qi + 1}/${S.quizQuestions.length} \u00B7 ${S.score}/${S.total}`) : null
+  ));
+
+  // Quiz progress bar
+  var quizPct = Math.round((S.qi + 1) / S.quizQuestions.length * 100);
+  wrap.appendChild(h('div', { style: { height: '3px', background: 'var(--bg3)', borderRadius: '2px', marginBottom: '16px', overflow: 'hidden' } },
+    h('div', { style: { height: '100%', width: quizPct + '%', background: 'var(--accent)', borderRadius: '2px', transition: 'width .3s ease' } })
   ));
 
   // Question
@@ -3915,12 +3921,12 @@ function renderFlashcards() {
   } else {
     // Classic mode
     const cardEl = h('div', {
-      className: 'flashcard' + (S.fcFlipped ? ' flashcard-back' : ''),
+      className: 'flashcard' + (S.fcFlipped ? ' flashcard-back flipping' : ''),
       style: { background: S.fcFlipped ? 'var(--bg2)' : 'var(--bg)' },
       onClick: () => { S.fcFlipped = !S.fcFlipped; render(); }
     },
       h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
-        h('div', { className: 'flashcard-label' }, S.fcFlipped ? 'Reponse' : 'Question'),
+        h('div', { className: 'flashcard-label' }, S.fcFlipped ? 'R\u00e9ponse' : 'Question'),
         h('div', { className: 'flashcard-text' }, S.fcFlipped ? card.b : card.f)
       )
     );
