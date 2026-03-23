@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.2.1';
+const APP_VERSION = '3.3.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -1028,7 +1028,7 @@ function render() {
 
   // Pomodoro in top bar
   if (!S.pomodoro.active) {
-    var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus' });
+    var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus', 'aria-label': 'D\u00e9marrer le mode focus' });
     pomBtn.appendChild(icon('timer', 22));
     topActions.appendChild(pomBtn);
   } else {
@@ -1044,7 +1044,7 @@ function render() {
   }
 
   // Search
-  var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher' });
+  var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher', 'aria-label': 'Rechercher' });
   searchBtn.appendChild(icon('search', 22));
   topActions.appendChild(searchBtn);
 
@@ -1060,7 +1060,7 @@ function render() {
   topActions.appendChild(themeBtn);
 
   // Sync
-  var syncBtn = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', style: _syncCode ? { color: 'var(--green)' } : {} });
+  var syncBtn = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', 'aria-label': 'Synchronisation cloud', style: _syncCode ? { color: 'var(--green)' } : {} });
   syncBtn.appendChild(icon('cloud', 22));
   topActions.appendChild(syncBtn);
 
@@ -1070,7 +1070,7 @@ function render() {
   // Mobile bottom tab bar
   var existingMobileTabs = document.querySelector('.mobile-tabs');
   if (existingMobileTabs) existingMobileTabs.remove();
-  var mobileTabs = h('div', { className: 'mobile-tabs' });
+  var mobileTabs = h('div', { className: 'mobile-tabs', role: 'navigation', 'aria-label': 'Navigation mobile' });
   var mobileItems = [
     { id: 'home', label: 'Accueil', iconName: 'inbox' },
     { id: 'formation', label: 'Formation', iconName: 'book' },
@@ -1453,7 +1453,7 @@ function makeSidebarSvg(pathD) {
 }
 
 function renderSidebar() {
-  var sidebar = h('nav', { className: 'sidebar' });
+  var sidebar = h('nav', { className: 'sidebar', role: 'navigation', 'aria-label': 'Navigation principale' });
 
   // Logo
   var logoIcon = h('img', { src: 'icon.png', alt: 'DAX Academy', style: { width: '36px', height: '36px', borderRadius: '8px' } });
@@ -4562,6 +4562,26 @@ function renderProgress() {
       }
       weakBox.appendChild(wdRow);
     });
+    // Button: start weak domain review session
+    var weakDomIds = _weakDoms.map(function(wd) { return wd.id; });
+    weakBox.appendChild(h('button', {
+      className: 'quiz-next',
+      style: { marginTop: '12px', width: '100%', background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' },
+      onClick: function() {
+        // Filter quiz to weak domains only
+        var weakQs = QUIZ.filter(function(q) { return weakDomIds.includes(q.d); });
+        if (weakQs.length === 0) return;
+        shuf(weakQs);
+        S.quizQuestions = weakQs.slice(0, Math.min(20, weakQs.length));
+        S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0;
+        S.quizHistory = []; S.multiSel = []; S.orderSel = [];
+        S.quizMode = 'training'; S.examActive = false;
+        S._quizRetryPool = true;
+        S.tab = 'quiz';
+        S._weakReviewMode = true;
+        render();
+      }
+    }, 'R\u00e9viser mes points faibles (' + weakDomIds.length + ' domaine' + (weakDomIds.length > 1 ? 's' : '') + ')'));
     wrap.appendChild(weakBox);
   }
 
@@ -4577,6 +4597,59 @@ function renderProgress() {
       'Pas encore d\'examen blanc. Lance-toi quand tu te sens pr\u00eat !'
     ));
   }
+
+  // Export / Import
+  var exportImportSection = h('div', { style: { marginTop: '32px', padding: '20px', background: 'var(--bg2)', borderRadius: 'var(--radius)', border: '0.5px solid var(--bd)' } });
+  exportImportSection.appendChild(h('div', { style: { fontSize: '14px', fontWeight: '600', marginBottom: '12px' } }, 'Mes donn\u00e9es'));
+
+  // Export button
+  exportImportSection.appendChild(h('button', {
+    style: { marginRight: '12px', padding: '8px 16px', fontSize: '13px', background: 'var(--accent-bg)', color: 'var(--accent)', borderColor: 'var(--accent)', borderRadius: 'var(--radius)' },
+    onClick: function() {
+      var data = getSaveData();
+      data._exportDate = new Date().toISOString();
+      data._appVersion = APP_VERSION;
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'dax-academy-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click(); URL.revokeObjectURL(url);
+    }
+  }, 'Exporter mes donn\u00e9es'));
+
+  // Import button
+  exportImportSection.appendChild(h('button', {
+    style: { padding: '8px 16px', fontSize: '13px', background: 'var(--bg3)', color: 'var(--tx2)', borderColor: 'var(--bd)', borderRadius: 'var(--radius)' },
+    onClick: function() {
+      var input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json';
+      input.addEventListener('change', function() {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            var data = JSON.parse(e.target.result);
+            if (!data.missions && !data.xp && !data.known) {
+              alert('Fichier invalide : aucune donn\u00e9e de progression trouv\u00e9e.');
+              return;
+            }
+            if (!confirm('\u00c9craser la progression actuelle avec les donn\u00e9es import\u00e9es ?')) return;
+            applyData(data);
+            save(); render();
+            showNotification('Donn\u00e9es import\u00e9es avec succ\u00e8s', 'xp');
+          } catch(err) {
+            alert('Erreur de lecture du fichier JSON.');
+          }
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    }
+  }, 'Importer'));
+
+  exportImportSection.appendChild(h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '8px' } }, 'Sauvegarde locale au format JSON. Compatible entre appareils.'));
+  wrap.appendChild(exportImportSection);
 
   // Reset
   wrap.appendChild(h('button', {
