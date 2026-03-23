@@ -721,13 +721,16 @@ code, .code { font-family: var(--mono); font-size: 13px; }
     padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer;
     background: rgba(52,199,89,0.1); color: var(--green);
   }
-  /* Bottom tabs — X-style icons only */
+  /* Bottom tabs — icons only, glassmorphism */
   .mobile-tabs {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    background: var(--bg); border-top: 0.5px solid var(--bd);
+    background: rgba(255,255,255,0.88); backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--bd);
     height: 50px; padding-bottom: env(safe-area-inset-bottom);
     justify-content: space-around; align-items: center;
   }
+  [data-theme="dark"] .mobile-tabs { background: rgba(28,28,30,0.88); }
   .mobile-tab {
     display: flex; align-items: center; justify-content: center;
     padding: 8px 16px; color: var(--tx3);
@@ -767,8 +770,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 <div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=4.4.3"></script>
-<script type="module" src="app.js?v=4.4.3"></script>
+<script src="data.js?v=4.4.4"></script>
+<script type="module" src="app.js?v=4.4.4"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
