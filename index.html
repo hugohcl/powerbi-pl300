@@ -803,14 +803,91 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .chat-fab { bottom: 80px; right: 12px; }
   .chat-panel { bottom: 0; right: 0; left: 0; width: 100%; height: 100%; border-radius: 0; }
 }
+
+/* ===== ENHANCED EFFECTS v4.7 ===== */
+
+/* 1. View transitions — content morphing */
+.view-exit { animation: viewExit .2s ease forwards; pointer-events: none; }
+.view-enter { animation: viewEnter .35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes viewExit { to { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(2px); } }
+@keyframes viewEnter { from { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* 2. Animated gradient mesh on hero */
+.bento-hero { position: relative; }
+.gradient-mesh {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0.6;
+  background:
+    radial-gradient(ellipse 50% 60% at 20% 30%, rgba(0,113,227,0.25), transparent),
+    radial-gradient(ellipse 40% 50% at 80% 70%, rgba(175,82,222,0.2), transparent),
+    radial-gradient(ellipse 60% 40% at 60% 20%, rgba(52,199,89,0.1), transparent);
+  animation: meshMove 8s ease-in-out infinite alternate;
+}
+@keyframes meshMove {
+  0% { background-position: 0% 0%, 100% 100%, 50% 0%; transform: scale(1) rotate(0deg); }
+  33% { background-position: 30% 20%, 70% 80%, 20% 50%; }
+  66% { background-position: 10% 60%, 90% 30%, 80% 70%; }
+  100% { background-position: 50% 50%, 30% 20%, 40% 80%; transform: scale(1.05) rotate(1deg); }
+}
+
+/* 3. Ripple effect */
+.ripple-container { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute; border-radius: 50%; background: rgba(255,255,255,0.25);
+  transform: scale(0); animation: rippleExpand .5s ease-out forwards; pointer-events: none;
+}
+@keyframes rippleExpand { to { transform: scale(4); opacity: 0; } }
+
+/* 4. Skeleton loading */
+.skeleton { border-radius: var(--radius); background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease infinite; }
+.skeleton-card { height: 120px; border-radius: var(--radius-lg); margin-bottom: 16px; }
+.skeleton-line { height: 14px; margin-bottom: 10px; border-radius: 6px; }
+.skeleton-line.short { width: 60%; }
+.skeleton-line.medium { width: 80%; }
+.skeleton-circle { width: 48px; height: 48px; border-radius: 50%; }
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* 5. Parallax — handled via JS transform on scroll */
+.parallax-card { transition: transform .1s linear; will-change: transform; }
+
+/* 6. Glow cursor on cards */
+.glow-card { position: relative; overflow: hidden; }
+.glow-card::before {
+  content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,113,227,0.08), transparent 70%);
+  pointer-events: none; opacity: 0; transition: opacity .3s;
+  transform: translate(-50%, -50%); z-index: 0;
+  left: var(--mouse-x, 50%); top: var(--mouse-y, 50%);
+}
+.glow-card:hover::before { opacity: 1; }
+.glow-card > * { position: relative; z-index: 1; }
+
+/* 7. Smooth theme transition */
+html.theme-transitioning, html.theme-transitioning * {
+  transition: background-color .4s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease !important;
+}
+
+/* Pulse glow on active mobile tab indicator */
+.mobile-tab.active::after {
+  content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+  animation: pulseGlow 2s ease infinite;
+}
+.mobile-tab { position: relative; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-mesh, .ripple, .view-exit, .view-enter, .skeleton { animation: none !important; }
+  html.theme-transitioning, html.theme-transitioning * { transition: none !important; }
+  .glow-card::before { display: none; }
+  .mobile-tab.active::after { animation: none; }
+}
 </style>
 </head>
 <body>
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=4.6.0"></script>
-<script type="module" src="app.js?v=4.6.0"></script>
+<script src="data.js?v=4.7.0"></script>
+<script type="module" src="app.js?v=4.7.0"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

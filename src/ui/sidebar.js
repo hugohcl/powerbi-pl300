@@ -91,7 +91,7 @@ export function renderHeader() {
   var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
   var themeIcon = currentTheme === 'dark' ? 'sun' : currentTheme === 'high-contrast' ? 'eye' : 'moon';
   var themeTitle = currentTheme === 'dark' ? 'Mode clair' : currentTheme === 'high-contrast' ? 'Mode clair' : 'Mode sombre';
-  var themeBtn = h('button', { className: 'theme-btn', onClick: toggleTheme, title: themeTitle });
+  var themeBtn = h('button', { className: 'theme-btn', onClick: function() { if (window._smoothToggleTheme) window._smoothToggleTheme(); else toggleTheme(); }, title: themeTitle });
   themeBtn.appendChild(icon(themeIcon, 16));
   headerRight.appendChild(themeBtn);
 
@@ -278,7 +278,7 @@ export function renderSidebar() {
   // Theme toggle
   var tIcon = curTheme === 'dark' ? 'sun' : curTheme === 'high-contrast' ? 'eye' : 'moon';
   var tTitle = curTheme === 'dark' ? 'Contraste élevé' : curTheme === 'high-contrast' ? 'Mode clair' : 'Mode sombre';
-  var themeBtn = h('button', { onClick: toggleTheme, title: tTitle });
+  var themeBtn = h('button', { onClick: function() { if (window._smoothToggleTheme) window._smoothToggleTheme(); else toggleTheme(); }, title: tTitle });
   themeBtn.appendChild(icon(tIcon, 16));
   bottomActions.appendChild(themeBtn);
 
