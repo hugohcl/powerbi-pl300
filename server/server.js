@@ -273,21 +273,33 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     return res.status(503).json({ error: 'Cl\u00e9 API Gemini non configur\u00e9e. Ajoute GEMINI_API_KEY dans les variables d\'environnement Render.' });
   }
 
-  const { message, context } = req.body;
+  const { message, context, history } = req.body;
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return res.status(400).json({ error: 'Message vide.' });
   }
 
   const systemPrompt = CHAT_SYSTEM + (context ? `\n\nContexte actuel de l'apprenant : ${context}` : '');
 
+  // Build conversation history
+  const contents = [];
+  if (history && Array.isArray(history)) {
+    history.slice(-10).forEach(function(msg) {
+      contents.push({
+        role: msg.role === 'bot' ? 'model' : 'user',
+        parts: [{ text: msg.text }]
+      });
+    });
+  }
+  contents.push({ role: 'user', parts: [{ text: message.trim().slice(0, 2000) }] });
+
   try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: message.trim().slice(0, 2000) }] }],
-        generationConfig: { maxOutputTokens: 500 }
+        contents,
+        generationConfig: { temperature: 0.7, topP: 0.9, maxOutputTokens: 500 }
       })
     });
 

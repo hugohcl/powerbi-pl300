@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '4.0.4';
+const APP_VERSION = '4.1.0';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -5180,7 +5180,7 @@ async function sendChatMessage() {
     var resp = await fetch(SYNC_API + '/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, context: getChatContext() })
+      body: JSON.stringify({ message: msg, context: getChatContext(), history: _chatMessages.slice(-10) })
     });
     var data = await resp.json();
     if (data.error) {
