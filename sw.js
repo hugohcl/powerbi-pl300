@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pl300-v4.0.0';
+const CACHE_NAME = 'pl300-v4.0.1';
 const ASSETS = [
   './',
   './index.html',
-  './app.js?v=4.0.0',
-  './data.js?v=4.0.0',
+  './app.js?v=4.0.1',
+  './data.js?v=4.0.1',
   './icon.png',
   './manifest.json'
 ];

@@ -253,7 +253,7 @@ function mergeProgress(server, client) {
 // ─── Serve static frontend (production) ───
 app.use(express.static(path.join(__dirname, '..')));
 
-// ─── Chat (Claude Haiku tutor) ───
+// ─── Chat (Gemini Flash tutor — free) ───
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
@@ -268,9 +268,9 @@ const CHAT_SYSTEM = `Tu es un tuteur Power BI et DAX. Tu aides un apprenant qui 
 - Si tu ne sais pas, dis-le honnêtement`;
 
 app.post('/api/chat', chatLimiter, async (req, res) => {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ error: 'Clé API Anthropic non configurée. Ajoute ANTHROPIC_API_KEY dans les variables d\'environnement Render.' });
+    return res.status(503).json({ error: 'Cl\u00e9 API Gemini non configur\u00e9e. Ajoute GEMINI_API_KEY dans les variables d\'environnement Render.' });
   }
 
   const { message, context } = req.body;
@@ -281,29 +281,26 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
   const systemPrompt = CHAT_SYSTEM + (context ? `\n\nContexte actuel de l'apprenant : ${context}` : '');
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: message.trim().slice(0, 2000) }]
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: message.trim().slice(0, 2000) }] }],
+        generationConfig: { maxOutputTokens: 500 }
       })
     });
 
     if (!response.ok) {
       const errBody = await response.text();
-      console.error('[chat] API error:', response.status, errBody);
-      return res.status(502).json({ error: 'Erreur API Anthropic.' });
+      console.error('[chat] Gemini API error:', response.status, errBody);
+      return res.status(502).json({ error: 'Erreur API Gemini.' });
     }
 
     const data = await response.json();
-    const reply = data.content && data.content[0] ? data.content[0].text : 'Pas de réponse.';
+    const reply = data.candidates && data.candidates[0] && data.candidates[0].content
+      ? data.candidates[0].content.parts.map(p => p.text).join('')
+      : 'Pas de r\u00e9ponse.';
     res.json({ reply });
   } catch (err) {
     console.error('[chat] Error:', err.message);
