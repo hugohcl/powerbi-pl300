@@ -3,7 +3,7 @@
 ## Règles obligatoires
 - **Toujours bumper la version** (APP_VERSION dans app.js, sw.js, index.html) à chaque push. Même pour un hotfix.
 - **Toujours communiquer le numéro de version** (ex: "v1.3.3 pushée") dans la réponse après chaque push.
-- Nom de l'app : **Formation Power BI**
+- Nom de l'app : **DAX Academy**
 
 ## Stack technique
 - Frontend : SPA vanilla JS (index.html, app.js, data.js)
@@ -15,7 +15,7 @@
 ## Structure
 ```
 index.html          — Page unique (HTML + CSS inline)
-app.js              — Logique applicative (~3400 lignes)
+app.js              — Logique applicative (~4900 lignes)
 data.js             — Contenu formation (chapitres, quiz, exercices)
 sw.js               — Service worker (cache offline)
 manifest.json       — PWA manifest
@@ -63,7 +63,7 @@ Formation | Quiz PL-300 | Flashcards | Référence | Progression
 - Palette : bleu #2E75B6 accent principal
 - Dark mode par défaut + Light mode + High-contrast
 - **Pas d'emojis** dans l'UI — utiliser des icônes SVG via la fonction `icon()`
-- Desktop-first (pas d'optimisation mobile nécessaire, mais responsive OK)
+- Desktop + Mobile (sidebar desktop, bottom tab bar mobile avec 5 onglets)
 
 ### CSS — Convention box-*
 Les `.box-*` utilisent un fond neutre `var(--bg2)` avec **seulement un border-left coloré de 2px** :
@@ -80,13 +80,15 @@ Les `.box-*` utilisent un fond neutre `var(--bg2)` avec **seulement un border-le
 --bg, --bg2, --bg3    — fonds (dark: #141419, #1c1c24, #24242e)
 --tx, --tx2, --tx3    — textes (primaire, secondaire, tertiaire)
 --ac                  — accent (#2E75B6)
+--bd                  — bordures
 ```
+**Ne PAS créer de nouvelles variables** (--text, --border, etc.) — utiliser celles ci-dessus.
 
 ## Règles de développement
 
 ### Obligatoire
 - **Ne JAMAIS réécrire un fichier from scratch** — patcher l'existant avec des remplacements ciblés
-- **`node --check`** sur le JS avant chaque commit
+- **`node --check`** sur le JS avant chaque commit (ou `node tests/smoke.js` si disponible)
 - **Vérifier que tous les `getElementById('x')` ont un `id="x"` dans le HTML**
 - Taille du fichier cohérente avec la version précédente après édition
 
@@ -123,6 +125,9 @@ git push --force-with-lease -u origin claude/xxx
 ```
 Cela crée un seul commit propre basé sur master, sans historique divergent.
 
+## Documentation
+- **Avant toute modification structurelle**, consulte ARCHITECTURE.md et mets-le à jour après
+
 ## Auto-correction
 Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire la même erreur.
 
@@ -136,4 +141,4 @@ Quand l'utilisateur me corrige, ce fichier est mis à jour pour ne plus refaire 
 - **TOUJOURS rebaser sur master avant chaque push** — après un squash-merge, la branche locale diverge. Faire systématiquement `git fetch origin master && git reset --soft origin/master && git commit && git push --force-with-lease` pour garantir un commit propre basé sur le dernier master
 
 ## Version actuelle
-v3.0.7
+v3.0.11
