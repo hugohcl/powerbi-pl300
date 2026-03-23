@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '4.6.0';
+export const APP_VERSION = '4.7.0';
 
 // ─── Render proxy ───
 let _renderFn = null;
@@ -9,13 +9,31 @@ export function setRenderFn(fn) { _renderFn = fn; }
 export function render() { if (_renderFn) _renderFn(); }
 
 // ─── Helpers ───
+export function renderSkeleton(type) {
+  if (type === 'cards') {
+    const wrap = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } });
+    for (let i = 0; i < 3; i++) {
+      wrap.appendChild(h('div', { className: 'skeleton skeleton-card', style: { animationDelay: (i * 0.15) + 's' } }));
+    }
+    return wrap;
+  }
+  if (type === 'lines') {
+    const wrap = h('div', null);
+    wrap.appendChild(h('div', { className: 'skeleton skeleton-line', style: { width: '40%' } }));
+    wrap.appendChild(h('div', { className: 'skeleton skeleton-line medium' }));
+    wrap.appendChild(h('div', { className: 'skeleton skeleton-line short' }));
+    return wrap;
+  }
+  return h('div', { className: 'skeleton skeleton-card' });
+}
+
 export function h(tag, attrs, ...children) {
   const el = document.createElement(tag);
   if (attrs) Object.entries(attrs).forEach(([k, v]) => {
     if (k === 'className') el.className = v;
     else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
     else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
-    else el.setAttribute(k, v);
+    else if (v != null) el.setAttribute(k, v);
   });
   children.flat(3).forEach(c => {
     if (c == null || c === false) return;

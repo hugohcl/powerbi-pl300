@@ -118,7 +118,7 @@ function mainRender() {
   }
   S._prevTab = S.tab;
   S._prevChapterIdx = S.chapterIdx;
-  var content = h('div', { className: animClass });
+  var content = h('div', { className: animClass + ' view-enter' });
   if (S.tab === 'home') content.appendChild(renderHome());
   else if (S.tab === 'formation') content.appendChild(renderFormation());
   else if (S.tab === 'quiz') content.appendChild(renderQuiz());
@@ -127,6 +127,8 @@ function mainRender() {
   else if (S.tab === 'ref') content.appendChild(renderReference());
   else if (S.tab === 'progress') content.appendChild(renderProgress());
   appEl.appendChild(content);
+  // Remove view-enter class after animation completes
+  content.addEventListener('animationend', function() { content.classList.remove('view-enter'); }, { once: true });
 
   // Global progress bar
   var existingProgress = document.querySelector('.global-progress');
@@ -175,7 +177,7 @@ function mainRender() {
   topActions.appendChild(musicBtn);
 
   var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
-  var themeBtn = h('button', { onClick: toggleTheme, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
+  var themeBtn = h('button', { onClick: function() { if (window._smoothToggleTheme) window._smoothToggleTheme(); else toggleTheme(); }, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
   themeBtn.appendChild(isDarkMobile ? icon('sun', 22) : icon('moon', 22));
   topActions.appendChild(themeBtn);
 
@@ -348,6 +350,89 @@ if (getSyncCode()) { syncPull(); }
     sessionStorage.setItem('pbi-splashed', '1');
     setTimeout(function() { sp.style.display = 'none'; }, 600);
   }, 2500);
+})();
+
+// ─── Glow cursor effect on cards ───
+(function() {
+  document.addEventListener('mousemove', function(e) {
+    var cards = document.querySelectorAll('.bento-card, .chapter-card, .quiz-card-apple, .flashcard, .card');
+    cards.forEach(function(card) {
+      var rect = card.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        card.classList.add('glow-card');
+        card.style.setProperty('--mouse-x', (e.clientX - rect.left) + 'px');
+        card.style.setProperty('--mouse-y', (e.clientY - rect.top) + 'px');
+      } else {
+        card.classList.remove('glow-card');
+      }
+    });
+  }, { passive: true });
+})();
+
+// ─── Ripple effect on mobile buttons ───
+(function() {
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button, .mobile-tab, .nav-item, .pill, .quiz-opt, .hero-btn, .exam-btn-apple');
+    if (!btn) return;
+    btn.style.position = btn.style.position || 'relative';
+    btn.style.overflow = 'hidden';
+    var circle = document.createElement('span');
+    circle.className = 'ripple';
+    var rect = btn.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    circle.style.width = circle.style.height = size + 'px';
+    circle.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    circle.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(circle);
+    circle.addEventListener('animationend', function() { circle.remove(); });
+  });
+})();
+
+// ─── Parallax scroll on bento stat cards ───
+(function() {
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      var cards = document.querySelectorAll('.bento-stat, .stat-mini');
+      cards.forEach(function(card) {
+        var rect = card.getBoundingClientRect();
+        var viewH = window.innerHeight;
+        if (rect.top < viewH && rect.bottom > 0) {
+          var center = rect.top + rect.height / 2;
+          var offset = (center - viewH / 2) / viewH;
+          var shift = Math.round(offset * -4 * 10) / 10;
+          card.style.transform = 'translateY(' + shift + 'px)';
+        }
+      });
+      ticking = false;
+    });
+  }, { passive: true });
+})();
+
+// ─── Smooth theme transition ───
+var origToggleTheme = toggleTheme;
+window._smoothToggleTheme = function() {
+  document.documentElement.classList.add('theme-transitioning');
+  origToggleTheme();
+  setTimeout(function() {
+    document.documentElement.classList.remove('theme-transitioning');
+  }, 450);
+};
+
+// ─── Inject gradient mesh into hero bento on render ───
+var _origRender = render;
+(function() {
+  var observer = new MutationObserver(function() {
+    var hero = document.querySelector('.bento-hero');
+    if (hero && !hero.querySelector('.gradient-mesh')) {
+      var mesh = document.createElement('div');
+      mesh.className = 'gradient-mesh';
+      hero.insertBefore(mesh, hero.firstChild);
+    }
+  });
+  observer.observe(document.getElementById('app'), { childList: true, subtree: true });
 })();
 
 // Debug access
