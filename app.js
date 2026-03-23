@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.1.1';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -980,8 +980,21 @@ function render() {
     return;
   }
 
-  // Add fade-in animation
-  var content = h('div', { className: 'fade-in' });
+  // Add directional animation
+  var tabOrder = ['home', 'formation', 'quiz', 'flash', 'interview', 'ref', 'progress'];
+  var prevIdx = tabOrder.indexOf(S._prevTab || 'home');
+  var curIdx = tabOrder.indexOf(S.tab);
+  var animClass = 'fade-in';
+  if (S._prevTab !== S.tab) {
+    animClass = curIdx > prevIdx ? 'slide-forward' : 'slide-back';
+  } else if (S.tab === 'formation' && S.chapterIdx !== null && S._prevChapterIdx === null) {
+    animClass = 'slide-forward';
+  } else if (S.tab === 'formation' && S.chapterIdx === null && S._prevChapterIdx !== null) {
+    animClass = 'slide-back';
+  }
+  S._prevTab = S.tab;
+  S._prevChapterIdx = S.chapterIdx;
+  var content = h('div', { className: animClass });
   if (S.tab === 'home') content.appendChild(renderHome());
   else if (S.tab === 'formation') content.appendChild(renderFormation());
   else if (S.tab === 'quiz') content.appendChild(renderQuiz());
@@ -990,6 +1003,20 @@ function render() {
   else if (S.tab === 'ref') content.appendChild(renderReference());
   else if (S.tab === 'progress') content.appendChild(renderProgress());
   appEl.appendChild(content);
+
+  // Global progress bar
+  var existingProgress = document.querySelector('.global-progress');
+  if (existingProgress) existingProgress.remove();
+  var totalMissions = getTotalMissions();
+  var doneMissions = Object.values(S.missions).filter(Boolean).length;
+  var masteredCards = FLASHCARDS.filter(function(_, i) { return sm2IsMastered(i); }).length;
+  var globalPct = Math.round((doneMissions + masteredCards) / (totalMissions + FLASHCARDS.length) * 100);
+  if (globalPct > 0) {
+    var gBar = h('div', { className: 'global-progress' },
+      h('div', { className: 'global-progress-fill', style: { width: globalPct + '%' } })
+    );
+    document.body.appendChild(gBar);
+  }
 
   // Mobile top bar (fixed header with utilities)
   var existingTopbar = document.querySelector('.mobile-topbar');

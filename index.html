@@ -277,7 +277,13 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
-.fade-in { animation: fadeIn .25s ease; }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn .25s cubic-bezier(0.4, 0, 0.2, 1); }
+.slide-forward { animation: slideIn .3s cubic-bezier(0.4, 0, 0.2, 1); }
+.slide-back { animation: slideInLeft .3s cubic-bezier(0.4, 0, 0.2, 1); }
+.slide-up { animation: slideUp .3s cubic-bezier(0.4, 0, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .fade-in, .slide-forward, .slide-back, .slide-up { animation: none; } }
 .quiz-opt { transition: all .15s ease; }
 .quiz-opt:not(.correct):not(.wrong):hover { transform: translateX(4px); border-color: var(--accent); }
 .flashcard { transition: all .2s ease; }
@@ -653,6 +659,10 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .top-bento, .bottom-bento, .domain-grid { grid-template-columns: 1fr; }
 }
 /* Mobile top bar + bottom tabs */
+/* Global progress bar */
+.global-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 1001; background: transparent; pointer-events: none; }
+.global-progress-fill { height: 100%; background: var(--accent); border-radius: 0 2px 2px 0; transition: width .6s cubic-bezier(0.4, 0, 0.2, 1); }
+
 .mobile-topbar, .mobile-tabs { display: none; }
 @media (max-width: 768px) {
   .sidebar { display: none; }
