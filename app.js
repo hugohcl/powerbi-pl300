@@ -201,7 +201,7 @@ function mainRender() {
     var tab = h('button', {
       className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
       onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
-    }, icon(mi.iconName, 20), h('span', null, mi.label));
+    }, icon(mi.iconName, 28));
     mobileTabs.appendChild(tab);
   });
   document.body.appendChild(mobileTabs);
