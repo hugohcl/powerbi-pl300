@@ -253,6 +253,64 @@ function mergeProgress(server, client) {
 // ─── Serve static frontend (production) ───
 app.use(express.static(path.join(__dirname, '..')));
 
+// ─── Chat (Claude Haiku tutor) ───
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: 'Trop de messages, attends une minute.' }
+});
+
+const CHAT_SYSTEM = `Tu es un tuteur Power BI et DAX. Tu aides un apprenant qui prépare la certification PL-300.
+- Réponds en français, de manière concise (5 lignes max sauf si une formule DAX est nécessaire)
+- Utilise des exemples concrets avec la base AdventureWorks PostgreSQL (tables : Sales=sales.salesorderdetail, Orders=sales.salesorderheader, Product=production.product, Customer=sales.customer, Territory=sales.salesterritory)
+- Si la question concerne du DAX, donne la formule exacte avec explication courte
+- Ne donne pas de réponses trop longues — va droit au but
+- Si tu ne sais pas, dis-le honnêtement`;
+
+app.post('/api/chat', chatLimiter, async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({ error: 'Clé API Anthropic non configurée. Ajoute ANTHROPIC_API_KEY dans les variables d\'environnement Render.' });
+  }
+
+  const { message, context } = req.body;
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Message vide.' });
+  }
+
+  const systemPrompt = CHAT_SYSTEM + (context ? `\n\nContexte actuel de l'apprenant : ${context}` : '');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message.trim().slice(0, 2000) }]
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('[chat] API error:', response.status, errBody);
+      return res.status(502).json({ error: 'Erreur API Anthropic.' });
+    }
+
+    const data = await response.json();
+    const reply = data.content && data.content[0] ? data.content[0].text : 'Pas de réponse.';
+    res.json({ reply });
+  } catch (err) {
+    console.error('[chat] Error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
 // ─── Cleanup old entries (> 90 days inactive) ───
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // daily
 const MAX_AGE = 90 * 24 * 60 * 60 * 1000; // 90 days
