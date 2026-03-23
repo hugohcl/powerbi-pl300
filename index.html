@@ -757,7 +757,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .chat-input-row { padding: 12px; border-top: 0.5px solid var(--bd); display: flex; gap: 8px; background: var(--bg2); }
 .chat-input-row input { flex: 1; padding: 10px 14px; border: 0.5px solid var(--bd); border-radius: 20px; background: var(--bg); color: var(--tx); font-size: 13px; outline: none; min-height: auto; }
 .chat-input-row input:focus { border-color: var(--accent); }
-.chat-input-row button { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; }
+.chat-input-row button { width: 36px; height: 36px; border-radius: 50%; background: var(--bg3); color: var(--tx3); border: none; cursor: default; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; transition: background .2s, color .2s; }
+.chat-input-row button.active { background: var(--accent); color: white; cursor: pointer; }
 .chat-input-row button:disabled { opacity: 0.4; cursor: not-allowed; }
 @media (max-width: 768px) {
   .chat-fab { bottom: 80px; right: 12px; }
@@ -769,8 +770,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 <div id="splash"><img src="icon.png" alt=""><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=4.2.4"></script>
-<script src="app.js?v=4.2.4"></script>
+<script src="data.js?v=4.2.5"></script>
+<script src="app.js?v=4.2.5"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

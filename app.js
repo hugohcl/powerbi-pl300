@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // APP.JS — Logique applicative Formation PowerBI + PL-300
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = '4.2.4';
+const APP_VERSION = '4.2.5';
 
 // ─── Syntax highlighting for DAX / M / SQL code blocks ───
 function highlightCode(code) {
@@ -5143,7 +5143,11 @@ function renderChatPanel() {
     type: 'text',
     placeholder: 'Pose ta question...',
     id: 'chat-input',
-    onKeydown: function(e) { if (e.key === 'Enter' && !_chatLoading) sendChatMessage(); }
+    onKeydown: function(e) { if (e.key === 'Enter' && !_chatLoading) sendChatMessage(); },
+    onInput: function(e) {
+      var btn = e.target.parentElement.querySelector('button');
+      if (btn) { if (e.target.value.trim()) btn.classList.add('active'); else btn.classList.remove('active'); }
+    }
   });
   var sendBtn = h('button', {
     onClick: function() { if (!_chatLoading) sendChatMessage(); },
