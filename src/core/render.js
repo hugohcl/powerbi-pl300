@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '4.5.0';
+export const APP_VERSION = '4.6.0';
 
 // ─── Render proxy ───
 let _renderFn = null;

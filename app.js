@@ -200,6 +200,9 @@ function mainRender() {
   mobileItems.forEach(function(mi) {
     var tab = h('button', {
       className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
+      'aria-label': mi.label,
+      'aria-current': S.tab === mi.id ? 'page' : null,
+      role: 'tab',
       onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
     }, icon(mi.iconName, 20), h('span', null, mi.label));
     mobileTabs.appendChild(tab);
@@ -222,6 +225,13 @@ document.addEventListener('keydown', function(e) {
     return;
   }
   if (e.key === 'Escape' && S.searchOpen) { S.searchOpen = false; render(); return; }
+  // Tab navigation with numbers 1-5
+  if (!S.searchOpen && !S.examActive && e.key >= '1' && e.key <= '5' && S.tab !== 'quiz' && S.tab !== 'flash') {
+    var tabIds = ['home', 'formation', 'quiz', 'flash', 'progress'];
+    var tabIdx = parseInt(e.key) - 1;
+    if (tabIdx < tabIds.length) { S.tab = tabIds[tabIdx]; if (tabIds[tabIdx] === 'formation') S.chapterIdx = null; render(); }
+    return;
+  }
   if (S.tab === 'quiz' && S.quizQuestions.length > 0 && S.qi >= 0 && S.qi < S.quizQuestions.length) {
     if (!S.shown && 'abcd'.includes(e.key.toLowerCase())) {
       var idx = e.key.toLowerCase().charCodeAt(0) - 97;

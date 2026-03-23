@@ -207,6 +207,9 @@ export function renderSidebar() {
     section.items.forEach(function(item) {
       var navItem = h('button', {
         className: 'nav-item' + (S.tab === item.id ? ' active' : ''),
+        'aria-label': item.text,
+        'aria-current': S.tab === item.id ? 'page' : null,
+        role: 'tab',
         onClick: function() { S.tab = item.id; if (item.id === 'formation') S.chapterIdx = null; render(); }
       });
       navItem.appendChild(makeSidebarSvg(item.icon));
@@ -224,7 +227,7 @@ export function renderSidebar() {
   sidebar.appendChild(h('div', { className: 'sidebar-spacer' }));
 
   // Search shortcut
-  var searchBtn = h('button', { className: 'sidebar-search', onClick: function() { S.searchOpen = true; render(); } });
+  var searchBtn = h('button', { className: 'sidebar-search', 'aria-label': 'Rechercher dans l\'application', onClick: function() { S.searchOpen = true; render(); } });
   searchBtn.appendChild(makeSidebarSvg('<circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/>'));
   searchBtn.appendChild(h('span', { className: 'sidebar-search-text' }, 'Rechercher\u2026'));
   searchBtn.appendChild(h('span', { className: 'sidebar-search-shortcut' }, '\u2318K'));
