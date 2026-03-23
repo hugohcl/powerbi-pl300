@@ -32,12 +32,34 @@ console.log('\nDAX Academy — Smoke Tests\n');
 // ── Syntax checks ──
 console.log('Syntax:');
 
-test('app.js syntax valid', function() {
-  execSync('node --check ' + quote(path.join(ROOT, 'app.js')), { stdio: 'pipe' });
-});
+var jsFiles = [
+  'app.js',
+  'data.js',
+  'src/core/state.js',
+  'src/core/render.js',
+  'src/core/icons.js',
+  'src/data/highlight.js',
+  'src/features/gamification.js',
+  'src/features/sync.js',
+  'src/features/flashcards.js',
+  'src/features/quiz.js',
+  'src/features/missions.js',
+  'src/features/exercises.js',
+  'src/features/pomodoro.js',
+  'src/features/chat.js',
+  'src/features/search.js',
+  'src/ui/sidebar.js',
+  'src/ui/home.js',
+  'src/ui/formation.js',
+  'src/ui/progress.js',
+  'src/ui/reference.js',
+  'src/ui/interview.js'
+];
 
-test('data.js syntax valid', function() {
-  execSync('node --check ' + quote(path.join(ROOT, 'data.js')), { stdio: 'pipe' });
+jsFiles.forEach(function(f) {
+  test(f + ' syntax valid', function() {
+    execSync('node --check ' + quote(path.join(ROOT, f)), { stdio: 'pipe' });
+  });
 });
 
 test('server/server.js syntax valid', function() {
@@ -50,6 +72,8 @@ console.log('\nData integrity:');
 var src = fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8');
 // Remove const/let/var declarations to make them global in eval
 src = src.replace(/^const /gm, 'var ').replace(/^let /gm, 'var ');
+// Provide window mock for data.js window assignments
+if (typeof window === 'undefined') { global.window = global; }
 eval(src);
 
 test('CHAPTERS defined and has 7 entries', function() {
@@ -105,11 +129,11 @@ test('All chapters have sections with theory', function() {
 // ── Version alignment ──
 console.log('\nVersioning:');
 
-var appSrc = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
-var appVersionMatch = appSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+var renderSrc = fs.readFileSync(path.join(ROOT, 'src', 'core', 'render.js'), 'utf8');
+var appVersionMatch = renderSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
 var appVersion = appVersionMatch ? appVersionMatch[1] : null;
 
-test('APP_VERSION found in app.js', function() {
+test('APP_VERSION found in src/core/render.js', function() {
   assert(appVersion, 'APP_VERSION not found');
 });
 
@@ -119,6 +143,10 @@ var swVersion = swVersionMatch ? swVersionMatch[1] : null;
 
 test('Version found in sw.js', function() {
   assert(swVersion, 'Version not found in sw.js CACHE_NAME');
+});
+
+test('APP_VERSION matches sw.js version', function() {
+  assert(appVersion === swVersion, 'Version mismatch: render.js=' + appVersion + ' sw.js=' + swVersion);
 });
 
 // ── Summary ──
