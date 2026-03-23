@@ -294,7 +294,10 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     if (!response.ok) {
       const errBody = await response.text();
       console.error('[chat] Gemini API error:', response.status, errBody);
-      return res.status(502).json({ error: 'Erreur API Gemini.' });
+      if (response.status === 400) return res.status(502).json({ error: 'Erreur Gemini : requ\u00eate invalide. V\u00e9rifie la cl\u00e9 API.' });
+      if (response.status === 403) return res.status(502).json({ error: 'Cl\u00e9 API Gemini refus\u00e9e. R\u00e9g\u00e9n\u00e8re-la sur aistudio.google.com.' });
+      if (response.status === 429) return res.status(502).json({ error: 'Limite Gemini atteinte. R\u00e9essaie dans une minute.' });
+      return res.status(502).json({ error: 'Erreur API Gemini (code ' + response.status + ').' });
     }
 
     const data = await response.json();
