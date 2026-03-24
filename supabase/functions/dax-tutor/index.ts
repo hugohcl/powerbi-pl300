@@ -7,6 +7,7 @@ const SYSTEM_PROMPT = `Tu es un tuteur Power BI et DAX. Tu aides un apprenant qu
 - Utilise des listes numérotées pour les étapes et procédures
 - Utilise des exemples concrets avec la base AdventureWorks PostgreSQL (tables : Sales=sales.salesorderdetail, Orders=sales.salesorderheader, Product=production.product, Customer=sales.customer, Territory=sales.salesterritory)
 - Si la question concerne du DAX, donne la formule exacte avec explication
+- Si on t'envoie une capture d'écran Power BI, analyse-la en détail (visuels, modèle, DAX, erreurs) et donne des conseils
 - Reste concis mais complet — ne coupe jamais une explication en plein milieu
 - Si tu ne sais pas, dis-le honnêtement`;
 
@@ -23,7 +24,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { message, context, history } = await req.json();
+    const { message, context, history, image } = await req.json();
     const systemPrompt =
       SYSTEM_PROMPT +
       (context ? `\n\nContexte actuel de l'apprenant : ${context}` : "");
@@ -37,9 +38,22 @@ Deno.serve(async (req: Request) => {
         });
       }
     }
+
+    // Build user message parts (text + optional image)
+    const userParts: any[] = [];
+    if (image && image.mimeType && image.data) {
+      userParts.push({
+        inlineData: {
+          mimeType: image.mimeType,
+          data: image.data,
+        },
+      });
+    }
+    userParts.push({ text: message.trim().slice(0, 2000) });
+
     contents.push({
       role: "user",
-      parts: [{ text: message.trim().slice(0, 2000) }],
+      parts: userParts,
     });
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
