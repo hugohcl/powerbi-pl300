@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '4.7.2';
+export const APP_VERSION = '4.7.3';
 
 // ─── Render proxy ───
 let _renderFn = null;
@@ -33,7 +33,8 @@ export function h(tag, attrs, ...children) {
     if (k === 'className') el.className = v;
     else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
     else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
-    else if (v != null) el.setAttribute(k, v);
+    else if (v === true) el.setAttribute(k, '');
+    else if (v !== false && v != null) el.setAttribute(k, v);
   });
   children.flat(3).forEach(c => {
     if (c == null || c === false) return;
