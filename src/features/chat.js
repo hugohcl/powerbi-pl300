@@ -90,6 +90,7 @@ export async function sendChatMessage() {
   if (!input || !input.value.trim()) return;
   var msg = input.value.trim();
 
+  var historyToSend = _chatMessages.slice(-10);
   _chatMessages.push({ role: 'user', text: msg });
   _chatLoading = true;
   renderChatPanel();
@@ -98,7 +99,7 @@ export async function sendChatMessage() {
     var resp = await fetch(SUPABASE_URL + '/functions/v1/dax-tutor', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ message: msg, context: getChatContext(), history: _chatMessages.slice(-10) })
+      body: JSON.stringify({ message: msg, context: getChatContext(), history: historyToSend })
     });
     var data = await resp.json();
     if (data.error) {
