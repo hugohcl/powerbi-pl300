@@ -225,7 +225,7 @@ export function renderHome() {
   var chaptersGrid = h('div', { className: 'chapters-grid' });
   var prereqs = getChapterPrereqs();
   CHAPTERS.forEach(function(ch, i) {
-    var isLocked = prereqs[i] && !prereqs[i].unlocked;
+    var isLocked = !isChapterUnlocked(ch.id);
     var done = Object.entries(S.missions).filter(function(e) { return e[1] && Number(e[0]) >= ch.missions[0] && Number(e[0]) <= ch.missions[1]; }).length;
     var total = ch.missions[1] - ch.missions[0] + 1;
     var pct = Math.round(done / total * 100);
