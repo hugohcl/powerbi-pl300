@@ -51,22 +51,7 @@
   --glass-border: rgba(255,255,255,0.08);
   --glass-blur: blur(24px) saturate(180%);
 }
-[data-theme="high-contrast"] {
-  --bg: #000000; --bg2: #1a1a1a; --bg3: #2a2a2a;
-  --surface: #1a1a1a; --surface-secondary: #2a2a2a;
-  --tx: #ffffff; --tx2: #e0e0e0; --tx3: #b0b0b0;
-  --bd: rgba(255,255,255,0.25); --bd2: rgba(255,255,255,0.4);
-  --accent: #4da6ff; --accent-bg: #4da6ff30;
-  --green: #4ade80; --green-bg: #4ade8025;
-  --red: #ff6b6b; --red-bg: #ff6b6b25;
-  --orange: #ffb347;
-  --purple: #c084fc; --purple-bg: #c084fc25;
-  --yellow-bg: #ffb34725; --blue-light-bg: #4da6ff25;
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.4);
-  --glass: rgba(0,0,0,0.8);
-  --glass-border: rgba(255,255,255,0.15);
-  --glass-blur: blur(24px) saturate(180%);
-}
+
 html { scroll-behavior: smooth; background: var(--bg); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: var(--font); background: var(--bg); color: var(--tx); line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
@@ -895,8 +880,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=4.7.4"></script>
-<script type="module" src="app.js?v=4.7.4"></script>
+<script src="data.js?v=4.7.7"></script>
+<script type="module" src="app.js?v=4.7.7"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

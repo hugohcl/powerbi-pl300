@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '4.7.4';
+export const APP_VERSION = '4.7.7';
 
 // ─── Render proxy ───
 let _renderFn = null;
@@ -64,10 +64,10 @@ export function $(sel) { return document.querySelector(sel); }
 export function getTotalMissions() { return window.CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0); }
 
 // ─── Theme ───
-const THEMES = ['light', 'dark', 'high-contrast'];
+const THEMES = ['light', 'dark'];
 export function initTheme() {
   const saved = localStorage.getItem('pbi-theme');
-  if (saved === 'dark' || saved === 'high-contrast') document.documentElement.setAttribute('data-theme', saved);
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
 }
 export function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'light';
