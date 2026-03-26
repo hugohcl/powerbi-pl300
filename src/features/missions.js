@@ -261,7 +261,23 @@ export function renderMission(m) {
             }
           }
         }
-        save(); render();
+        save();
+        // Update button in-place instead of full re-render
+        var btn = e.currentTarget;
+        var nowDone = S.missions[mKey];
+        btn.className = 'done-btn' + (nowDone ? ' checked' : '');
+        btn.innerHTML = '';
+        if (nowDone) {
+          var sp = document.createElement('span');
+          sp.appendChild(icon('check', 12));
+          sp.appendChild(document.createTextNode(' Fait'));
+          btn.appendChild(sp);
+        } else {
+          btn.textContent = 'Marquer fait';
+        }
+        // Update mission card style
+        var card = btn.closest('.mission');
+        if (card) card.classList.toggle('mission-done', nowDone);
       }
     }, done ? h('span', null, icon('check', 12), ' Fait') : 'Marquer fait')
   ));
