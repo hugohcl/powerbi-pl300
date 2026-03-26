@@ -65,6 +65,7 @@ export const S = {
   streak: 0,
   lastActiveDate: null,
   xpHistory: [],
+  studyTime: 0, // seconds spent in app (tracked while window is visible)
   // Interview tab
   interviewFilter: 'all',
   interviewReviewed: {},
@@ -111,7 +112,7 @@ export function setSyncCallback(fn) { _syncCallback = fn; }
 
 // ─── Persistence ───
 export function getSaveData() {
-  return { missions: S.missions, missionsXpAwarded: S.missionsXpAwarded, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog };
+  return { missions: S.missions, missionsXpAwarded: S.missionsXpAwarded, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog, studyTime: S.studyTime };
 }
 
 export function save() {
@@ -150,6 +151,7 @@ export function applyData(d) {
   S.weeklyChallengeDate = d.weeklyChallengeDate || null;
   S.weeklyQuizLog = d.weeklyQuizLog || [];
   S.missionsXpAwarded = d.missionsXpAwarded || {};
+  S.studyTime = d.studyTime || 0;
 }
 
 export function load() {

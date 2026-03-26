@@ -338,6 +338,25 @@ showOnboarding();
 // Auto-sync on load if connected
 if (getSyncCode()) { syncPull(); }
 
+// ─── Study time tracker (counts seconds while window is visible) ───
+(function() {
+  var _studyInterval = null;
+  function startTracking() {
+    if (_studyInterval) return;
+    _studyInterval = setInterval(function() {
+      S.studyTime = (S.studyTime || 0) + 30;
+      save();
+    }, 30000); // save every 30s
+  }
+  function stopTracking() {
+    if (_studyInterval) { clearInterval(_studyInterval); _studyInterval = null; }
+  }
+  if (!document.hidden) startTracking();
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) stopTracking(); else startTracking();
+  });
+})();
+
 // Splash screen
 (function() {
   var sp = document.getElementById('splash');
