@@ -34,6 +34,7 @@ export const S = {
   fcFlipped: false,
   // Progress
   missions: {},    // {missionId: true}
+  missionsXpAwarded: {}, // {missionId: true} — tracks XP already given (anti-farming)
   checklist: {},   // {cl-chId-idx: true} — checklist séparée des missions
   known: {},       // {flashcardIdx: {ef, interval, repetitions, nextReview}} SM-2 data (migrated from old 0|1|2|3)
   quizStats: {},   // {questionHash: {right, wrong}}
@@ -110,7 +111,7 @@ export function setSyncCallback(fn) { _syncCallback = fn; }
 
 // ─── Persistence ───
 export function getSaveData() {
-  return { missions: S.missions, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog };
+  return { missions: S.missions, missionsXpAwarded: S.missionsXpAwarded, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog };
 }
 
 export function save() {
@@ -148,6 +149,7 @@ export function applyData(d) {
   S.weeklyChallenge = d.weeklyChallenge || null;
   S.weeklyChallengeDate = d.weeklyChallengeDate || null;
   S.weeklyQuizLog = d.weeklyQuizLog || [];
+  S.missionsXpAwarded = d.missionsXpAwarded || {};
 }
 
 export function load() {

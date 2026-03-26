@@ -244,14 +244,21 @@ export function renderMission(m) {
         e.stopPropagation();
         var wasDone = S.missions[mKey];
         S.missions[mKey] = !S.missions[mKey];
-        if (!wasDone && S.missions[mKey] && typeof window.XP_REWARDS !== 'undefined') {
+        // XP only if never completed before (prevent farming)
+        if (!S.missionsXpAwarded) S.missionsXpAwarded = {};
+        if (!wasDone && S.missions[mKey] && !S.missionsXpAwarded[mKey] && typeof window.XP_REWARDS !== 'undefined') {
+          S.missionsXpAwarded[mKey] = true;
           addXP(m.xp || window.XP_REWARDS.mission, 'Mission');
           // Check chapter complete
           var ch = window.CHAPTERS.find(function(c) { return c.id === m.ch; });
           if (ch) {
             var allDone = true;
             for (var i = ch.missions[0]; i <= ch.missions[1]; i++) { if (!S.missions[i]) { allDone = false; break; } }
-            if (allDone && typeof window.XP_REWARDS !== 'undefined') addXP(window.XP_REWARDS.chapter_complete, 'Chapitre ' + ch.id);
+            var chKey = 'ch_' + ch.id;
+            if (allDone && !S.missionsXpAwarded[chKey] && typeof window.XP_REWARDS !== 'undefined') {
+              S.missionsXpAwarded[chKey] = true;
+              addXP(window.XP_REWARDS.chapter_complete, 'Chapitre ' + ch.id);
+            }
           }
         }
         save(); render();
