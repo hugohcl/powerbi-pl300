@@ -1,6 +1,15 @@
 import { S } from '../core/state.js';
 import { render } from '../core/render.js';
 
+function _startInterval() {
+  if (S.pomodoro.interval) clearInterval(S.pomodoro.interval);
+  S.pomodoro.interval = setInterval(function() {
+    S.pomodoro.timeLeft--;
+    if (S.pomodoro.timeLeft <= 0) pomodoroNext();
+    updatePomodoroDisplay();
+  }, 1000);
+}
+
 export function startPomodoro() {
   S.pomodoro.active = true;
   S.pomodoro.mode = 'work';
@@ -8,13 +17,7 @@ export function startPomodoro() {
   S.pomodoro.cycle = 0;
   S.pomodoro.paused = false;
   S.pomodoro.dropdownOpen = false;
-  S.pomodoro.interval = setInterval(function() {
-    S.pomodoro.timeLeft--;
-    if (S.pomodoro.timeLeft <= 0) {
-      pomodoroNext();
-    }
-    updatePomodoroDisplay();
-  }, 1000);
+  _startInterval();
   render();
 }
 
@@ -70,31 +73,22 @@ export function stopPomodoro() {
 }
 
 export function pausePomodoro() {
-  if (S.pomodoro.interval) {
-    clearInterval(S.pomodoro.interval);
+  if (S.pomodoro.paused) {
+    S.pomodoro.paused = false;
+    _startInterval();
+  } else {
+    if (S.pomodoro.interval) clearInterval(S.pomodoro.interval);
     S.pomodoro.interval = null;
     S.pomodoro.paused = true;
-  } else {
-    S.pomodoro.paused = false;
-    S.pomodoro.interval = setInterval(function() {
-      S.pomodoro.timeLeft--;
-      if (S.pomodoro.timeLeft <= 0) pomodoroNext();
-      updatePomodoroDisplay();
-    }, 1000);
   }
   render();
 }
 
 export function resetPomodoro() {
-  clearInterval(S.pomodoro.interval);
   S.pomodoro.mode = 'work';
   S.pomodoro.timeLeft = 25 * 60;
   S.pomodoro.cycle = 0;
   S.pomodoro.paused = false;
-  S.pomodoro.interval = setInterval(function() {
-    S.pomodoro.timeLeft--;
-    if (S.pomodoro.timeLeft <= 0) pomodoroNext();
-    updatePomodoroDisplay();
-  }, 1000);
+  _startInterval();
   render();
 }
