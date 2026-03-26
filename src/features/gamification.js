@@ -339,7 +339,7 @@ export function getChapterPrereqs() {
     4: [3],
     5: [4],
     6: [4, 5],
-    7: [1]
+    7: [6]
   };
 }
 

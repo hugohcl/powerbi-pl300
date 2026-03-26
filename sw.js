@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pl300-v4.7.9';
+const CACHE_NAME = 'pl300-v4.8.0';
 const ASSETS = [
   './',
   './index.html',
-  './app.js?v=4.7.9',
-  './data.js?v=4.7.9',
+  './app.js?v=4.8.0',
+  './data.js?v=4.8.0',
   './src/core/state.js',
   './src/core/render.js',
   './src/core/icons.js',
@@ -30,7 +30,9 @@ const ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+      .then(cache => Promise.all(
+        ASSETS.map(url => fetch(url, { cache: 'reload' }).then(res => cache.put(url, res)))
+      ))
       .then(() => self.skipWaiting())
   );
 });
