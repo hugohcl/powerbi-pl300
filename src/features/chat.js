@@ -7,6 +7,23 @@ var _chatOpen = false;
 var _chatLoading = false;
 var _chatPendingImage = null; // { mimeType, data (base64) }
 
+function _renderMarkdown(text) {
+  // Lightweight markdown → HTML for chat messages
+  var html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape HTML first
+    .replace(/```([^`]*?)```/gs, '<pre><code>$1</code></pre>') // code blocks
+    .replace(/`([^`]+)`/g, '<code>$1</code>') // inline code
+    .replace(/^### (.+)$/gm, '<strong style="display:block;margin:8px 0 4px;font-size:14px;">$1</strong>') // h3
+    .replace(/^## (.+)$/gm, '<strong style="display:block;margin:10px 0 4px;font-size:15px;">$1</strong>') // h2
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // bold
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>') // italic
+    .replace(/^\* (.+)$/gm, '<li style="margin-left:16px;list-style:disc;">$1</li>') // unordered list
+    .replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal;">$1</li>') // ordered list
+    .replace(/\n{2,}/g, '<br><br>') // double newline = paragraph break
+    .replace(/\n/g, '<br>'); // single newline
+  return html;
+}
+
 function getChatContext() {
   var ctx = 'Niveau : ' + window.LEVELS[getLevel(S.xp)].name;
   if (S.tab === 'formation' && S.chapterIdx !== null && window.CHAPTERS[S.chapterIdx]) {
@@ -53,7 +70,9 @@ export function renderChatPanel() {
       msgEl.appendChild(img);
     }
     if (m.text) {
-      msgEl.appendChild(document.createTextNode(m.text));
+      var textDiv = document.createElement('div');
+      textDiv.innerHTML = _renderMarkdown(m.text);
+      msgEl.appendChild(textDiv);
     }
     msgArea.appendChild(msgEl);
   });
