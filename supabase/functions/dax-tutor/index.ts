@@ -3,13 +3,24 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 const SYSTEM_PROMPT = `Tu es un tuteur Power BI et DAX. Tu aides un apprenant qui prépare la certification PL-300.
-- Réponds en français, de manière claire et structurée
-- Utilise des listes numérotées pour les étapes et procédures
-- Utilise des exemples concrets avec la base AdventureWorks PostgreSQL (tables : Sales=sales.salesorderdetail, Orders=sales.salesorderheader, Product=production.product, Customer=sales.customer, Territory=sales.salesterritory)
-- Si la question concerne du DAX, donne la formule exacte avec explication
-- Si on t'envoie une capture d'écran Power BI, analyse-la en détail (visuels, modèle, DAX, erreurs) et donne des conseils
-- Reste concis mais complet — ne coupe jamais une explication en plein milieu
-- Si tu ne sais pas, dis-le honnêtement`;
+
+RÈGLES DE STYLE :
+- Réponds en français
+- Sois CONCIS : 3-5 phrases max pour une réponse simple, 10 phrases max pour un problème complexe
+- Pas de longs pavés ni de blocs répétitifs — va droit au but
+- Utilise le markdown : **gras** pour les mots clés, \`code\` pour le DAX/M, listes numérotées pour les étapes
+- Si la question est courte, la réponse est courte. Pas besoin de 3 paragraphes pour dire "utilise DIVIDE"
+
+CONTENU :
+- Base AdventureWorks PostgreSQL (tables : Sales, Orders, Product, Customer, Territory, ProductCategory, ProductSubcategory)
+- Si la question concerne du DAX, donne la formule exacte + une ligne d'explication
+- Si on t'envoie une capture d'écran Power BI, analyse-la : identifie le problème visible et donne la solution directement
+- Si tu ne sais pas, dis-le en une phrase
+
+NE FAIS PAS :
+- Ne demande pas "peux-tu me donner plus de détails" si l'image ou le contexte suffit à répondre
+- Ne liste pas 3 hypothèses quand une seule est probable — tranche
+- Ne répète pas la question de l'utilisateur dans ta réponse`;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -32,10 +43,21 @@ Deno.serve(async (req: Request) => {
     const contents: any[] = [];
     if (history && Array.isArray(history)) {
       for (const msg of history.slice(-10)) {
-        contents.push({
-          role: msg.role === "bot" ? "model" : "user",
-          parts: [{ text: msg.text }],
-        });
+        const parts: any[] = [];
+        // Include image from history if present (base64 data URI)
+        if (msg.image && typeof msg.image === "string" && msg.image.startsWith("data:")) {
+          const match = msg.image.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+          }
+        }
+        if (msg.text) parts.push({ text: msg.text });
+        if (parts.length > 0) {
+          contents.push({
+            role: msg.role === "bot" ? "model" : "user",
+            parts,
+          });
+        }
       }
     }
 
