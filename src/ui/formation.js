@@ -194,48 +194,7 @@ export function renderChapterList() {
   // Roadmap
   wrap.appendChild(renderRoadmap());
 
-  // ── Skill Tree (non-linear) ──
-  var prereqs = getChapterPrereqs();
-  var skillTreeWrap = h('div', { className: 'skill-tree' });
-  skillTreeWrap.appendChild(h('div', { style: { fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.5px', color: 'var(--tx3)', marginBottom: '12px' } }, 'Arbre de competences'));
-
-  // Render chapters as a non-linear tree
-  var rows = [
-    [1],       // Row 1: Introduction
-    [2, 3, 7], // Row 2: Power Query, Modelling, Service (parallel)
-    [4],       // Row 3: DAX (needs 3)
-    [5],       // Row 4: Time Intelligence (needs 4)
-    [6]        // Row 5: Advanced (needs 4, 5)
-  ];
-
-  rows.forEach(function(rowChIds) {
-    var row = h('div', { className: 'skill-tree-row' });
-    rowChIds.forEach(function(chId) {
-      var ch = CHAPTERS[chId - 1];
-      var done = 0, total = ch.missions[1] - ch.missions[0] + 1;
-      for (var i = ch.missions[0]; i <= ch.missions[1]; i++) { if (S.missions[i]) done++; }
-      var pct = Math.round(done / total * 100);
-      var unlocked = isChapterUnlocked(chId);
-      var nodeClass = 'skill-node' + (pct === 100 ? ' done' : unlocked ? ' unlocked' : ' locked');
-
-      var node = h('div', {
-        className: nodeClass,
-        onClick: function() { if (unlocked) { S.chapterIdx = chId - 1; render(); } }
-      },
-        h('div', { className: 'skill-node-num' }, String(chId)),
-        h('div', { className: 'skill-node-title' }, ch.title),
-        h('div', { className: 'skill-node-bar' },
-          h('div', { className: 'skill-node-fill' + (pct === 100 ? ' green' : ''), style: { width: pct + '%' } })
-        ),
-        !unlocked ? h('div', { className: 'skill-node-lock' }, icon('lock', 12)) : null
-      );
-      row.appendChild(node);
-    });
-    skillTreeWrap.appendChild(row);
-  });
-  wrap.appendChild(skillTreeWrap);
-
-  // ── Chapter list (classic) ──
+  // ── Chapter list ──
   const done = Object.values(S.missions).filter(Boolean).length;
   const totalMissionsMax = CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0);
 
