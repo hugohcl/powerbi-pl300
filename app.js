@@ -212,7 +212,7 @@ function mainRender() {
   document.body.appendChild(mobileTabs);
 }
 
-// Register the render function
+// Register the render function (overridden below with history tracking)
 setRenderFn(mainRender);
 
 // ─── Keyboard shortcuts ───
@@ -332,6 +332,49 @@ if (!localStorage.getItem('pbi-theme')) {
 }
 
 renderChatFab();
+
+// ─── Browser history navigation (back/forward buttons) ───
+var _skipPush = false;
+var _origRenderForHistory = render;
+
+// Push state on every tab/chapter change
+function _pushHistoryState() {
+  if (_skipPush) return;
+  var state = { tab: S.tab, chapterIdx: S.chapterIdx };
+  var current = history.state;
+  // Only push if state actually changed
+  if (!current || current.tab !== state.tab || current.chapterIdx !== state.chapterIdx) {
+    history.pushState(state, '', '');
+  }
+}
+
+// Listen for back/forward
+window.addEventListener('popstate', function(e) {
+  if (e.state) {
+    _skipPush = true;
+    S.tab = e.state.tab || 'home';
+    S.chapterIdx = e.state.chapterIdx != null ? e.state.chapterIdx : null;
+    render();
+    _skipPush = false;
+  }
+});
+
+// Replace initial state
+history.replaceState({ tab: S.tab, chapterIdx: S.chapterIdx }, '', '');
+
+// Hook into render to push state after each render
+var _renderCount = 0;
+var _lastPushedTab = S.tab;
+var _lastPushedChapter = S.chapterIdx;
+setRenderFn(function() {
+  mainRender();
+  if (S.tab !== _lastPushedTab || S.chapterIdx !== _lastPushedChapter) {
+    _pushHistoryState();
+    _lastPushedTab = S.tab;
+    _lastPushedChapter = S.chapterIdx;
+  }
+});
+
 render();
 showOnboarding();
 
