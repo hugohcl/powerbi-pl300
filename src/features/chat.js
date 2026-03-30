@@ -155,7 +155,7 @@ export function renderChatFab() {
   var fab = h('button', {
     className: 'chat-fab',
     'aria-label': 'Ouvrir le tuteur IA',
-    onClick: function() { _openChat(); }
+    onClick: function() { _chatOpen ? _closeChat() : _openChat(); }
   });
   fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
   document.body.appendChild(fab);
@@ -226,9 +226,7 @@ export function renderChatPanel() {}
 function _openChat() {
   _chatOpen = true;
   var panel = document.querySelector('.chat-panel');
-  var fab = document.querySelector('.chat-fab');
   if (panel) panel.classList.add('is-open');
-  if (fab) fab.classList.add('is-hidden');
   _updateChatMessages(false);
   setTimeout(function() {
     var ci = document.getElementById('chat-input');
@@ -239,9 +237,7 @@ function _openChat() {
 function _closeChat() {
   _chatOpen = false;
   var panel = document.querySelector('.chat-panel');
-  var fab = document.querySelector('.chat-fab');
   if (panel) panel.classList.remove('is-open');
-  if (fab) fab.classList.remove('is-hidden');
 }
 
 export async function sendChatMessage() {
