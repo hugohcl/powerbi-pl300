@@ -11,6 +11,29 @@ export function setMissionDeps(deps) {
   if (deps.renderDiagram) _renderDiagram = deps.renderDiagram;
 }
 
+function renderText(text, style) {
+  const container = h('div', { style: { ...style, marginBottom: '14px' } });
+  const paragraphs = text.split('\n\n');
+  paragraphs.forEach(para => {
+    const trimmed = para.trim();
+    if (!trimmed) return;
+    // Check if paragraph is a list (lines starting with - or a digit followed by ) or .)
+    const lines = trimmed.split('\n');
+    const isList = lines.length > 1 && lines.every(l => /^\s*[-–•]/.test(l.trim()) || /^\s*\d+[.)\-]/.test(l.trim()) || l.trim() === '');
+    if (isList) {
+      const ul = h('ul', { style: { margin: '8px 0', paddingLeft: '20px', listStyleType: 'disc' } });
+      lines.forEach(l => {
+        const clean = l.trim().replace(/^[-–•]\s*/, '').replace(/^\d+[.)\-]\s*/, '');
+        if (clean) ul.appendChild(h('li', { style: { marginBottom: '4px' } }, clean));
+      });
+      container.appendChild(ul);
+    } else {
+      container.appendChild(h('p', { style: { marginBottom: '10px' } }, trimmed));
+    }
+  });
+  return container;
+}
+
 export function renderChapterDetail(ch) {
   const wrap = h('div', null);
 
@@ -55,14 +78,14 @@ export function renderChapterDetail(ch) {
       sec.title
     ));
 
-    // Theory as plain text paragraph
+    // Theory as structured paragraphs
     if (sec.theory) {
-      wrap.appendChild(h('p', { style: { fontSize: '14px', lineHeight: '1.75', marginBottom: '14px', color: 'var(--tx)' } }, sec.theory));
+      wrap.appendChild(renderText(sec.theory, { fontSize: '14px', lineHeight: '1.75', color: 'var(--tx)' }));
     }
 
-    // Business context merged as a second paragraph (no colored box)
+    // Business context as structured paragraphs
     if (sec.business) {
-      wrap.appendChild(h('p', { style: { fontSize: '14px', lineHeight: '1.75', marginBottom: '14px', color: 'var(--tx2)' } }, sec.business));
+      wrap.appendChild(renderText(sec.business, { fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)' }));
     }
 
     if (sec.code) {
@@ -87,9 +110,7 @@ export function renderChapterDetail(ch) {
 
     // Tip as subtle italic line (no box)
     if (sec.tip) {
-      wrap.appendChild(h('p', { style: { fontSize: '13px', lineHeight: '1.6', color: 'var(--tx3)', fontStyle: 'italic', marginBottom: '14px' } },
-        '\u25B8 ', sec.tip
-      ));
+      wrap.appendChild(renderText('\u25B8 ' + sec.tip, { fontSize: '13px', lineHeight: '1.6', color: 'var(--tx3)', fontStyle: 'italic' }));
     }
 
     // SVG diagrams for specific sections
@@ -98,7 +119,7 @@ export function renderChapterDetail(ch) {
     if (sec.id === '2.1') wrap.appendChild(_renderDiagram('pq-pipeline'));
 
     if (sec.deep) {
-      const deepContent = h('div', { style: { display: 'none', fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)', marginBottom: '14px', whiteSpace: 'pre-line' } }, sec.deep);
+      const deepContent = renderText(sec.deep, { display: 'none', fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)' });
       const deepToggle = h('button', {
         style: { fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', padding: '0', marginBottom: '14px' },
         onClick: () => {
