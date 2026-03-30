@@ -269,7 +269,7 @@ export async function sendChatMessage() {
     if (image) body.image = { mimeType: image.mimeType, data: image.data };
     var resp = await fetch(SUPABASE_URL + '/functions/v1/dax-tutor', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
       body: JSON.stringify(body)
     });
     var data = await resp.json();
