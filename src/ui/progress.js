@@ -209,7 +209,7 @@ export function renderProgress() {
   topBento.appendChild(ringsCard);
 
   // Key Numbers card
-  var studyHoursP = Math.round((S.studyTime || 0) / 60 * 10) / 10;
+  var studyHoursP = Math.round((S.studyTime || 0) / 3600 * 10) / 10;
   var keyCard = h('div', { className: 'bento-card', style: { padding: '22px' } },
     h('div', { className: 'stats-mini' },
       h('div', { className: 'stat-mini' },
