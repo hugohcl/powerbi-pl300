@@ -423,7 +423,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 
 /* Heatmap */
 .heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.heatmap-cell { width: 100%; aspect-ratio: 1; border-radius: 2px; background: var(--bg3); }
+.heatmap-cell { width: 100%; aspect-ratio: 1; border-radius: 2px; background: rgba(0,0,0,0.07); }
 .heatmap-cell.l1 { background: rgba(46,117,182,.2); }
 .heatmap-cell.l2 { background: rgba(46,117,182,.4); }
 .heatmap-cell.l3 { background: rgba(46,117,182,.6); }
@@ -883,8 +883,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.0.9"></script>
-<script type="module" src="app.js?v=5.0.9"></script>
+<script src="data.js?v=5.1.0"></script>
+<script type="module" src="app.js?v=5.1.0"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
