@@ -1,7 +1,7 @@
 import { S, save, getSaveData, applyData } from '../core/state.js';
 import { h, render, qHash, shuf, getTotalMissions, APP_VERSION } from '../core/render.js';
 import { icon } from '../core/icons.js';
-import { getLevel, checkBadges, getGhostProfiles, getNarrativeMessages, showNotification } from '../features/gamification.js';
+import { getLevel, checkBadges, getNarrativeMessages, showNotification } from '../features/gamification.js';
 
 let _sm2IsMastered = null;
 let _getDueCards = null;
@@ -209,7 +209,7 @@ export function renderProgress() {
   topBento.appendChild(ringsCard);
 
   // Key Numbers card
-  var studyHoursP = Math.round(S.xp / 120 * 10) / 10;
+  var studyHoursP = Math.round((S.studyTime || 0) / 60 * 10) / 10;
   var keyCard = h('div', { className: 'bento-card', style: { padding: '22px' } },
     h('div', { className: 'stats-mini' },
       h('div', { className: 'stat-mini' },
@@ -291,32 +291,6 @@ export function renderProgress() {
   ));
   wrap.appendChild(streakBox);
 
-  // ── Ghost Leaderboard (Apple style) ──
-  var ghosts = getGhostProfiles();
-  var lbSection = h('div', { className: 'leaderboard-section' });
-  lbSection.appendChild(h('div', { className: 'section-label-apple' }, 'Classement'));
-  var lbTable = h('div', { className: 'leaderboard' });
-  var rankClasses = ['gold', 'silver', 'bronze'];
-  var avatarColors = ['#ffd60a20', '#0071e310', '#34c75910', 'var(--accent-bg)', '#af52de10'];
-  var avatarTextColors = ['#b8860b', '#0071e3', '#34c759', 'var(--accent)', '#af52de'];
-  ghosts.forEach(function(g, i) {
-    var isUser = g.isUser;
-    var row = h('div', { className: 'leaderboard-row' + (isUser ? ' me' : '') },
-      h('div', { className: 'lb-rank' + (i < 3 ? ' ' + rankClasses[i] : '') }, String(i + 1)),
-      h('div', { className: 'lb-avatar', style: { background: avatarColors[i % avatarColors.length], color: avatarTextColors[i % avatarTextColors.length] } }, g.avatar),
-      h('div', { className: 'lb-info' },
-        h('div', { className: 'lb-name' }, isUser ? 'Toi' : g.name),
-        g.role ? h('div', { className: 'lb-desc' }, g.role) : null
-      ),
-      h('div', { className: 'lb-xp' },
-        icon('xp', 12),
-        ' ' + g.xp + ' XP'
-      )
-    );
-    lbTable.appendChild(row);
-  });
-  lbSection.appendChild(lbTable);
-  wrap.appendChild(lbSection);
 
   // Prochaine r\u00e9vision
   var dueCount = getDueCards().length;
