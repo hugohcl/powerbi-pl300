@@ -1,5 +1,5 @@
 import { S, save, getSaveData, applyData } from '../core/state.js';
-import { h, render, qHash, shuf, getTotalMissions, APP_VERSION } from '../core/render.js';
+import { h, render, qHash, shuf, getTotalMissions, APP_VERSION, formatStudyTime } from '../core/render.js';
 import { icon } from '../core/icons.js';
 import { getLevel, checkBadges, getNarrativeMessages, showNotification } from '../features/gamification.js';
 
@@ -209,7 +209,7 @@ export function renderProgress() {
   topBento.appendChild(ringsCard);
 
   // Key Numbers card
-  var studyHoursP = Math.round((S.studyTime || 0) / 3600 * 10) / 10;
+  var studyHoursP = formatStudyTime(S.studyTime);
   var keyCard = h('div', { className: 'bento-card', style: { padding: '22px' } },
     h('div', { className: 'stats-mini' },
       h('div', { className: 'stat-mini' },
@@ -228,7 +228,7 @@ export function renderProgress() {
         h('div', { className: 'stat-mini-label' }, 'taux quiz')
       ),
       h('div', { className: 'stat-mini' },
-        h('div', { className: 'stat-mini-value' }, String(studyHoursP), h('span', null, 'h')),
+        h('div', { className: 'stat-mini-value' }, studyHoursP),
         h('div', { className: 'stat-mini-label' }, 'temps d\'\u00e9tude')
       )
     )

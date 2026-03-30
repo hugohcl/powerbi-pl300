@@ -1,5 +1,5 @@
 import { S } from '../core/state.js';
-import { h, render, qHash, getTotalMissions, APP_VERSION } from '../core/render.js';
+import { h, render, qHash, getTotalMissions, APP_VERSION, formatStudyTime } from '../core/render.js';
 import { icon } from '../core/icons.js';
 import { getLevel, startDailyMix, getChapterPrereqs, isChapterUnlocked } from '../features/gamification.js';
 import { makeSidebarSvg } from './sidebar.js';
@@ -189,13 +189,11 @@ export function renderHome() {
   var totalQuizAnswered = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right + s.wrong; }, 0);
   var totalQuizRight = Object.values(S.quizStats).reduce(function(sum, s) { return sum + s.right; }, 0);
   var quizPct = totalQuizAnswered > 0 ? Math.round(totalQuizRight / totalQuizAnswered * 100) : 0;
-  var studyHours = (S.studyTime || 0) / 3600;
-
   var stats = [
     { bg: 'var(--accent-bg)', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', value: missionsDone, suffix: '/' + totalMissions, label: 'Missions termin\u00e9es', color: 'var(--accent)' },
     { bg: '#34c75912', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 8l2 2 4-4"/>', value: knownCards, suffix: '/' + totalFlash, label: 'Flashcards ma\u00eetris\u00e9es', color: 'var(--green)' },
     { bg: '#af52de12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>', value: quizPct, suffix: '%', label: 'Taux de r\u00e9ussite quiz', color: 'var(--purple)' },
-    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: studyHours.toFixed(1), suffix: 'h', label: 'Temps d\'étude total', color: 'var(--orange)' }
+    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: formatStudyTime(S.studyTime), suffix: '', label: 'Temps d\'étude total', color: 'var(--orange)' }
   ];
 
   stats.forEach(function(st) {

@@ -1,7 +1,7 @@
 import { S, save } from './state.js';
 import { icon } from './icons.js';
 
-export const APP_VERSION = '5.1.0';
+export const APP_VERSION = '5.1.1';
 
 // ─── Render proxy ───
 let _renderFn = null;
@@ -83,3 +83,11 @@ export function toggleTheme() {
 }
 
 export function isMobile() { return window.innerWidth <= 600; }
+
+export function formatStudyTime(seconds) {
+  var mins = Math.round((seconds || 0) / 60);
+  if (mins < 60) return mins + ' min';
+  var h = Math.floor(mins / 60);
+  var m = mins % 60;
+  return m === 0 ? h + 'h' : h + 'h' + (m < 10 ? '0' : '') + m;
+}
