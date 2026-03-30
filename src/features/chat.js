@@ -223,8 +223,23 @@ export function renderChatFab() {
 // renderChatPanel is kept for API compatibility but is a no-op after init
 export function renderChatPanel() {}
 
+function _saveToStorage() {
+  var toSave = _chatMessages.slice(-50).map(function(m) {
+    if (m.image) return { role: m.role, text: m.text, image: '[image]' };
+    return m;
+  });
+  try { localStorage.setItem('pbi-chat', JSON.stringify(toSave)); } catch(e) {}
+}
+
 function _openChat() {
   _chatOpen = true;
+  // Restore from localStorage if in-memory array was cleared (e.g. after page reload)
+  if (_chatMessages.length === 0) {
+    try {
+      var stored = JSON.parse(localStorage.getItem('pbi-chat') || '[]');
+      if (stored.length > 0) _chatMessages = stored;
+    } catch(e) {}
+  }
   var panel = document.querySelector('.chat-panel');
   if (panel) panel.classList.add('is-open');
   _updateChatMessages(false);
@@ -236,6 +251,7 @@ function _openChat() {
 
 function _closeChat() {
   _chatOpen = false;
+  _saveToStorage();
   var panel = document.querySelector('.chat-panel');
   if (panel) panel.classList.remove('is-open');
 }
@@ -280,10 +296,6 @@ export async function sendChatMessage() {
 
   _chatLoading = false;
   _updateLoadingState();
-  var toSave = _chatMessages.slice(-50).map(function(m) {
-    if (m.image) return { role: m.role, text: m.text, image: '[image]' };
-    return m;
-  });
-  try { localStorage.setItem('pbi-chat', JSON.stringify(toSave)); } catch(e) {}
+  _saveToStorage();
   _updateChatMessages(true);
 }

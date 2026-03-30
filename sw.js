@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pl300-v5.1.5';
+const CACHE_NAME = 'pl300-v5.1.6';
 const ASSETS = [
   './',
   './index.html',
-  './app.js?v=5.1.5',
-  './data.js?v=5.1.5',
+  './app.js?v=5.1.6',
+  './data.js?v=5.1.6',
   './src/core/state.js',
   './src/core/render.js',
   './src/core/icons.js',
