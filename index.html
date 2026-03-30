@@ -783,10 +783,10 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .chat-input-row { padding: 12px; border-top: 0.5px solid var(--bd); display: flex; gap: 8px; background: var(--bg2); }
 .chat-input-row input { flex: 1; padding: 10px 14px; border: 0.5px solid var(--bd); border-radius: 20px; background: var(--bg); color: var(--tx); font-size: 13px; outline: none; min-height: auto; }
 .chat-input-row input:focus { border-color: var(--accent); }
-.chat-input-row .chat-send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); border: none; cursor: default; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; transition: background .2s, color .2s; opacity: 0.6; }
+.chat-input-row .chat-send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); border: none; cursor: default; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; transition: background .2s, color .2s; opacity: 0.6; }
 .chat-input-row .chat-send-btn.active { background: var(--accent); color: white; cursor: pointer; opacity: 1; }
 .chat-input-row .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.chat-img-btn { width: 36px; height: 36px; border-radius: 50%; background: none; color: var(--tx3); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; transition: color .2s; opacity: 0.7; }
+.chat-img-btn { width: 42px; height: 42px; border-radius: 50%; background: none; color: var(--tx3); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: auto; flex-shrink: 0; transition: color .2s; opacity: 0.7; }
 .chat-img-btn:hover { color: var(--accent); opacity: 1; }
 .chat-img-btn.has-image { color: var(--accent); opacity: 1; }
 .chat-img-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -883,8 +883,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.0.4"></script>
-<script type="module" src="app.js?v=5.0.4"></script>
+<script src="data.js?v=5.0.6"></script>
+<script type="module" src="app.js?v=5.0.6"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

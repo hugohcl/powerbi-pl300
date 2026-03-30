@@ -231,7 +231,7 @@ export function renderSidebar() {
   var searchBtn = h('button', { className: 'sidebar-search', 'aria-label': 'Rechercher dans l\'application', onClick: function() { S.searchOpen = true; render(); } });
   searchBtn.appendChild(makeSidebarSvg('<circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/>'));
   searchBtn.appendChild(h('span', { className: 'sidebar-search-text' }, 'Rechercher\u2026'));
-  searchBtn.appendChild(h('span', { className: 'sidebar-search-shortcut' }, '\u2318K'));
+  searchBtn.appendChild(h('span', { className: 'sidebar-search-shortcut' }, 'Ctrl+K'));
   sidebar.appendChild(searchBtn);
 
   // Pomodoro timer

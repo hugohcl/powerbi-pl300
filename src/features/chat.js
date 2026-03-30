@@ -186,16 +186,16 @@ export function renderChatFab() {
     'aria-label': 'Joindre une image',
     onClick: function() { document.getElementById('chat-file-input').click(); }
   });
-  imgBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  imgBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
   inputRow.appendChild(imgBtn);
 
   var input = h('input', {
-    type: 'text', placeholder: 'Pose ta question...', id: 'chat-input',
+    type: 'text', placeholder: 'Pose ta question...', id: 'chat-input', autocomplete: 'off',
     onKeydown: function(e) { if (e.key === 'Enter' && !_chatLoading) { e.preventDefault(); sendChatMessage(); } },
     onInput: function() { _updateSendBtnState(); }
   });
   var sendBtn = h('button', { className: 'chat-send-btn', onClick: function() { if (!_chatLoading) sendChatMessage(); } });
-  sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+  sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
   inputRow.appendChild(input);
   inputRow.appendChild(sendBtn);
   panel.appendChild(inputRow);
