@@ -118,7 +118,8 @@ function mainRender() {
   var tabOrder = ['home', 'formation', 'quiz', 'flash', 'interview', 'ref', 'progress'];
   var prevIdx = tabOrder.indexOf(S._prevTab || 'home');
   var curIdx = tabOrder.indexOf(S.tab);
-  var animClass = 'fade-in';
+  // Animate only on tab/chapter changes — within-tab interactions are instant (no flash)
+  var animClass = '';
   if (S._prevTab !== S.tab) {
     animClass = curIdx > prevIdx ? 'slide-forward' : 'slide-back';
   } else if (S.tab === 'formation' && S.chapterIdx !== null && S._prevChapterIdx === null) {
@@ -128,7 +129,7 @@ function mainRender() {
   }
   S._prevTab = S.tab;
   S._prevChapterIdx = S.chapterIdx;
-  var content = h('div', { className: animClass + ' view-enter' });
+  var content = h('div', { className: animClass });
   if (S.tab === 'home') content.appendChild(renderHome());
   else if (S.tab === 'formation') content.appendChild(renderFormation());
   else if (S.tab === 'quiz') content.appendChild(renderQuiz());
