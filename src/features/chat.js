@@ -4,7 +4,6 @@ import { getLevel } from './gamification.js';
 
 var _chatMessages = JSON.parse(localStorage.getItem('pbi-chat') || '[]');
 var _chatOpen = false;
-var _chatMinimized = false;
 var _chatLoading = false;
 var _chatPendingImage = null; // { mimeType, data (base64) }
 var _lastUserMsgIdx = -1;
@@ -156,7 +155,7 @@ export function renderChatFab() {
   var fab = h('button', {
     className: 'chat-fab',
     'aria-label': 'Ouvrir le tuteur IA',
-    onClick: function() { _chatMinimized ? _restoreChat() : (_chatOpen ? _minimizeChat() : _openChat()); }
+    onClick: function() { _chatOpen ? _closeChat() : _openChat(); }
   });
   fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
   document.body.appendChild(fab);
@@ -164,15 +163,13 @@ export function renderChatFab() {
   // Panel (always in DOM, hidden by default via CSS)
   var panel = h('div', { className: 'chat-panel' });
 
-  // Header (click on title = restore when minimized)
-  var header = h('div', { className: 'chat-header' });
-  var headerTitle = h('span', { className: 'chat-header-title' }, 'Tuteur IA');
-  headerTitle.addEventListener('click', function() { if (_chatMinimized) _restoreChat(); });
-  var minimizeBtn = h('button', { className: 'chat-close', 'aria-label': 'R\u00e9duire', onClick: function() { _minimizeChat(); } });
-  minimizeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-  header.appendChild(headerTitle);
-  header.appendChild(minimizeBtn);
-  panel.appendChild(header);
+  // Header
+  var closeBtn = h('button', { className: 'chat-close', 'aria-label': 'R\u00e9duire', onClick: function() { _closeChat(); } });
+  closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  panel.appendChild(h('div', { className: 'chat-header' },
+    h('span', { className: 'chat-header-title' }, 'Tuteur IA'),
+    closeBtn
+  ));
 
   // Messages area
   panel.appendChild(h('div', { className: 'chat-messages', id: 'chat-messages' }));
@@ -238,7 +235,6 @@ function _saveToStorage() {
 
 function _openChat() {
   _chatOpen = true;
-  _chatMinimized = false;
   if (_chatMessages.length === 0) {
     try {
       var stored = JSON.parse(localStorage.getItem('pbi-chat') || '[]');
@@ -246,7 +242,7 @@ function _openChat() {
     } catch(e) {}
   }
   var panel = document.querySelector('.chat-panel');
-  if (panel) { panel.classList.add('is-open'); panel.classList.remove('is-minimized'); }
+  if (panel) panel.classList.add('is-open');
   _updateChatMessages(false);
   setTimeout(function() {
     var ci = document.getElementById('chat-input');
@@ -254,24 +250,11 @@ function _openChat() {
   }, 50);
 }
 
-function _minimizeChat() {
+function _closeChat() {
   _chatOpen = false;
-  _chatMinimized = true;
   _saveToStorage();
   var panel = document.querySelector('.chat-panel');
-  if (panel) { panel.classList.remove('is-open'); panel.classList.add('is-minimized'); }
-}
-
-function _restoreChat() {
-  _chatOpen = true;
-  _chatMinimized = false;
-  var panel = document.querySelector('.chat-panel');
-  if (panel) { panel.classList.add('is-open'); panel.classList.remove('is-minimized'); }
-  _updateChatMessages(false);
-  setTimeout(function() {
-    var ci = document.getElementById('chat-input');
-    if (ci) ci.focus();
-  }, 50);
+  if (panel) panel.classList.remove('is-open');
 }
 
 export async function sendChatMessage() {
