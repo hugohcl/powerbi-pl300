@@ -576,8 +576,7 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .hero-focus-active { background: rgba(255,159,10,0.25); border-color: rgba(255,159,10,0.4); color: #ffcf6b; }
 .hero-focus-active svg { stroke: #ffcf6b; }
 .bento-streak { grid-column: span 4; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; }
-.streak-flame { margin-bottom: 8px; }
-.streak-flame svg { width: 28px; height: 28px; fill: var(--orange); stroke: none; }
+.streak-flame { font-size: 28px; margin-bottom: 8px; }
 .streak-number { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; color: var(--tx); line-height: 1; margin-bottom: 4px; }
 .streak-label { font-size: 13px; font-weight: 500; color: var(--tx3); }
 .bento-stat { grid-column: span 3; padding: 22px; }
@@ -892,8 +891,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.1.4"></script>
-<script type="module" src="app.js?v=5.1.4"></script>
+<script src="data.js?v=5.1.5"></script>
+<script type="module" src="app.js?v=5.1.5"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

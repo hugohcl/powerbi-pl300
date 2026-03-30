@@ -194,11 +194,10 @@ export function renderHome() {
 
   // Streak card
   var streak = h('div', { className: 'bento-card bento-streak' },
-    h('div', { className: 'streak-flame' }),
+    h('div', { className: 'streak-flame' }, '\uD83D\uDD25'),
     h('div', { className: 'streak-number' }, String(S.streak || 0)),
     h('div', { className: 'streak-label' }, (S.streak || 0) <= 1 ? 'jour de streak' : 'jours de streak')
   );
-  streak.querySelector('.streak-flame').appendChild(icon('flame', 28));
   bento.appendChild(streak);
 
   // 4 stat cards
