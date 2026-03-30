@@ -567,16 +567,40 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .hero-btn:active { transform: scale(0.96); transition-duration: .08s; }
 .hero-progress-wrap { display: flex; align-items: center; gap: 10px; }
 .hero-bar { width: 60px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
-.hero-bar-fill { height: 100%; border-radius: 2px; background: var(--orange); }
+.hero-bar-fill { height: 100%; border-radius: 2px; background: var(--orange); transition: width 0.5s ease; }
 .hero-xp-label { font-size: 12px; opacity: 0.35; }
+.hero-btns { display: flex; align-items: center; gap: 10px; }
+.hero-focus-btn { padding: 10px 18px; border-radius: 12px; background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.18); cursor: pointer; transition: all var(--spring); display: flex; align-items: center; gap: 6px; }
+.hero-focus-btn:hover { background: rgba(255,255,255,0.2); }
+.hero-focus-btn svg { stroke: rgba(255,255,255,0.85); }
+.hero-focus-active { background: rgba(255,159,10,0.25); border-color: rgba(255,159,10,0.4); color: #ffcf6b; }
+.hero-focus-active svg { stroke: #ffcf6b; }
+@keyframes flame-pulse { 0%,100% { transform: scale(1); filter: drop-shadow(0 2px 8px rgba(255,159,10,0.3)); } 50% { transform: scale(1.18); filter: drop-shadow(0 4px 16px rgba(255,159,10,0.65)); } }
 .bento-streak { grid-column: span 4; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; }
 .streak-flame { font-size: 28px; margin-bottom: 8px; filter: drop-shadow(0 2px 8px rgba(255,159,10,0.3)); }
+.streak-flame.is-active { animation: flame-pulse 1.8s ease-in-out infinite; }
 .streak-number { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; color: var(--tx); line-height: 1; margin-bottom: 4px; }
 .streak-label { font-size: 13px; font-weight: 500; color: var(--tx3); }
 .bento-stat { grid-column: span 3; padding: 22px; }
 .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
 .bento-stat .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; color: var(--tx); line-height: 1; margin-bottom: 4px; }
 .bento-stat .stat-label { font-size: 12px; font-weight: 500; color: var(--tx3); }
+
+/* Home mini quiz */
+.home-quiz { background: var(--glass); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: var(--radius-lg); border: 0.5px solid var(--glass-border); padding: 24px; margin-bottom: 32px; }
+.home-quiz-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--accent); margin-bottom: 12px; }
+.home-quiz-q { font-size: 15px; font-weight: 600; color: var(--tx); line-height: 1.5; margin-bottom: 18px; }
+.home-quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.home-quiz-opt { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--bd); border-radius: var(--radius); padding: 11px 14px; font-size: 13px; font-weight: 500; color: var(--tx2); cursor: pointer; text-align: left; transition: background var(--transition), border-color var(--transition), color var(--transition); }
+.home-quiz-opt:hover:not(:disabled) { background: var(--accent-bg); border-color: var(--accent); color: var(--tx); }
+.home-quiz-opt:disabled { cursor: default; }
+.home-quiz-opt.correct { background: rgba(52,199,89,0.12); border-color: var(--green); color: var(--green); }
+.home-quiz-opt.wrong { background: rgba(255,59,48,0.1); border-color: var(--red); color: var(--red); }
+.home-quiz-letter { width: 22px; height: 22px; min-width: 22px; border-radius: 6px; background: var(--bg3); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--tx3); }
+.home-quiz-opt.correct .home-quiz-letter { background: var(--green); color: #fff; }
+.home-quiz-opt.wrong .home-quiz-letter { background: var(--red); color: #fff; }
+.home-quiz-exp { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius); background: var(--accent-bg); border-left: 3px solid var(--accent); font-size: 13px; color: var(--tx2); line-height: 1.55; }
+@media (max-width: 600px) { .home-quiz-opts { grid-template-columns: 1fr; } }
 
 /* Parcours section */
 .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
@@ -883,8 +907,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.1.2"></script>
-<script type="module" src="app.js?v=5.1.2"></script>
+<script src="data.js?v=5.1.3"></script>
+<script type="module" src="app.js?v=5.1.3"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

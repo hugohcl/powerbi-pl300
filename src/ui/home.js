@@ -1,8 +1,13 @@
 import { S } from '../core/state.js';
 import { h, render, qHash, getTotalMissions, APP_VERSION, formatStudyTime } from '../core/render.js';
 import { icon } from '../core/icons.js';
-import { getLevel, startDailyMix, getChapterPrereqs, isChapterUnlocked } from '../features/gamification.js';
+import { getLevel, startDailyMix, getChapterPrereqs, isChapterUnlocked, addXP } from '../features/gamification.js';
+import { startPomodoro } from '../features/pomodoro.js';
 import { makeSidebarSvg } from './sidebar.js';
+
+// Home quiz state (ephemeral, resets each day)
+var _homeQuizDate = '';
+var _homeQuizSel = null;
 
 let _sm2Get = null;
 let _sm2IsMastered = null;
@@ -162,21 +167,39 @@ export function renderHome() {
   );
   hero.appendChild(heroTop);
   var heroBottom = h('div', { className: 'hero-bottom' });
+  var heroBtns = h('div', { className: 'hero-btns' });
   var heroBtn = h('button', { className: 'hero-btn', onClick: function(e) { e.stopPropagation(); startDailyMix(); } }, 'Commencer');
-  heroBottom.appendChild(heroBtn);
+  heroBtns.appendChild(heroBtn);
+  var pomodoroActive = S.pomodoro && S.pomodoro.active;
+  var focusBtn;
+  if (pomodoroActive) {
+    var pomM = Math.floor(S.pomodoro.timeLeft / 60);
+    var pomS = S.pomodoro.timeLeft % 60;
+    var pomLabel = pomM + ':' + String(pomS).padStart(2, '0');
+    focusBtn = h('button', { className: 'hero-focus-btn hero-focus-active', onClick: function(e) { e.stopPropagation(); S.pomodoro.dropdownOpen = !S.pomodoro.dropdownOpen; render(); } },
+      icon('timer', 14), ' ', pomLabel
+    );
+  } else {
+    focusBtn = h('button', { className: 'hero-focus-btn', onClick: function(e) { e.stopPropagation(); startPomodoro(); } },
+      icon('timer', 14), ' Focus 25 min'
+    );
+  }
+  heroBtns.appendChild(focusBtn);
+  heroBottom.appendChild(heroBtns);
   var progressWrap = h('div', { className: 'hero-progress-wrap' },
     h('div', { className: 'hero-bar' },
-      h('div', { className: 'hero-bar-fill', style: { width: goalPct + '%' } })
+      h('div', { className: 'hero-bar-fill', id: 'hero-bar-fill', style: { width: goalPct + '%' } })
     ),
-    h('span', { className: 'hero-xp-label' }, todayXP + '/' + S.dailyGoal + ' XP')
+    h('span', { className: 'hero-xp-label', id: 'hero-xp-label' }, todayXP + '/' + S.dailyGoal + ' XP')
   );
   heroBottom.appendChild(progressWrap);
   hero.appendChild(heroBottom);
   bento.appendChild(hero);
 
   // Streak card
+  var activeToday = S.lastActiveDate === todayStr;
   var streak = h('div', { className: 'bento-card bento-streak' },
-    h('div', { className: 'streak-flame' }, '\uD83D\uDD25'),
+    h('div', { className: 'streak-flame' + (activeToday ? ' is-active' : '') }, '\uD83D\uDD25'),
     h('div', { className: 'streak-number' }, String(S.streak || 0)),
     h('div', { className: 'streak-label' }, (S.streak || 0) <= 1 ? 'jour de streak' : 'jours de streak')
   );
@@ -214,6 +237,52 @@ export function renderHome() {
   });
 
   wrap.appendChild(bento);
+
+  // Mini quiz du jour
+  var simpleQuiz = QUIZ.filter(function(q) { return typeof q.a === 'number' && Array.isArray(q.o) && q.o.length === 4; });
+  if (simpleQuiz.length > 0) {
+    var todayNum = parseInt(todayStr.replace(/-/g, ''));
+    var dq = simpleQuiz[todayNum % simpleQuiz.length];
+    var dqHash = dq.q.slice(0, 40);
+    if (_homeQuizDate !== todayStr) { _homeQuizDate = todayStr; _homeQuizSel = null; }
+    var letters = ['A', 'B', 'C', 'D'];
+    var quizSection = h('div', { className: 'home-quiz' });
+    quizSection.appendChild(h('div', { className: 'home-quiz-label' }, 'Question du jour'));
+    quizSection.appendChild(h('div', { className: 'home-quiz-q' }, dq.q));
+    var optsDiv = h('div', { className: 'home-quiz-opts' });
+    dq.o.forEach(function(opt, i) {
+      var cls = 'home-quiz-opt';
+      if (_homeQuizSel !== null) {
+        if (i === dq.a) cls += ' correct';
+        else if (i === _homeQuizSel && i !== dq.a) cls += ' wrong';
+      }
+      var btn = h('button', { className: cls });
+      btn.appendChild(h('span', { className: 'home-quiz-letter' }, letters[i]));
+      btn.appendChild(document.createTextNode(opt));
+      if (_homeQuizSel === null) {
+        btn.addEventListener('click', function() {
+          _homeQuizSel = i;
+          optsDiv.querySelectorAll('.home-quiz-opt').forEach(function(b, j) {
+            if (j === dq.a) b.classList.add('correct');
+            else if (j === i && j !== dq.a) b.classList.add('wrong');
+            b.disabled = true;
+          });
+          var exp = quizSection.querySelector('.home-quiz-exp');
+          if (exp) { exp.style.display = ''; }
+          if (!S.quizStats[dqHash]) S.quizStats[dqHash] = { right: 0, wrong: 0 };
+          S.quizStats[dqHash][i === dq.a ? 'right' : 'wrong']++;
+          addXP(i === dq.a ? 15 : 5, 'Quiz du jour');
+        });
+      } else {
+        btn.disabled = true;
+      }
+      optsDiv.appendChild(btn);
+    });
+    quizSection.appendChild(optsDiv);
+    var expDiv = h('div', { className: 'home-quiz-exp', style: { display: _homeQuizSel !== null ? '' : 'none' } }, dq.w);
+    quizSection.appendChild(expDiv);
+    wrap.appendChild(quizSection);
+  }
 
   // Parcours section
   var sectionHeader = h('div', { className: 'section-header' },
