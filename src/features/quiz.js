@@ -52,7 +52,7 @@ export function startQuiz(filter, mode) {
 
   S.quizQuestions = qs;
   S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0;
-  S.quizHistory = []; S.multiSel = []; S.orderSel = [];
+  S.quizHistory = []; S.multiSel = []; S.orderSel = []; S._quizIsReview = false;
   render();
 }
 
@@ -504,12 +504,12 @@ export function renderQuiz() {
     wrap.appendChild(h('div', { className: 'quiz-result', style: { background: pct >= .7 ? 'var(--green-bg)' : 'var(--red-bg)' } },
       h('div', { className: 'score', style: { color: pct >= .7 ? 'var(--green)' : 'var(--red)' } }, `${S.score}/${S.total}`),
       h('div', { style: { fontSize: '14px', color: pct >= .7 ? 'var(--green)' : 'var(--red)', marginBottom: '14px' } },
-        pct >= .85 ? 'Excellent !' : pct >= .7 ? 'Bien. R\u00e9vise les erreurs.' : 'Continue de t\'entra\u00eener.'
+        pct >= .85 ? 'Excellent !' : pct >= .7 ? (S._quizIsReview ? 'Bien !' : 'Bien. R\u00e9vise les erreurs.') : (S._quizIsReview ? 'Continue de t\'entra\u00eener.' : 'Continue de t\'entra\u00eener.')
       ),
       domFeedback,
       h('button', { onClick: () => { S.quizQuestions = []; render(); } }, 'Retour'),
-      S.quizHistory.length > 0 ? h('button', {
-        onClick: () => { S.quizQuestions = shuf(S.quizHistory); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizHistory = []; render(); },
+      S.quizHistory.length > 0 && !S._quizIsReview ? h('button', {
+        onClick: () => { S.quizQuestions = shuf(S.quizHistory); S.qi = 0; S.sel = null; S.shown = false; S.score = 0; S.total = 0; S.quizHistory = []; S._quizIsReview = true; render(); },
         style: { marginLeft: '8px', background: 'var(--red-bg)', color: 'var(--red)', borderColor: 'var(--red)' }
       }, `Revoir les erreurs`) : null
     ));

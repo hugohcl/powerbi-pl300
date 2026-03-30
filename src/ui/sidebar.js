@@ -188,7 +188,7 @@ export function renderSidebar() {
   var navSections = [
     { label: 'Apprendre', items: [
       { id: 'home', text: 'Accueil', icon: '<path d="M2 6.5l7-5 7 5V15a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 012 15z"/><path d="M6 16V9h6v7"/>' },
-      { id: 'formation', text: 'Formation', icon: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', badge: Object.entries(S.missions).filter(function(e) { return e[1] && !isNaN(e[0]) && e[0] > 0; }).length + '/' + getTotalMissions() }
+      { id: 'formation', text: 'Formation', icon: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', badge: Object.entries(S.missions).filter(function(e) { return e[1] && !isNaN(e[0]) && e[0] > 0; }).length + '/' + getTotalMissions(), badgeClass: 'progress' }
     ]},
     { label: 'Pratiquer', items: [
       { id: 'quiz', text: 'Quiz PL-300', icon: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>' },
