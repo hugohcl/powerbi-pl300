@@ -4,7 +4,7 @@
 
 // Core
 import { S, save, load, setSyncCallback, getSaveData, applyData, SUPABASE_URL, SUPABASE_ANON_KEY } from './src/core/state.js';
-import { APP_VERSION, h, $, render, setRenderFn, shuf, qHash, trackQuizAnswer, getTotalMissions, isMobile, initTheme, toggleTheme } from './src/core/render.js';
+import { APP_VERSION, h, $, render, setRenderFn, shuf, qHash, trackQuizAnswer, getTotalMissions, isMobile, initTheme, toggleTheme, formatStudyTime } from './src/core/render.js';
 import { icon, iconSearch, iconTimer, iconSun, iconMoon } from './src/core/icons.js';
 import { highlightCode } from './src/data/highlight.js';
 
@@ -416,6 +416,8 @@ if (getSyncCode()) { syncPull(); }
     _studyInterval = setInterval(function() {
       S.studyTime = (S.studyTime || 0) + 30;
       save();
+      var el = document.getElementById('home-study-time');
+      if (el) el.childNodes[0].textContent = formatStudyTime(S.studyTime);
     }, 30000); // save every 30s
   }
   function stopTracking() {

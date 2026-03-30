@@ -193,7 +193,7 @@ export function renderHome() {
     { bg: 'var(--accent-bg)', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', value: missionsDone, suffix: '/' + totalMissions, label: 'Missions termin\u00e9es', color: 'var(--accent)' },
     { bg: '#34c75912', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 8l2 2 4-4"/>', value: knownCards, suffix: '/' + totalFlash, label: 'Flashcards ma\u00eetris\u00e9es', color: 'var(--green)' },
     { bg: '#af52de12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>', value: quizPct, suffix: '%', label: 'Taux de r\u00e9ussite quiz', color: 'var(--purple)' },
-    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: formatStudyTime(S.studyTime), suffix: '', label: 'Temps d\'étude total', color: 'var(--orange)' }
+    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: formatStudyTime(S.studyTime), suffix: '', label: 'Temps d\'étude total', color: 'var(--orange)', id: 'home-study-time' }
   ];
 
   stats.forEach(function(st) {
@@ -203,10 +203,12 @@ export function renderHome() {
     svgEl.setAttribute('stroke', st.color);
     iconWrap.appendChild(svgEl);
     statCard.appendChild(iconWrap);
-    statCard.appendChild(h('div', { className: 'stat-value' },
+    var valEl = h('div', { className: 'stat-value' },
       String(st.value),
       h('span', { style: { fontSize: '16px', color: 'var(--tx3)' } }, st.suffix)
-    ));
+    );
+    if (st.id) valEl.id = st.id;
+    statCard.appendChild(valEl);
     statCard.appendChild(h('div', { className: 'stat-label' }, st.label));
     bento.appendChild(statCard);
   });
