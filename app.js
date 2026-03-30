@@ -72,10 +72,20 @@ function mainRender() {
   var appEl = document.getElementById('app');
   appEl.innerHTML = '';
 
-  // Sidebar (always rendered outside .app, as a sibling)
+  // Sidebar: persistent — rebuild only when pomodoro state changes, otherwise patch active classes
   var existingSidebar = document.querySelector('.sidebar');
-  if (existingSidebar) existingSidebar.remove();
-  document.body.insertBefore(renderSidebar(), appEl);
+  var _sbPomKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0');
+  if (!existingSidebar || existingSidebar.dataset.pomKey !== _sbPomKey) {
+    if (existingSidebar) existingSidebar.remove();
+    var newSidebar = renderSidebar();
+    newSidebar.dataset.pomKey = _sbPomKey;
+    document.body.insertBefore(newSidebar, appEl);
+  } else {
+    existingSidebar.querySelectorAll('[data-tab]').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.tab === S.tab);
+      btn.setAttribute('aria-current', btn.dataset.tab === S.tab ? 'page' : null);
+    });
+  }
 
   // Search overlay
   if (S.searchOpen) {
@@ -130,68 +140,72 @@ function mainRender() {
   // Remove view-enter class after animation completes
   content.addEventListener('animationend', function() { content.classList.remove('view-enter'); }, { once: true });
 
-  // Global progress bar
-  var existingProgress = document.querySelector('.global-progress');
-  if (existingProgress) existingProgress.remove();
+  // Global progress bar: update in-place
   var totalMissions = getTotalMissions();
   var doneMissions = Object.values(S.missions).filter(Boolean).length;
   var masteredCards = window.FLASHCARDS.filter(function(_, i) { return sm2IsMastered(i); }).length;
   var globalPct = Math.round((doneMissions + masteredCards) / (totalMissions + window.FLASHCARDS.length) * 100);
-  if (globalPct > 0) {
+  var existingProgress = document.querySelector('.global-progress');
+  if (existingProgress) {
+    var existingFill = existingProgress.querySelector('.global-progress-fill');
+    if (existingFill) existingFill.style.width = globalPct + '%';
+  } else if (globalPct > 0) {
     var gBar = h('div', { className: 'global-progress' },
       h('div', { className: 'global-progress-fill', style: { width: globalPct + '%' } })
     );
     document.body.appendChild(gBar);
   }
 
-  // Mobile top bar
+  // Mobile top bar: persistent — rebuild only when pomodoro state or theme changes
   var existingTopbar = document.querySelector('.mobile-topbar');
-  if (existingTopbar) existingTopbar.remove();
-  var topbar = h('div', { className: 'mobile-topbar' });
-  var topLogo = h('img', { className: 'mobile-topbar-logo', src: 'icon.png', alt: 'DAX Academy', onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } });
-  topbar.appendChild(topLogo);
-  var topActions = h('div', { className: 'mobile-topbar-actions' });
+  var _curTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  var _tbKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0') + _curTheme;
+  if (!existingTopbar || existingTopbar.dataset.stateKey !== _tbKey) {
+    if (existingTopbar) existingTopbar.remove();
+    var topbar = h('div', { className: 'mobile-topbar' });
+    topbar.dataset.stateKey = _tbKey;
+    var topLogo = h('img', { className: 'mobile-topbar-logo', src: 'icon.png', alt: 'DAX Academy', onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } });
+    topbar.appendChild(topLogo);
+    var topActions = h('div', { className: 'mobile-topbar-actions' });
 
-  if (!S.pomodoro.active) {
-    var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus', 'aria-label': 'D\u00e9marrer le mode focus' });
-    pomBtn.appendChild(icon('timer', 22));
-    topActions.appendChild(pomBtn);
-  } else {
-    var tPomM = Math.floor(S.pomodoro.timeLeft / 60);
-    var tPomS = S.pomodoro.timeLeft % 60;
-    var tPomLabel = tPomM + ':' + String(tPomS).padStart(2, '0');
-    var tPomClass = S.pomodoro.mode === 'work' ? 'pomodoro-active-pill' : 'pomodoro-break-pill';
-    var tPomBtn = h('button', {
-      className: tPomClass,
-      onClick: function() { S.pomodoro.dropdownOpen = !S.pomodoro.dropdownOpen; render(); }
-    }, tPomLabel);
-    topActions.appendChild(tPomBtn);
+    if (!S.pomodoro.active) {
+      var pomBtn = h('button', { onClick: function() { startPomodoro(); }, title: 'Focus', 'aria-label': 'D\u00e9marrer le mode focus' });
+      pomBtn.appendChild(icon('timer', 22));
+      topActions.appendChild(pomBtn);
+    } else {
+      var tPomM = Math.floor(S.pomodoro.timeLeft / 60);
+      var tPomS = S.pomodoro.timeLeft % 60;
+      var tPomLabel = tPomM + ':' + String(tPomS).padStart(2, '0');
+      var tPomClass = S.pomodoro.mode === 'work' ? 'pomodoro-active-pill' : 'pomodoro-break-pill';
+      var tPomBtn = h('button', {
+        className: tPomClass,
+        onClick: function() { S.pomodoro.dropdownOpen = !S.pomodoro.dropdownOpen; render(); }
+      }, tPomLabel);
+      topActions.appendChild(tPomBtn);
+    }
+
+    var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher', 'aria-label': 'Rechercher' });
+    searchBtn.appendChild(icon('search', 22));
+    topActions.appendChild(searchBtn);
+
+    var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
+    musicBtn.appendChild(icon('music', 22));
+    topActions.appendChild(musicBtn);
+
+    var isDarkMobile = _curTheme === 'dark';
+    var themeBtn = h('button', { onClick: function() { if (window._smoothToggleTheme) window._smoothToggleTheme(); else toggleTheme(); }, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
+    themeBtn.appendChild(isDarkMobile ? icon('sun', 22) : icon('moon', 22));
+    topActions.appendChild(themeBtn);
+
+    var syncBtnM = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', 'aria-label': 'Synchronisation cloud', style: getSyncCode() ? { color: 'var(--green)' } : {} });
+    syncBtnM.appendChild(icon('cloud', 22));
+    topActions.appendChild(syncBtnM);
+
+    topbar.appendChild(topActions);
+    document.body.appendChild(topbar);
   }
 
-  var searchBtn = h('button', { onClick: function() { S.searchOpen = true; render(); }, title: 'Rechercher', 'aria-label': 'Rechercher' });
-  searchBtn.appendChild(icon('search', 22));
-  topActions.appendChild(searchBtn);
-
-  var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
-  musicBtn.appendChild(icon('music', 22));
-  topActions.appendChild(musicBtn);
-
-  var isDarkMobile = document.documentElement.getAttribute('data-theme') === 'dark';
-  var themeBtn = h('button', { onClick: function() { if (window._smoothToggleTheme) window._smoothToggleTheme(); else toggleTheme(); }, title: isDarkMobile ? 'Mode clair' : 'Mode sombre' });
-  themeBtn.appendChild(isDarkMobile ? icon('sun', 22) : icon('moon', 22));
-  topActions.appendChild(themeBtn);
-
-  var syncBtnM = h('button', { onClick: function() { showSyncModal(); }, title: 'Sync', 'aria-label': 'Synchronisation cloud', style: getSyncCode() ? { color: 'var(--green)' } : {} });
-  syncBtnM.appendChild(icon('cloud', 22));
-  topActions.appendChild(syncBtnM);
-
-  topbar.appendChild(topActions);
-  document.body.appendChild(topbar);
-
-  // Mobile bottom tab bar
-  var existingMobileTabs = document.querySelector('.mobile-tabs');
-  if (existingMobileTabs) existingMobileTabs.remove();
-  var mobileTabs = h('div', { className: 'mobile-tabs', role: 'navigation', 'aria-label': 'Navigation mobile' });
+  // Mobile bottom tab bar: persistent — only update active classes
   var mobileItems = [
     { id: 'home', label: 'Accueil', iconName: 'inbox' },
     { id: 'formation', label: 'Formation', iconName: 'book' },
@@ -199,17 +213,29 @@ function mainRender() {
     { id: 'flash', label: 'Flash', iconName: 'zap' },
     { id: 'progress', label: 'Stats', iconName: 'award' }
   ];
-  mobileItems.forEach(function(mi) {
-    var tab = h('button', {
-      className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
-      'aria-label': mi.label,
-      'aria-current': S.tab === mi.id ? 'page' : null,
-      role: 'tab',
-      onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
-    }, icon(mi.iconName, 20), h('span', null, mi.label));
-    mobileTabs.appendChild(tab);
-  });
-  document.body.appendChild(mobileTabs);
+  var existingMobileTabs = document.querySelector('.mobile-tabs');
+  if (!existingMobileTabs) {
+    var mobileTabs = h('div', { className: 'mobile-tabs', role: 'navigation', 'aria-label': 'Navigation mobile' });
+    mobileItems.forEach(function(mi) {
+      var tab = h('button', {
+        className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
+        'aria-label': mi.label,
+        'aria-current': S.tab === mi.id ? 'page' : null,
+        role: 'tab',
+        onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
+      }, icon(mi.iconName, 20), h('span', null, mi.label));
+      mobileTabs.appendChild(tab);
+    });
+    document.body.appendChild(mobileTabs);
+  } else {
+    var tabBtns = existingMobileTabs.querySelectorAll('.mobile-tab');
+    mobileItems.forEach(function(mi, i) {
+      if (tabBtns[i]) {
+        tabBtns[i].classList.toggle('active', S.tab === mi.id);
+        tabBtns[i].setAttribute('aria-current', S.tab === mi.id ? 'page' : null);
+      }
+    });
+  }
 }
 
 // Register the render function (overridden below with history tracking)

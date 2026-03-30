@@ -209,6 +209,7 @@ export function renderSidebar() {
         className: 'nav-item' + (S.tab === item.id ? ' active' : ''),
         'aria-label': item.text,
         'aria-current': S.tab === item.id ? 'page' : null,
+        'data-tab': item.id,
         role: 'tab',
         onClick: function() { S.tab = item.id; if (item.id === 'formation') S.chapterIdx = null; render(); }
       });
