@@ -460,16 +460,14 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
 
-/* Daily Mix CTA */
-.daily-mix-cta { padding: 20px 24px; border-radius: var(--radius-lg); border: 2px solid var(--accent); background: var(--accent-bg); margin-bottom: 16px; }
-[data-theme="dark"] .daily-mix-cta { border-color: var(--accent); background: rgba(46,117,182,.08); }
+/* Formation next-action bar */
+.formation-next-bar { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--bg2); border-radius: var(--radius-lg); border: 0.5px solid var(--bd); margin-bottom: 16px; }
+.formation-next-step { font-size: 14px; font-weight: 500; color: var(--tx); line-height: 1.4; }
+.formation-cta-btn { flex-shrink: 0; padding: 10px 20px; font-size: 13px; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; }
+.formation-cta-btn:hover { opacity: .9; }
 
 /* Daily Mix complete */
 .daily-mix-complete { text-align: center; padding: 48px 24px; }
-
-/* Weekly Challenge */
-.weekly-challenge-card { padding: 16px 20px; border-radius: var(--radius-lg); border: 0.5px solid var(--bd); background: var(--surface); margin-bottom: 16px; }
-.weekly-challenge-card.completed { border-color: var(--green); background: var(--green-bg); }
 
 /* Skill Tree */
 .skill-tree { padding: 20px 24px; border-radius: var(--radius-lg); border: 0.5px solid var(--bd); background: var(--surface); margin-bottom: 16px; }
@@ -512,7 +510,8 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .skill-node { padding: 8px 6px; }
   .skill-node-num { font-size: 14px; }
   .skill-node-title { font-size: 10px; }
-  .daily-mix-cta { padding: 14px 16px; }
+  .formation-next-bar { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px 16px; }
+  .formation-cta-btn { width: 100%; }
 }
 /* Splash Screen */
 #splash {
@@ -891,8 +890,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.2.1"></script>
-<script type="module" src="app.js?v=5.2.1"></script>
+<script src="data.js?v=5.2.2"></script>
+<script type="module" src="app.js?v=5.2.2"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

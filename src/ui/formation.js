@@ -1,15 +1,11 @@
-import { S, save } from '../core/state.js';
-import { h, render, getTotalMissions } from '../core/render.js';
+import { S } from '../core/state.js';
+import { h, render } from '../core/render.js';
 import { icon } from '../core/icons.js';
-import { isChapterUnlocked, getChapterPrereqs, getWeeklyChallenge, getWeeklyChallengeProgress, startDailyMix, addXP } from '../features/gamification.js';
+import { isChapterUnlocked } from '../features/gamification.js';
 import { renderChapterDetail } from '../features/missions.js';
-import { renderRoadmap } from './home.js';
-import { makeSidebarSvg } from './sidebar.js';
+import { getProgress } from './home.js';
 
-let _getDueCards = null;
-export function setFormationDeps(deps) {
-  if (deps.getDueCards) _getDueCards = deps.getDueCards;
-}
+export function setFormationDeps(deps) {}
 
 const CHAPTERS = window.CHAPTERS;
 const DOMAINS = window.DOMAINS;
@@ -126,91 +122,42 @@ export function renderFormation() {
 }
 
 export function renderChapterList() {
-  var getDueCards = _getDueCards || function() { return []; };
-  const wrap = h('div', null);
+  var wrap = h('div', null);
 
-  // ── Daily Mix CTA (primary action) ──
-  var todayXP = 0;
-  var todayStr = new Date().toISOString().slice(0, 10);
-  var todayEntry = S.xpHistory.find(function(e) { return e.date === todayStr; });
-  if (todayEntry) todayXP = todayEntry.xp;
-  var goalPct = Math.min(100, Math.round(todayXP / S.dailyGoal * 100));
-
-  var dailyMixCard = h('div', { className: 'daily-mix-cta' },
-    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-      h('div', null,
-        h('div', { style: { fontSize: '16px', fontWeight: '700', marginBottom: '4px' } }, 'Session du jour'),
-        h('div', { style: { fontSize: '13px', color: 'var(--tx2)' } },
-          getDueCards().length + ' flashcards + quiz cibles + mission \u2014 10 min')
-      ),
-      h('button', {
-        onClick: startDailyMix,
-        style: { padding: '12px 24px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)', whiteSpace: 'nowrap' }
-      }, 'Commencer')
+  // ── Next action bar (single CTA) ──
+  var prog = getProgress();
+  var totalPct = Math.round(prog.totalMissions / prog.totalMissionsMax * 100);
+  var nextBar = h('div', { className: 'formation-next-bar' });
+  var leftSide = h('div', { style: { flex: '1', minWidth: '0' } });
+  leftSide.appendChild(h('div', { className: 'formation-next-step' }, prog.nextStep));
+  leftSide.appendChild(h('div', { style: { marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' } },
+    h('div', { className: 'progress-bar', style: { flex: '1' } },
+      h('div', { className: 'progress-fill', style: { width: totalPct + '%' } })
     ),
-    h('div', { style: { marginTop: '10px' } },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--tx3)', marginBottom: '4px' } },
-        h('span', null, 'Objectif du jour'),
-        h('span', null, todayXP + '/' + S.dailyGoal + ' XP')
-      ),
-      h('div', { className: 'progress-bar' },
-        h('div', { className: 'progress-fill' + (goalPct >= 100 ? ' green' : ''), style: { width: goalPct + '%' } })
-      )
-    )
-  );
-  wrap.appendChild(dailyMixCard);
-
-  // ── Weekly Challenge ──
-  var challenge = getWeeklyChallenge();
-  if (challenge) {
-    var cProgress = getWeeklyChallengeProgress(challenge);
-    var cPct = Math.min(100, Math.round(cProgress / challenge.target * 100));
-    var cDone = cPct >= 100;
-    wrap.appendChild(h('div', { className: 'weekly-challenge-card' + (cDone ? ' completed' : '') },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' } },
-        icon(challenge.icon, 18),
-        h('div', null,
-          h('div', { style: { fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.5px', color: cDone ? 'var(--green)' : 'var(--accent)' } }, 'Defi de la semaine'),
-          h('div', { style: { fontSize: '14px', fontWeight: '500' } }, challenge.title)
-        ),
-        cDone ? h('span', { style: { marginLeft: 'auto', fontSize: '12px', fontWeight: '600', color: 'var(--green)' } }, 'Complete !') : null
-      ),
-      h('div', { style: { fontSize: '13px', color: 'var(--tx2)', marginBottom: '8px' } }, challenge.desc),
-      h('div', { className: 'progress-bar' },
-        h('div', { className: 'progress-fill' + (cDone ? ' green' : ''), style: { width: cPct + '%' } })
-      ),
-      h('div', { style: { fontSize: '11px', color: 'var(--tx3)', marginTop: '4px', textAlign: 'right' } },
-        cProgress + '/' + challenge.target + (cDone ? ' \u2014 +' + challenge.xpBonus + ' XP bonus' : ''))
-    ));
-    // Auto-award weekly challenge XP
-    if (cDone && !challenge.completed) {
-      challenge.completed = true;
-      S.weeklyChallenge = challenge;
-      addXP(challenge.xpBonus, 'Defi semaine');
-      save();
-    }
+    h('span', { style: { fontSize: '12px', color: 'var(--tx3)', whiteSpace: 'nowrap' } },
+      prog.totalMissions + '/' + prog.totalMissionsMax + ' \u00B7 ' + totalPct + '%')
+  ));
+  nextBar.appendChild(leftSide);
+  if (prog.nextAction) {
+    var btn = h('button', { className: 'formation-cta-btn', onClick: prog.nextAction }, 'Continuer');
+    nextBar.appendChild(btn);
   }
-
-  // Roadmap
-  wrap.appendChild(renderRoadmap());
+  wrap.appendChild(nextBar);
 
   // ── Chapter list ──
-  const done = Object.values(S.missions).filter(Boolean).length;
-  const totalMissionsMax = CHAPTERS.reduce(function(s, c) { return s + (c.missions[1] - c.missions[0] + 1); }, 0);
-
-  const nav = h('div', { className: 'ch-nav' });
-  CHAPTERS.forEach((ch, idx) => {
-    const [from, to] = ch.missions;
-    const total = to - from + 1;
-    const completed = Array.from({ length: total }, (_, i) => S.missions[from + i]).filter(Boolean).length;
-    const pct = Math.round(completed / total * 100);
+  var nav = h('div', { className: 'ch-nav' });
+  CHAPTERS.forEach(function(ch, idx) {
+    var from = ch.missions[0], to = ch.missions[1];
+    var total = to - from + 1;
+    var completed = 0;
+    for (var i = from; i <= to; i++) { if (S.missions[i]) completed++; }
+    var pct = Math.round(completed / total * 100);
     var unlocked = isChapterUnlocked(ch.id);
-
     nav.appendChild(h('div', {
       className: 'ch-item' + (completed === total ? ' completed' : '') + (!unlocked ? ' ch-locked' : ''),
       onClick: function() { if (unlocked) { S.chapterIdx = idx; render(); } }
     },
-      h('div', { className: 'ch-num' }, `${ch.id}`),
+      h('div', { className: 'ch-num' }, String(ch.id)),
       h('span', { className: 'ch-domain', style: { color: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color : 'var(--tx3)', background: DOMAINS[ch.domain] ? DOMAINS[ch.domain].color + '18' : 'var(--bg3)' } }, ch.domain || 'Intro'),
       h('div', { style: { flex: '1' } },
         h('div', { className: 'ch-title' }, ch.title),
@@ -221,7 +168,7 @@ export function renderChapterList() {
         )
       ),
       !unlocked ? icon('lock', 14) : null,
-      h('div', { className: 'ch-progress' }, `${completed}/${total}`)
+      h('div', { className: 'ch-progress' }, completed + '/' + total)
     ));
   });
   wrap.appendChild(nav);
