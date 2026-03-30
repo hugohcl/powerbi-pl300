@@ -6,6 +6,7 @@ var _chatMessages = JSON.parse(localStorage.getItem('pbi-chat') || '[]');
 var _chatOpen = false;
 var _chatLoading = false;
 var _chatPendingImage = null; // { mimeType, data (base64) }
+var _lastUserMsgIdx = -1; // index of last user message for scroll targeting
 
 function _renderMarkdown(text) {
   // Lightweight markdown → HTML for chat messages
@@ -30,6 +31,122 @@ function getChatContext() {
     ctx += '. Chapitre en cours : ' + window.CHAPTERS[S.chapterIdx].title;
   }
   return ctx;
+}
+
+function _handleImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  if (file.size > 4 * 1024 * 1024) {
+    alert('Image trop volumineuse (max 4 Mo)');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function() {
+    var base64 = reader.result.split(',')[1];
+    _chatPendingImage = { mimeType: file.type, data: base64 };
+    _updateImagePreview();
+    _updateSendBtnState();
+  };
+  reader.readAsDataURL(file);
+}
+
+function _buildMsgEl(m) {
+  var msgEl = h('div', { className: 'chat-msg ' + m.role });
+  if (m.image && m.image !== '[image]') {
+    var img = h('img', { src: m.image, className: 'chat-msg-img', alt: 'Image' });
+    msgEl.appendChild(img);
+  }
+  if (m.text) {
+    var textDiv = document.createElement('div');
+    textDiv.innerHTML = _renderMarkdown(m.text);
+    msgEl.appendChild(textDiv);
+  }
+  return msgEl;
+}
+
+// Incremental update: only rebuild the messages area content
+function _updateChatMessages(scrollToUserMsg) {
+  var msgArea = document.getElementById('chat-messages');
+  if (!msgArea) return;
+
+  msgArea.innerHTML = '';
+
+  if (_chatMessages.length === 0) {
+    msgArea.appendChild(h('div', { className: 'chat-msg bot' }, 'Salut ! Je suis ton tuteur Power BI. Pose-moi une question sur DAX, Power Query, ou la certification PL-300. Tu peux aussi coller une capture d\'\u00e9cran (Ctrl+V) !'));
+  }
+
+  var userMsgEl = null;
+  _chatMessages.forEach(function(m, i) {
+    var el = _buildMsgEl(m);
+    if (scrollToUserMsg && i === _lastUserMsgIdx) {
+      userMsgEl = el;
+    }
+    msgArea.appendChild(el);
+  });
+
+  if (_chatLoading) {
+    msgArea.appendChild(h('div', { className: 'chat-msg bot typing' }, '...'));
+  }
+
+  // Scroll: if we just got a bot response, scroll to show the user question at top
+  if (scrollToUserMsg && userMsgEl) {
+    setTimeout(function() {
+      userMsgEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  } else {
+    // Default: scroll to bottom (e.g. when opening panel, or user just sent)
+    setTimeout(function() {
+      msgArea.scrollTop = msgArea.scrollHeight;
+    }, 50);
+  }
+}
+
+function _updateImagePreview() {
+  var panel = document.querySelector('.chat-panel');
+  if (!panel) return;
+  var existing = panel.querySelector('.chat-img-preview');
+  if (existing) existing.remove();
+
+  if (_chatPendingImage) {
+    var preview = h('div', { className: 'chat-img-preview' });
+    var previewImg = h('img', { src: 'data:' + _chatPendingImage.mimeType + ';base64,' + _chatPendingImage.data });
+    var removeBtn = h('button', {
+      className: 'chat-img-remove',
+      onClick: function() { _chatPendingImage = null; _updateImagePreview(); _updateSendBtnState(); }
+    }, '\u00d7');
+    preview.appendChild(previewImg);
+    preview.appendChild(removeBtn);
+    // Insert before input row
+    var inputRow = panel.querySelector('.chat-input-row');
+    if (inputRow) panel.insertBefore(preview, inputRow);
+    else panel.appendChild(preview);
+  }
+
+  // Update placeholder
+  var input = document.getElementById('chat-input');
+  if (input) {
+    input.placeholder = _chatPendingImage ? 'D\u00e9cris ta capture (optionnel)...' : 'Pose ta question...';
+  }
+}
+
+function _updateSendBtnState() {
+  var btn = document.querySelector('.chat-send-btn');
+  var input = document.getElementById('chat-input');
+  if (!btn) return;
+  var hasContent = (input && input.value.trim()) || _chatPendingImage;
+  if (hasContent) btn.classList.add('active');
+  else btn.classList.remove('active');
+}
+
+function _updateLoadingState() {
+  var panel = document.querySelector('.chat-panel');
+  if (!panel) return;
+  // Update buttons disabled state
+  var sendBtn = panel.querySelector('.chat-send-btn');
+  var imgBtn = panel.querySelector('.chat-img-btn');
+  var input = document.getElementById('chat-input');
+  if (sendBtn) sendBtn.disabled = _chatLoading;
+  if (imgBtn) imgBtn.disabled = _chatLoading;
+  if (input) input.disabled = _chatLoading;
 }
 
 export function renderChatFab() {
@@ -60,39 +177,9 @@ export function renderChatPanel() {
 
   // Messages
   var msgArea = h('div', { className: 'chat-messages', id: 'chat-messages' });
-  if (_chatMessages.length === 0) {
-    msgArea.appendChild(h('div', { className: 'chat-msg bot' }, 'Salut ! Je suis ton tuteur Power BI. Pose-moi une question sur DAX, Power Query, ou la certification PL-300. Tu peux aussi m\'envoyer une capture d\'\u00e9cran !'));
-  }
-  _chatMessages.forEach(function(m) {
-    var msgEl = h('div', { className: 'chat-msg ' + m.role });
-    if (m.image) {
-      var img = h('img', { src: m.image, className: 'chat-msg-img', alt: 'Image' });
-      msgEl.appendChild(img);
-    }
-    if (m.text) {
-      var textDiv = document.createElement('div');
-      textDiv.innerHTML = _renderMarkdown(m.text);
-      msgEl.appendChild(textDiv);
-    }
-    msgArea.appendChild(msgEl);
-  });
-  if (_chatLoading) {
-    msgArea.appendChild(h('div', { className: 'chat-msg bot typing' }, '...'));
-  }
   panel.appendChild(msgArea);
 
-  // Image preview
-  if (_chatPendingImage) {
-    var preview = h('div', { className: 'chat-img-preview' });
-    var previewImg = h('img', { src: 'data:' + _chatPendingImage.mimeType + ';base64,' + _chatPendingImage.data });
-    var removeBtn = h('button', {
-      className: 'chat-img-remove',
-      onClick: function() { _chatPendingImage = null; renderChatPanel(); }
-    }, '\u00d7');
-    preview.appendChild(previewImg);
-    preview.appendChild(removeBtn);
-    panel.appendChild(preview);
-  }
+  // Image preview (will be populated by _updateImagePreview if needed)
 
   // Input row
   var inputRow = h('div', { className: 'chat-input-row' });
@@ -104,19 +191,8 @@ export function renderChatPanel() {
     style: { display: 'none' },
     id: 'chat-file-input',
     onChange: function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 4 * 1024 * 1024) {
-        alert('Image trop volumineuse (max 4 Mo)');
-        return;
-      }
-      var reader = new FileReader();
-      reader.onload = function() {
-        var base64 = reader.result.split(',')[1];
-        _chatPendingImage = { mimeType: file.type, data: base64 };
-        renderChatPanel();
-      };
-      reader.readAsDataURL(file);
+      _handleImageFile(e.target.files[0]);
+      e.target.value = ''; // reset so same file can be re-selected
     }
   });
   inputRow.appendChild(fileInput);
@@ -135,14 +211,8 @@ export function renderChatPanel() {
     type: 'text',
     placeholder: _chatPendingImage ? 'D\u00e9cris ta capture (optionnel)...' : 'Pose ta question...',
     id: 'chat-input',
-    onKeydown: function(e) { if (e.key === 'Enter' && !_chatLoading) sendChatMessage(); },
-    onInput: function(e) {
-      var btn = e.target.parentElement.querySelector('.chat-send-btn');
-      if (btn) {
-        if (e.target.value.trim() || _chatPendingImage) btn.classList.add('active');
-        else btn.classList.remove('active');
-      }
-    }
+    onKeydown: function(e) { if (e.key === 'Enter' && !_chatLoading) { e.preventDefault(); sendChatMessage(); } },
+    onInput: function() { _updateSendBtnState(); }
   });
   var sendBtn = h('button', {
     className: 'chat-send-btn' + (_chatPendingImage ? ' active' : ''),
@@ -154,12 +224,28 @@ export function renderChatPanel() {
   inputRow.appendChild(sendBtn);
   panel.appendChild(inputRow);
 
+  // Paste handler for clipboard images (Ctrl+V / Cmd+V)
+  panel.addEventListener('paste', function(e) {
+    var items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        var file = items[i].getAsFile();
+        if (file) _handleImageFile(file);
+        return;
+      }
+    }
+  });
+
   document.body.appendChild(panel);
 
-  // Scroll to bottom + focus
+  // Populate messages and image preview
+  _updateChatMessages(false);
+  _updateImagePreview();
+
+  // Focus input
   setTimeout(function() {
-    var ma = document.getElementById('chat-messages');
-    if (ma) ma.scrollTop = ma.scrollHeight;
     var ci = document.getElementById('chat-input');
     if (ci) ci.focus();
   }, 50);
@@ -181,10 +267,17 @@ export async function sendChatMessage() {
     userMsg.image = 'data:' + image.mimeType + ';base64,' + image.data;
   }
   _chatMessages.push(userMsg);
+  _lastUserMsgIdx = _chatMessages.length - 1;
 
   _chatPendingImage = null;
   _chatLoading = true;
-  renderChatPanel();
+
+  // Clear input without full re-render
+  if (input) input.value = '';
+  _updateImagePreview();
+  _updateSendBtnState();
+  _updateLoadingState();
+  _updateChatMessages(false); // scroll to bottom to show user msg + typing
 
   try {
     var body = { message: msg || 'Analyse cette image.', context: getChatContext(), history: historyToSend };
@@ -207,11 +300,15 @@ export async function sendChatMessage() {
   }
 
   _chatLoading = false;
+  _updateLoadingState();
+
   // Strip base64 images before saving to localStorage (too large)
   var toSave = _chatMessages.slice(-50).map(function(m) {
     if (m.image) return { role: m.role, text: m.text, image: '[image]' };
     return m;
   });
   try { localStorage.setItem('pbi-chat', JSON.stringify(toSave)); } catch(e) {}
-  renderChatPanel();
+
+  // Update messages, scroll to user question (not bottom)
+  _updateChatMessages(true);
 }
