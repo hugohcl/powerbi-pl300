@@ -192,13 +192,24 @@ export function renderHome() {
   hero.appendChild(heroBottom);
   bento.appendChild(hero);
 
-  // Streak card
+  // Streak card (compact)
   var streak = h('div', { className: 'bento-card bento-streak' },
     h('div', { className: 'streak-flame' }, '\uD83D\uDD25'),
     h('div', { className: 'streak-number' }, String(S.streak || 0)),
     h('div', { className: 'streak-label' }, (S.streak || 0) <= 1 ? 'jour de streak' : 'jours de streak')
   );
   bento.appendChild(streak);
+
+  // Study time card (compact, beside streak)
+  var studyCard = h('div', { className: 'bento-card bento-study' });
+  var studyIconWrap = h('div', { className: 'study-icon' });
+  var studySvg = makeSidebarSvg('<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>');
+  studySvg.setAttribute('stroke', 'var(--orange)');
+  studyIconWrap.appendChild(studySvg);
+  studyCard.appendChild(studyIconWrap);
+  studyCard.appendChild(h('div', { className: 'study-value', id: 'home-study-time' }, formatStudyTime(S.studyTime)));
+  studyCard.appendChild(h('div', { className: 'study-label' }, 'Temps d\'étude'));
+  bento.appendChild(studyCard);
 
   // Daily goal card
   var goalMet = todayXP >= S.dailyGoal;
@@ -234,8 +245,7 @@ export function renderHome() {
   var stats = [
     { bg: 'var(--accent-bg)', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 7h6M6 10h4"/>', value: missionsDone, suffix: '/' + totalMissions, label: 'Missions termin\u00e9es', color: 'var(--accent)' },
     { bg: '#34c75912', iconPath: '<rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 8l2 2 4-4"/>', value: knownCards, suffix: '/' + totalFlash, label: 'Flashcards ma\u00eetris\u00e9es', color: 'var(--green)' },
-    { bg: '#af52de12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>', value: quizPct, suffix: '%', label: 'Taux de r\u00e9ussite quiz', color: 'var(--purple)' },
-    { bg: '#ff9f0a12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 5v4h3"/>', value: formatStudyTime(S.studyTime), suffix: '', label: 'Temps d\'étude total', color: 'var(--orange)', id: 'home-study-time' }
+    { bg: '#af52de12', iconPath: '<circle cx="9" cy="9" r="7"/><path d="M9 6v3l2 1"/>', value: quizPct, suffix: '%', label: 'Taux de r\u00e9ussite quiz', color: 'var(--purple)' }
   ];
 
   stats.forEach(function(st) {
