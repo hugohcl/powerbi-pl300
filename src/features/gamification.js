@@ -504,28 +504,62 @@ export function showNotification(text, type) {
 
 export function showOnboarding() {
   if (localStorage.getItem('pbi-onboarded')) return;
+  var _onboardingStep = 0;
+
+  var steps = [
+    { icon: 'award', title: 'Bienvenue dans DAX Academy', desc: 'Formation compl\u00e8te pour la certification Power\u00a0BI PL-300. 7 chapitres, 120 missions, 277 quiz.' },
+    { icon: 'zap', title: 'Comment progresser', desc: 'Chaque action rapporte des XP\u00a0: missions (+15), quiz (+5), exercices (+30). Objectif\u00a0: atteindre le niveau PL-300 Ready (3\u202f000 XP).' },
+    { icon: 'target', title: 'Outils d\u2019\u00e9tude', desc: 'Daily Mix\u00a0: session personnalis\u00e9e quotidienne. Flashcards\u00a0: r\u00e9p\u00e9tition espac\u00e9e (SM-2). Examen blanc\u00a0: simulation PL-300 chronom\u00e9tr\u00e9e.' }
+  ];
+
   var overlay = h('div', { className: 'onboarding-overlay', id: 'onboarding' });
-  var card = h('div', { className: 'onboarding-card' },
-    h('div', { style: { marginBottom: '16px' } }, icon('award', 32)),
-    h('h2', null, 'Bienvenue dans ton parcours PL-300'),
-    h('p', null, 'Cette application te guide de z\u00e9ro \u00e0 la certification Power\u00a0BI PL-300.'),
-    h('div', { style: { textAlign: 'left', margin: '20px 0' } },
-      h('div', { className: 'onboarding-step' }, icon('book', 16), ' Formation\u00a0: 7 chapitres avec missions pratiques'),
-      h('div', { className: 'onboarding-step' }, icon('target', 16), ' Quiz PL-300\u00a0: entra\u00eenement par domaine + examen blanc'),
-      h('div', { className: 'onboarding-step' }, icon('zap', 16), ' Flashcards\u00a0: r\u00e9p\u00e9tition espac\u00e9e (SM-2)'),
-      h('div', { className: 'onboarding-step' }, icon('flag', 16), ' Projet Racing Games\u00a0: application sur un projet r\u00e9el'),
-      h('div', { className: 'onboarding-step' }, icon('trophy', 16), ' Objectif\u00a0: \u00ab\u00a0PL-300 Ready\u00a0\u00bb (3\u202f000 XP)')
-    ),
-    h('p', { style: { fontSize: '13px', color: 'var(--tx3)' } }, 'Tu gagnes des XP \u00e0 chaque action\u00a0: missions, quiz, exercices, flashcards.'),
-    h('button', {
-      onClick: function() {
-        localStorage.setItem('pbi-onboarded', '1');
-        var el = document.getElementById('onboarding');
-        if (el) el.remove();
-      },
-      style: { padding: '12px 32px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)', marginTop: '12px' }
-    }, 'Commencer')
-  );
+  var card = h('div', { className: 'onboarding-card' });
   overlay.appendChild(card);
+
+  function renderStep() {
+    var s = steps[_onboardingStep];
+    card.innerHTML = '';
+
+    // Icon
+    var iconWrap = h('div', { style: { marginBottom: '16px' } }, icon(s.icon, 32));
+    card.appendChild(iconWrap);
+
+    // Title
+    card.appendChild(h('h2', null, s.title));
+
+    // Description
+    card.appendChild(h('p', { style: { fontSize: '14px', color: 'var(--tx2)', lineHeight: '1.6', margin: '16px 0 24px' } }, s.desc));
+
+    // Dots
+    var dotsWrap = h('div', { style: { display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' } });
+    for (var i = 0; i < steps.length; i++) {
+      var dotStyle = {
+        width: '8px', height: '8px', borderRadius: '50%',
+        background: i === _onboardingStep ? 'var(--accent)' : 'var(--bd)',
+        transition: 'background .2s'
+      };
+      dotsWrap.appendChild(h('div', { style: dotStyle }));
+    }
+    card.appendChild(dotsWrap);
+
+    // Button
+    var isLast = _onboardingStep === steps.length - 1;
+    var btn = h('button', {
+      onClick: function() {
+        if (isLast) {
+          localStorage.setItem('pbi-onboarded', '1');
+          var el = document.getElementById('onboarding');
+          if (el) el.remove();
+        } else {
+          _onboardingStep++;
+          renderStep();
+        }
+      },
+      style: { padding: '12px 32px', fontSize: '14px', fontWeight: '600', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 'var(--radius)' }
+    }, isLast ? 'Commencer' : 'Suivant');
+    card.appendChild(btn);
+  }
+
+  renderStep();
   document.body.appendChild(overlay);
 }

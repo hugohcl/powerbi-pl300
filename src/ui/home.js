@@ -200,6 +200,30 @@ export function renderHome() {
   );
   bento.appendChild(streak);
 
+  // Daily goal card
+  var goalMet = todayXP >= S.dailyGoal;
+  var goalCard = h('div', { className: 'bento-card bento-stat' });
+  var goalIconWrap = h('div', { className: 'stat-icon', style: { background: goalMet ? '#34c75920' : 'var(--accent-bg)' } });
+  var goalSvgPath = goalMet
+    ? '<circle cx="9" cy="9" r="7"/><path d="M6 9l2 2 4-4"/>'
+    : '<circle cx="9" cy="9" r="7"/><path d="M9 6v4"/><path d="M7 8l2 2 2-2"/>';
+  var goalSvg = makeSidebarSvg(goalSvgPath);
+  goalSvg.setAttribute('stroke', goalMet ? 'var(--green)' : 'var(--accent)');
+  goalIconWrap.appendChild(goalSvg);
+  goalCard.appendChild(goalIconWrap);
+  goalCard.appendChild(h('div', { className: 'stat-value', style: goalMet ? { color: 'var(--green)' } : {} },
+    String(todayXP),
+    h('span', { style: { fontSize: '16px', color: 'var(--tx3)' } }, '/' + S.dailyGoal + ' XP')
+  ));
+  goalCard.appendChild(h('div', { className: 'stat-label' }, goalMet ? 'Objectif atteint !' : 'Objectif du jour'));
+  var goalBarWrap = h('div', { style: { marginTop: '6px', width: '100%' } },
+    h('div', { className: 'progress-bar', style: { height: '4px' } },
+      h('div', { className: 'progress-fill', style: { width: goalPct + '%', background: goalMet ? 'var(--green)' : 'var(--accent)' } })
+    )
+  );
+  goalCard.appendChild(goalBarWrap);
+  bento.appendChild(goalCard);
+
   // 4 stat cards
   var totalMissions = getTotalMissions();
   var knownCards = (typeof FLASHCARDS !== 'undefined' ? FLASHCARDS : []).filter(function(_, i) { return sm2IsMastered(i); }).length;
