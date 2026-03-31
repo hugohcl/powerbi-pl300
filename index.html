@@ -771,6 +771,37 @@ code, .code { font-family: var(--mono); font-size: 13px; }
   .mobile-tab:active { transform: scale(0.9); transition-duration: .08s; }
   .mobile-tab svg { width: 22px; height: 22px; transition: transform var(--transition); }
   .mobile-tab.active svg { transform: scale(1.1); }
+  /* Bottom sheet "Plus" menu */
+  .mobile-more-overlay {
+    position: fixed; inset: 0; z-index: 299;
+    background: rgba(0,0,0,0.3); animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .mobile-more-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: var(--glass); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-top: 0.5px solid var(--glass-border);
+    border-radius: 20px 20px 0 0;
+    padding: 8px 16px; padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+    transform: translateY(100%); animation: sheetUp .3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  @keyframes sheetUp { to { transform: translateY(0); } }
+  .mobile-more-handle {
+    width: 36px; height: 4px; border-radius: 2px; background: var(--tx3);
+    margin: 4px auto 12px; opacity: 0.4;
+  }
+  .mobile-more-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 12px; font-size: 15px; font-weight: 500;
+    color: var(--tx); cursor: pointer; border: none; background: none;
+    width: 100%; text-align: left; transition: background .15s;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .mobile-more-item:hover, .mobile-more-item:active { background: var(--bg3); }
+  .mobile-more-item.active { color: var(--accent); }
+  .mobile-more-item svg { width: 20px; height: 20px; color: var(--tx2); flex-shrink: 0; }
+  .mobile-more-item.active svg { color: var(--accent); }
 }
 
 /* Chat panel */
@@ -891,8 +922,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.3.6"></script>
-<script type="module" src="app.js?v=5.3.6"></script>
+<script src="data.js?v=5.4.0"></script>
+<script type="module" src="app.js?v=5.4.0"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

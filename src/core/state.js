@@ -80,6 +80,7 @@ export const S = {
   dailyMixShown: false,
   // Streak enhanced
   streakFreezes: 1,
+  soundEnabled: false,
   dailyGoal: 50, // XP per day
   // Weekly challenge
   weeklyChallenge: null,
@@ -112,7 +113,7 @@ export function setSyncCallback(fn) { _syncCallback = fn; }
 
 // ─── Persistence ───
 export function getSaveData() {
-  return { missions: S.missions, missionsXpAwarded: S.missionsXpAwarded, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog, studyTime: S.studyTime };
+  return { missions: S.missions, missionsXpAwarded: S.missionsXpAwarded, checklist: S.checklist, known: S.known, quizStats: S.quizStats, examHistory: S.examHistory, exCompleted: S.exCompleted, xp: S.xp, level: S.level, badges: S.badges, streak: S.streak, lastActiveDate: S.lastActiveDate, xpHistory: S.xpHistory, interviewReviewed: S.interviewReviewed, streakFreezes: S.streakFreezes, soundEnabled: S.soundEnabled, dailyGoal: S.dailyGoal, weeklyChallenge: S.weeklyChallenge, weeklyChallengeDate: S.weeklyChallengeDate, weeklyQuizLog: S.weeklyQuizLog, studyTime: S.studyTime };
 }
 
 export function save() {
@@ -146,6 +147,7 @@ export function applyData(d) {
   S.xpHistory = d.xpHistory || [];
   S.interviewReviewed = d.interviewReviewed || {};
   S.streakFreezes = d.streakFreezes != null ? d.streakFreezes : 1;
+  S.soundEnabled = d.soundEnabled || false;
   S.dailyGoal = d.dailyGoal || 50;
   S.weeklyChallenge = d.weeklyChallenge || null;
   S.weeklyChallengeDate = d.weeklyChallengeDate || null;

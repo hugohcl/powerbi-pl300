@@ -1,9 +1,10 @@
-import { S } from '../core/state.js';
+import { S, save } from '../core/state.js';
 import { h, render, APP_VERSION, isMobile, toggleTheme, getTotalMissions } from '../core/render.js';
 import { icon, iconSearch, iconTimer, iconSun, iconMoon } from '../core/icons.js';
 import { getLevel, isChapterUnlocked } from '../features/gamification.js';
 import { showSyncModal, getSyncCode } from '../features/sync.js';
 import { startPomodoro, pausePomodoro, stopPomodoro, resetPomodoro } from '../features/pomodoro.js';
+import { playClick } from '../features/sounds.js';
 
 let _getDueCards = null;
 export function setSidebarDeps(deps) {
@@ -275,6 +276,12 @@ export function renderSidebar() {
   // Bottom actions (theme, music, sync)
   var curTheme = document.documentElement.getAttribute('data-theme') || 'light';
   var bottomActions = h('div', { className: 'sidebar-bottom-actions' });
+
+  // Sound toggle
+  var soundTitle = S.soundEnabled ? 'Désactiver les sons' : 'Activer les sons';
+  var soundBtn = h('button', { onClick: function() { S.soundEnabled = !S.soundEnabled; if (S.soundEnabled) playClick(); save(); render(); }, title: soundTitle, style: S.soundEnabled ? { color: 'var(--accent)' } : {} });
+  soundBtn.appendChild(icon(S.soundEnabled ? 'volume' : 'volume-x', 16));
+  bottomActions.appendChild(soundBtn);
 
   // Theme toggle
   var tIcon = curTheme === 'dark' ? 'sun' : curTheme === 'high-contrast' ? 'eye' : 'moon';

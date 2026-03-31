@@ -189,6 +189,10 @@ function mainRender() {
     searchBtn.appendChild(icon('search', 22));
     topActions.appendChild(searchBtn);
 
+    var soundBtnM = h('button', { onClick: function() { S.soundEnabled = !S.soundEnabled; save(); render(); }, title: S.soundEnabled ? 'Désactiver les sons' : 'Activer les sons', style: S.soundEnabled ? { color: 'var(--accent)' } : {} });
+    soundBtnM.appendChild(icon(S.soundEnabled ? 'volume' : 'volume-x', 22));
+    topActions.appendChild(soundBtnM);
+
     var musicBtn = h('button', { onClick: function() { window.location.href = 'music://music.apple.com/fr/station/ambiance-studieuse/ra.q-MMLEBw'; }, title: 'Musique' });
     musicBtn.appendChild(icon('music', 22));
     topActions.appendChild(musicBtn);
@@ -206,24 +210,31 @@ function mainRender() {
     document.body.appendChild(topbar);
   }
 
-  // Mobile bottom tab bar: persistent — only update active classes
+  // Mobile bottom tab bar with "Plus" menu for hidden tabs
   var mobileItems = [
     { id: 'home', label: 'Accueil', iconName: 'inbox' },
     { id: 'formation', label: 'Formation', iconName: 'book' },
     { id: 'quiz', label: 'Quiz', iconName: 'target' },
     { id: 'flash', label: 'Flash', iconName: 'zap' },
-    { id: 'progress', label: 'Stats', iconName: 'award' }
+    { id: 'more', label: 'Plus', iconName: 'menu' }
   ];
+  var moreTabIds = ['progress', 'interview', 'ref'];
+  var isMoreActive = moreTabIds.indexOf(S.tab) !== -1;
   var existingMobileTabs = document.querySelector('.mobile-tabs');
   if (!existingMobileTabs) {
     var mobileTabs = h('div', { className: 'mobile-tabs', role: 'navigation', 'aria-label': 'Navigation mobile' });
     mobileItems.forEach(function(mi) {
+      var isActive = mi.id === 'more' ? isMoreActive : S.tab === mi.id;
       var tab = h('button', {
-        className: 'mobile-tab' + (S.tab === mi.id ? ' active' : ''),
+        className: 'mobile-tab' + (isActive ? ' active' : ''),
         'aria-label': mi.label,
-        'aria-current': S.tab === mi.id ? 'page' : null,
+        'aria-current': isActive ? 'page' : null,
         role: 'tab',
-        onClick: function() { S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render(); }
+        onClick: function() {
+          if (mi.id === 'more') { S._moreMenuOpen = !S._moreMenuOpen; render(); return; }
+          S._moreMenuOpen = false;
+          S.tab = mi.id; if (mi.id === 'formation') S.chapterIdx = null; render();
+        }
       }, icon(mi.iconName, 20), h('span', null, mi.label));
       mobileTabs.appendChild(tab);
     });
@@ -232,10 +243,36 @@ function mainRender() {
     var tabBtns = existingMobileTabs.querySelectorAll('.mobile-tab');
     mobileItems.forEach(function(mi, i) {
       if (tabBtns[i]) {
-        tabBtns[i].classList.toggle('active', S.tab === mi.id);
-        tabBtns[i].setAttribute('aria-current', S.tab === mi.id ? 'page' : null);
+        var isAct = mi.id === 'more' ? isMoreActive : S.tab === mi.id;
+        tabBtns[i].classList.toggle('active', isAct);
+        tabBtns[i].setAttribute('aria-current', isAct ? 'page' : null);
       }
     });
+  }
+
+  // "Plus" bottom sheet overlay
+  var existingSheet = document.querySelector('.mobile-more-overlay');
+  if (existingSheet) existingSheet.remove();
+  var existingSheet2 = document.querySelector('.mobile-more-sheet');
+  if (existingSheet2) existingSheet2.remove();
+  if (S._moreMenuOpen) {
+    var overlay = h('div', { className: 'mobile-more-overlay', onClick: function() { S._moreMenuOpen = false; render(); } });
+    document.body.appendChild(overlay);
+    var sheet = h('div', { className: 'mobile-more-sheet' });
+    sheet.appendChild(h('div', { className: 'mobile-more-handle' }));
+    var moreItems = [
+      { id: 'progress', label: 'Progression', iconName: 'award' },
+      { id: 'interview', label: 'Entretien', iconName: 'users' },
+      { id: 'ref', label: 'Référence DAX', iconName: 'book-open' }
+    ];
+    moreItems.forEach(function(mi) {
+      var item = h('button', {
+        className: 'mobile-more-item' + (S.tab === mi.id ? ' active' : ''),
+        onClick: function() { S._moreMenuOpen = false; S.tab = mi.id; render(); }
+      }, icon(mi.iconName, 20), mi.label);
+      sheet.appendChild(item);
+    });
+    document.body.appendChild(sheet);
   }
 }
 

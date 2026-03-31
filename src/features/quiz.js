@@ -2,6 +2,7 @@ import { S, save } from '../core/state.js';
 import { h, render, shuf, qHash, trackQuizAnswer } from '../core/render.js';
 import { icon } from '../core/icons.js';
 import { addXP, getLevel } from './gamification.js';
+import { playCorrect, playWrong } from './sounds.js';
 
 // Late-bound dependencies (set by app.js)
 let _renderExercises = null;
@@ -627,8 +628,8 @@ export function renderQuiz() {
         onClick: () => {
           S.shown = true; S.total++;
           const correct = cq.a.length === S.multiSel.length && cq.a.every(a => S.multiSel.includes(a));
-          if (correct) S.score++;
-          else S.quizHistory.push(cq);
+          if (correct) { S.score++; playCorrect(); }
+          else { S.quizHistory.push(cq); playWrong(); }
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
@@ -687,8 +688,8 @@ export function renderQuiz() {
         onClick: () => {
           S.shown = true; S.total++;
           const correct = cq.a.every((a, idx) => S.orderSel[idx] === a);
-          if (correct) S.score++;
-          else S.quizHistory.push(cq);
+          if (correct) { S.score++; playCorrect(); }
+          else { S.quizHistory.push(cq); playWrong(); }
           const hash = qHash(cq);
           if (!S.quizStats[hash]) S.quizStats[hash] = { right: 0, wrong: 0 };
           S.quizStats[hash][correct ? 'right' : 'wrong']++;
@@ -717,8 +718,8 @@ export function renderQuiz() {
           if (S.shown) return;
           S.sel = i; S.shown = true; S.total++;
           const correct = i === cq.a;
-          if (correct) S.score++;
-          else S.quizHistory.push(cq);
+          if (correct) { S.score++; playCorrect(); }
+          else { S.quizHistory.push(cq); playWrong(); }
 
           // Update stats
           const hash = qHash(cq);

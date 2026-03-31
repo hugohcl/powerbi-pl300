@@ -1,6 +1,7 @@
 import { S, save } from '../core/state.js';
 import { h, render, shuf, qHash, trackQuizAnswer, getTotalMissions } from '../core/render.js';
 import { icon } from '../core/icons.js';
+import { playXP, playLevelUp, playBadge } from './sounds.js';
 
 // Late-bound dependencies (set by app.js to break circular deps)
 let _getDueCards = null;
@@ -380,6 +381,7 @@ export function getLevel(xp) {
 export function addXP(amount, source) {
   if (!amount || amount <= 0) return;
   S.xp += amount;
+  playXP();
   // XP history
   var today = new Date().toISOString().slice(0, 10);
   var last = S.xpHistory.length > 0 ? S.xpHistory[S.xpHistory.length - 1] : null;
@@ -393,6 +395,7 @@ export function addXP(amount, source) {
   var newLvl = getLevel(S.xp);
   if (newLvl > S.level) {
     S.level = newLvl;
+    playLevelUp();
     showCelebration('Niveau ' + window.LEVELS[newLvl].name + ' !', 'Tu as atteint le niveau ' + (newLvl + 1) + '/' + window.LEVELS.length, 'level');
   }
   // Show XP notif
@@ -475,6 +478,7 @@ export function checkBadges() {
     }
     if (earned) {
       S.badges.push(b.id);
+      playBadge();
       showCelebration('Badge debloque !', b.name + ' \u2014 ' + b.desc, 'badge');
     }
   });
