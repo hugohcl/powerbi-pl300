@@ -11,24 +11,38 @@ export function setMissionDeps(deps) {
   if (deps.renderDiagram) _renderDiagram = deps.renderDiagram;
 }
 
+function _inlineFormat(text) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<u>$1</u>')
+    .replace(/`([^`]+)`/g, '<code style="font-size:0.92em;padding:1px 5px;background:var(--bg3);border-radius:4px;">$1</code>');
+}
+
 function renderText(text, style) {
   const container = h('div', { style: { ...style, marginBottom: '14px' } });
   const paragraphs = text.split('\n\n');
   paragraphs.forEach(para => {
     const trimmed = para.trim();
     if (!trimmed) return;
-    // Check if paragraph is a list (lines starting with - or a digit followed by ) or .)
     const lines = trimmed.split('\n');
     const isList = lines.length > 1 && lines.every(l => /^\s*[-–•]/.test(l.trim()) || /^\s*\d+[.)\-]/.test(l.trim()) || l.trim() === '');
     if (isList) {
       const ul = h('ul', { style: { margin: '8px 0', paddingLeft: '20px', listStyleType: 'disc' } });
       lines.forEach(l => {
         const clean = l.trim().replace(/^[-–•]\s*/, '').replace(/^\d+[.)\-]\s*/, '');
-        if (clean) ul.appendChild(h('li', { style: { marginBottom: '4px' } }, clean));
+        if (clean) {
+          const li = document.createElement('li');
+          li.style.marginBottom = '4px';
+          li.innerHTML = _inlineFormat(clean);
+          ul.appendChild(li);
+        }
       });
       container.appendChild(ul);
     } else {
-      container.appendChild(h('p', { style: { marginBottom: '10px' } }, trimmed));
+      const p = document.createElement('p');
+      p.style.marginBottom = '10px';
+      p.innerHTML = _inlineFormat(trimmed);
+      container.appendChild(p);
     }
   });
   return container;
