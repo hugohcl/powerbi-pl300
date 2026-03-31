@@ -74,7 +74,7 @@ function mainRender() {
 
   // Sidebar: persistent — rebuild only when pomodoro state changes, otherwise patch active classes
   var existingSidebar = document.querySelector('.sidebar');
-  var _sbPomKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0');
+  var _sbPomKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0') + (S.soundEnabled ? 's1' : 's0');
   if (!existingSidebar || existingSidebar.dataset.pomKey !== _sbPomKey) {
     if (existingSidebar) existingSidebar.remove();
     var newSidebar = renderSidebar();
@@ -160,7 +160,7 @@ function mainRender() {
   // Mobile top bar: persistent — rebuild only when pomodoro state or theme changes
   var existingTopbar = document.querySelector('.mobile-topbar');
   var _curTheme = document.documentElement.getAttribute('data-theme') || 'light';
-  var _tbKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0') + _curTheme;
+  var _tbKey = (S.pomodoro.active ? '1' : '0') + (S.pomodoro.dropdownOpen ? '1' : '0') + _curTheme + (S.soundEnabled ? 's1' : 's0');
   if (!existingTopbar || existingTopbar.dataset.stateKey !== _tbKey) {
     if (existingTopbar) existingTopbar.remove();
     var topbar = h('div', { className: 'mobile-topbar' });
@@ -189,7 +189,7 @@ function mainRender() {
     searchBtn.appendChild(icon('search', 22));
     topActions.appendChild(searchBtn);
 
-    var soundBtnM = h('button', { onClick: function() { S.soundEnabled = !S.soundEnabled; save(); render(); }, title: S.soundEnabled ? 'Désactiver les sons' : 'Activer les sons', style: S.soundEnabled ? { color: 'var(--accent)' } : {} });
+    var soundBtnM = h('button', { onClick: function() { S.soundEnabled = !S.soundEnabled; save(); render(); }, title: S.soundEnabled ? 'Désactiver les sons' : 'Activer les sons', style: S.soundEnabled ? { color: 'var(--accent)', background: 'var(--accent-bg)', borderRadius: '8px' } : {} });
     soundBtnM.appendChild(icon(S.soundEnabled ? 'volume' : 'volume-x', 22));
     topActions.appendChild(soundBtnM);
 

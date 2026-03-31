@@ -277,9 +277,13 @@ export function renderSidebar() {
   var curTheme = document.documentElement.getAttribute('data-theme') || 'light';
   var bottomActions = h('div', { className: 'sidebar-bottom-actions' });
 
-  // Sound toggle
+  // Sound toggle — with label for discoverability
   var soundTitle = S.soundEnabled ? 'Désactiver les sons' : 'Activer les sons';
-  var soundBtn = h('button', { onClick: function() { S.soundEnabled = !S.soundEnabled; if (S.soundEnabled) playClick(); save(); render(); }, title: soundTitle, style: S.soundEnabled ? { color: 'var(--accent)' } : {} });
+  var soundBtn = h('button', {
+    onClick: function() { S.soundEnabled = !S.soundEnabled; if (S.soundEnabled) playClick(); save(); render(); },
+    title: soundTitle,
+    style: S.soundEnabled ? { color: 'var(--accent)', background: 'var(--accent-bg)' } : {}
+  });
   soundBtn.appendChild(icon(S.soundEnabled ? 'volume' : 'volume-x', 16));
   bottomActions.appendChild(soundBtn);
 
