@@ -146,7 +146,7 @@ export function renderSidebar() {
 
   // Logo
   var logoIcon = h('img', { src: 'icon.png', alt: 'DAX Academy', style: { width: '36px', height: '36px', borderRadius: '8px' } });
-  var logo = h('div', { className: 'sidebar-logo' },
+  var logo = h('div', { className: 'sidebar-logo', style: { cursor: 'pointer' }, onClick: function() { S.tab = 'home'; S.chapterIdx = null; render(); } },
     logoIcon,
     h('span', { className: 'sidebar-logo-text' }, 'DAX Academy'),
     h('span', { className: 'sidebar-version' }, 'v' + APP_VERSION)

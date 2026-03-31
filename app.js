@@ -141,21 +141,9 @@ function mainRender() {
   // Remove view-enter class after animation completes
   content.addEventListener('animationend', function() { content.classList.remove('view-enter'); }, { once: true });
 
-  // Global progress bar: update in-place
-  var totalMissions = getTotalMissions();
-  var doneMissions = Object.values(S.missions).filter(Boolean).length;
-  var masteredCards = window.FLASHCARDS.filter(function(_, i) { return sm2IsMastered(i); }).length;
-  var globalPct = Math.round((doneMissions + masteredCards) / (totalMissions + window.FLASHCARDS.length) * 100);
+  // Remove legacy global progress bar if present
   var existingProgress = document.querySelector('.global-progress');
-  if (existingProgress) {
-    var existingFill = existingProgress.querySelector('.global-progress-fill');
-    if (existingFill) existingFill.style.width = globalPct + '%';
-  } else if (globalPct > 0) {
-    var gBar = h('div', { className: 'global-progress' },
-      h('div', { className: 'global-progress-fill', style: { width: globalPct + '%' } })
-    );
-    document.body.appendChild(gBar);
-  }
+  if (existingProgress) existingProgress.remove();
 
   // Mobile top bar: persistent — rebuild only when pomodoro state or theme changes
   var existingTopbar = document.querySelector('.mobile-topbar');
