@@ -1,6 +1,5 @@
 import { S, save } from '../core/state.js';
 import { h, render, shuf } from '../core/render.js';
-import { icon } from '../core/icons.js';
 import { addXP, generateFCQuizOptions } from './gamification.js';
 
 export function sm2Default() {
@@ -67,29 +66,57 @@ export function getDueCards() {
   return window.FLASHCARDS.map((_, i) => i).filter(i => sm2IsDue(i));
 }
 
+// ─── Helpers for reverse mode ───
+function fcQ(card) { return S.fcReverse ? card.b : card.f; }
+function fcA(card) { return S.fcReverse ? card.f : card.b; }
+
 export function renderFlashcards() {
   const wrap = h('div', null);
   const cats = [...new Set(window.FLASHCARDS.map(f => f.c))];
   const knownCount = window.FLASHCARDS.filter((_, i) => sm2IsMastered(i)).length;
   const dueCount = getDueCards().length;
 
-  // Filters
+  // ── Header stats bar ──
+  var statsBar = h('div', { className: 'fc-stats-bar' },
+    h('div', { className: 'fc-stat' },
+      h('span', { className: 'fc-stat-num', style: { color: 'var(--green)' } }, String(knownCount)),
+      h('span', { className: 'fc-stat-label' }, 'ma\u00eetris\u00e9es')
+    ),
+    h('div', { className: 'fc-stat' },
+      h('span', { className: 'fc-stat-num', style: { color: 'var(--accent)' } }, String(dueCount)),
+      h('span', { className: 'fc-stat-label' }, '\u00e0 r\u00e9viser')
+    ),
+    h('div', { className: 'fc-stat' },
+      h('span', { className: 'fc-stat-num', style: { color: 'var(--tx2)' } }, String(window.FLASHCARDS.length)),
+      h('span', { className: 'fc-stat-label' }, 'total')
+    ),
+    // Session stats (if any cards answered this session)
+    S.fcSessionCorrect + S.fcSessionWrong > 0 ? h('div', { className: 'fc-stat fc-stat-session' },
+      h('span', { className: 'fc-stat-num' },
+        h('span', { style: { color: 'var(--green)' } }, String(S.fcSessionCorrect)),
+        ' / ',
+        h('span', { style: { color: 'var(--red)' } }, String(S.fcSessionWrong))
+      ),
+      h('span', { className: 'fc-stat-label' }, 'session')
+    ) : null
+  );
+  wrap.appendChild(statsBar);
+
+  // ── Filters with counts ──
+  var allCount = window.FLASHCARDS.length;
+  var reviewCount = window.FLASHCARDS.filter((_, i) => !sm2IsMastered(i)).length;
   wrap.appendChild(h('div', { className: 'pills' },
-    h('button', { className: 'pill' + (S.fcFilter === 'all' ? ' active' : ''), onClick: () => { S.fcFilter = 'all'; S.fcIdx = 0; S.fcFlipped = false; render(); } }, 'Toutes'),
+    h('button', { className: 'pill' + (S.fcFilter === 'all' ? ' active' : ''), onClick: () => { S.fcFilter = 'all'; S.fcIdx = 0; S.fcFlipped = false; render(); } }, `Toutes (${allCount})`),
     h('button', { className: 'pill' + (S.fcFilter === 'due' ? ' active' : ''), onClick: () => { S.fcFilter = 'due'; S.fcIdx = 0; S.fcFlipped = false; render(); },
       style: { borderColor: 'var(--accent)', color: 'var(--accent)' }
-    }, `Revision du jour (${dueCount})`),
+    }, `R\u00e9vision du jour (${dueCount})`),
     h('button', { className: 'pill' + (S.fcFilter === 'review' ? ' active' : ''), onClick: () => { S.fcFilter = 'review'; S.fcIdx = 0; S.fcFlipped = false; render(); },
       style: { borderColor: 'var(--red)', color: 'var(--red)' }
-    }, 'Non maitrisees'),
-    ...cats.map(c =>
-      h('button', { className: 'pill' + (S.fcFilter === c ? ' active' : ''), onClick: () => { S.fcFilter = c; S.fcIdx = 0; S.fcFlipped = false; render(); } }, c)
-    )
-  ));
-
-  // Stats
-  wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--tx3)', marginBottom: '16px' } },
-    `${knownCount}/${window.FLASHCARDS.length} maitrisees \u00b7 ${dueCount} a reviser aujourd'hui`
+    }, `Non ma\u00eetris\u00e9es (${reviewCount})`),
+    ...cats.map(c => {
+      var catCount = window.FLASHCARDS.filter(f => f.c === c).length;
+      return h('button', { className: 'pill' + (S.fcFilter === c ? ' active' : ''), onClick: () => { S.fcFilter = c; S.fcIdx = 0; S.fcFlipped = false; render(); } }, `${c} (${catCount})`);
+    })
   ));
 
   // Filter cards (use shuffled order if available)
@@ -102,7 +129,7 @@ export function renderFlashcards() {
 
   if (fc.length === 0) {
     wrap.appendChild(h('div', { style: { textAlign: 'center', padding: '40px', color: 'var(--tx3)' } },
-      S.fcFilter === 'due' ? 'Aucune carte a reviser aujourd\'hui !' : S.fcFilter === 'review' ? 'Toutes les cartes sont maitrisees !' : 'Aucune carte dans cette categorie.'
+      S.fcFilter === 'due' ? 'Aucune carte \u00e0 r\u00e9viser aujourd\'hui !' : S.fcFilter === 'review' ? 'Toutes les cartes sont ma\u00eetris\u00e9es !' : 'Aucune carte dans cette cat\u00e9gorie.'
     ));
     return wrap;
   }
@@ -113,37 +140,60 @@ export function renderFlashcards() {
   const sm2Data = sm2Get(globalIdx);
   const daysUntil = sm2DaysUntilReview(globalIdx);
 
-  // Progress
-  const sm2Label = sm2IsMastered(globalIdx) ? 'Maitrisee' : sm2Data.repetitions === 0 ? 'Nouvelle' : `Rep. ${sm2Data.repetitions}`;
-  const reviewLabel = daysUntil === 0 ? 'A reviser' : `Revision dans ${daysUntil}j`;
-  wrap.appendChild(h('div', { style: { fontSize: '12px', color: 'var(--tx3)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between' } },
-    h('span', null, `${S.fcIdx + 1}/${fc.length}`),
-    h('span', null, `Ch.${card.ch} \u00b7 ${sm2Label} \u00b7 ${reviewLabel}`)
+  // Progress bar + card info
+  var progressPct = Math.round((S.fcIdx + 1) / fc.length * 100);
+  const sm2Label = sm2IsMastered(globalIdx) ? 'Ma\u00eetris\u00e9e' : sm2Data.repetitions === 0 ? 'Nouvelle' : `R\u00e9p. ${sm2Data.repetitions}`;
+  const reviewLabel = daysUntil === 0 ? '\u00c0 r\u00e9viser' : `R\u00e9vision dans ${daysUntil}j`;
+  wrap.appendChild(h('div', { style: { marginBottom: '12px' } },
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--tx3)', marginBottom: '6px' } },
+      h('span', null, `${S.fcIdx + 1} / ${fc.length}`),
+      h('span', null, `Ch.${card.ch} \u00b7 ${card.c} \u00b7 ${sm2Label} \u00b7 ${reviewLabel}`)
+    ),
+    h('div', { className: 'progress-bar', style: { height: '3px' } },
+      h('div', { className: 'progress-fill', style: { width: progressPct + '%', transition: 'width 0.3s' } })
+    )
   ));
 
-  // Mode toggle (QCM vs Classic)
-  wrap.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'flex-end' } },
+  // ── Mode toggle row (Classic/QCM + Reverse) ──
+  wrap.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginBottom: '14px', justifyContent: 'space-between', flexWrap: 'wrap' } },
+    h('div', { style: { display: 'flex', gap: '6px' } },
+      h('button', {
+        onClick: function() { S.fcQuizMode = false; S.fcQuizSel = null; S.fcQuizShown = false; render(); },
+        style: { fontSize: '11px', padding: '3px 10px', background: !S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: !S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (!S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
+      }, 'Classique'),
+      h('button', {
+        onClick: function() { S.fcQuizMode = true; S.fcQuizSel = null; S.fcQuizShown = false; var qd = generateFCQuizOptions(globalIdx, S.fcReverse); S.fcQuizOptions = qd.options; S._fcQuizCorrect = qd.correct; render(); },
+        style: { fontSize: '11px', padding: '3px 10px', background: S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
+      }, 'QCM')
+    ),
     h('button', {
-      onClick: function() { S.fcQuizMode = false; S.fcQuizSel = null; S.fcQuizShown = false; render(); },
-      style: { fontSize: '11px', padding: '3px 10px', background: !S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: !S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (!S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
-    }, 'Classique'),
-    h('button', {
-      onClick: function() { S.fcQuizMode = true; S.fcQuizSel = null; S.fcQuizShown = false; var qd = generateFCQuizOptions(globalIdx); S.fcQuizOptions = qd.options; S._fcQuizCorrect = qd.correct; render(); },
-      style: { fontSize: '11px', padding: '3px 10px', background: S.fcQuizMode ? 'var(--accent)' : 'var(--bg)', color: S.fcQuizMode ? 'white' : 'var(--tx3)', border: '1px solid ' + (S.fcQuizMode ? 'var(--accent)' : 'var(--bd)'), borderRadius: '10px' }
-    }, 'QCM')
+      onClick: function() {
+        S.fcReverse = !S.fcReverse;
+        S.fcQuizSel = null; S.fcQuizShown = false; S.fcQuizOptions = [];
+        if (S.fcQuizMode) {
+          var qd = generateFCQuizOptions(globalIdx, S.fcReverse);
+          S.fcQuizOptions = qd.options; S._fcQuizCorrect = qd.correct;
+        }
+        render();
+      },
+      style: { fontSize: '11px', padding: '3px 10px', background: S.fcReverse ? 'var(--purple-bg, rgba(123,31,162,0.1))' : 'var(--bg)', color: S.fcReverse ? 'var(--purple, #7B1FA2)' : 'var(--tx3)', border: '1px solid ' + (S.fcReverse ? 'var(--purple, #7B1FA2)' : 'var(--bd)'), borderRadius: '10px' }
+    }, S.fcReverse ? '\u21c4 R\u00e9ponse en haut' : '\u21c4 Question en haut')
   ));
 
   if (S.fcQuizMode) {
-    // QCM mode: show question, 4 options
-    wrap.appendChild(h('div', { className: 'flashcard', style: { minHeight: '120px' } },
+    // QCM mode: show question side (respecting reverse), 4 options for answer side
+    var questionText = fcQ(card);
+    var questionLabel = S.fcReverse ? 'D\u00e9finition' : 'Question';
+    wrap.appendChild(h('div', { className: 'flashcard', style: { minHeight: '120px', cursor: 'default' } },
       h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
-        h('div', { className: 'flashcard-label' }, 'Question'),
-        h('div', { className: 'flashcard-text' }, card.f)
+        h('span', { className: 'fc-cat-badge' }, card.c),
+        h('div', { className: 'flashcard-label' }, questionLabel),
+        h('div', { className: 'flashcard-text' }, questionText)
       )
     ));
     // Generate options if not yet
     if (!S.fcQuizOptions || S.fcQuizOptions.length === 0) {
-      var qd = generateFCQuizOptions(globalIdx);
+      var qd = generateFCQuizOptions(globalIdx, S.fcReverse);
       S.fcQuizOptions = qd.options;
       S._fcQuizCorrect = qd.correct;
     }
@@ -159,6 +209,8 @@ export function renderFlashcards() {
           S.fcQuizSel = i;
           S.fcQuizShown = true;
           var quality = i === S._fcQuizCorrect ? 5 : 1;
+          if (quality === 5) S.fcSessionCorrect++;
+          else S.fcSessionWrong++;
           sm2Update(globalIdx, quality);
           render();
         }
@@ -166,12 +218,21 @@ export function renderFlashcards() {
     });
     wrap.appendChild(qOpts);
     if (S.fcQuizShown) {
+      // Show full explanation after answering
+      var explanation = fcA(card);
+      var fullAnswer = S.fcReverse ? card.f + ' \u2192 ' + card.b : card.b;
+      if (S.fcQuizSel !== S._fcQuizCorrect) {
+        wrap.appendChild(h('div', { className: 'fc-explanation' },
+          h('span', { style: { fontWeight: '600', color: 'var(--green)' } }, 'R\u00e9ponse : '),
+          fullAnswer
+        ));
+      }
       wrap.appendChild(h('button', { className: 'quiz-next', onClick: function() {
         S.fcQuizSel = null; S.fcQuizShown = false; S.fcQuizOptions = [];
         S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1);
         var nextGlobalIdx = window.FLASHCARDS.indexOf(fc[S.fcIdx]);
         if (nextGlobalIdx >= 0) {
-          var nd = generateFCQuizOptions(nextGlobalIdx);
+          var nd = generateFCQuizOptions(nextGlobalIdx, S.fcReverse);
           S.fcQuizOptions = nd.options; S._fcQuizCorrect = nd.correct;
         }
         render();
@@ -179,14 +240,17 @@ export function renderFlashcards() {
     }
   } else {
     // Classic mode
+    var questionSide = fcQ(card);
+    var answerSide = fcA(card);
     const cardEl = h('div', {
       className: 'flashcard' + (S.fcFlipped ? ' flashcard-back flipping' : ''),
       style: { background: S.fcFlipped ? 'var(--bg2)' : 'var(--bg)' },
       onClick: () => { S.fcFlipped = !S.fcFlipped; render(); }
     },
       h('div', { style: { textAlign: 'center', maxWidth: '500px' } },
+        h('span', { className: 'fc-cat-badge' }, card.c),
         h('div', { className: 'flashcard-label' }, S.fcFlipped ? 'R\u00e9ponse' : 'Question'),
-        h('div', { className: 'flashcard-text' }, S.fcFlipped ? card.b : card.f)
+        h('div', { className: 'flashcard-text' }, S.fcFlipped ? answerSide : questionSide)
       )
     );
     wrap.appendChild(cardEl);
@@ -195,14 +259,17 @@ export function renderFlashcards() {
     if (S.fcFlipped) {
       wrap.appendChild(h('div', { className: 'flash-actions' },
         h('button', { className: 'review', onClick: () => {
+          S.fcSessionWrong++;
           sm2Update(globalIdx, 1);
           S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
-        }}, 'A revoir'),
+        }}, '\u00c0 revoir'),
         h('button', { onClick: () => {
+          S.fcSessionCorrect++;
           sm2Update(globalIdx, 3);
           S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
         }, style: { borderColor: '#F0AD4E', color: '#F0AD4E' } }, 'Difficile'),
         h('button', { className: 'know', onClick: () => {
+          S.fcSessionCorrect++;
           sm2Update(globalIdx, 5);
           S.fcFlipped = false; S.fcIdx = Math.min(S.fcIdx + 1, fc.length - 1); render();
         }}, 'Facile')
@@ -220,10 +287,11 @@ export function renderFlashcards() {
   ));
   wrap.appendChild(h('div', { className: 'swipe-hint' }, 'Tap pour retourner \u00b7 Swipe \u2190 \u2192 pour naviguer'));
 
-  // Restart + Shuffle
-  wrap.appendChild(h('div', { style: { textAlign: 'center', marginTop: '12px', display: 'flex', gap: '8px', justifyContent: 'center' } },
+  // Restart + Shuffle + Reset session
+  wrap.appendChild(h('div', { style: { textAlign: 'center', marginTop: '12px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' } },
     h('button', { onClick: () => { S.fcIdx = 0; S.fcFlipped = false; render(); }, style: { fontSize: '12px' } }, 'Recommencer'),
-    h('button', { onClick: () => { S.fcShuffled = shuf(window.FLASHCARDS); S.fcIdx = 0; S.fcFlipped = false; render(); }, style: { fontSize: '12px' } }, 'Melanger')
+    h('button', { onClick: () => { S.fcShuffled = shuf(window.FLASHCARDS); S.fcIdx = 0; S.fcFlipped = false; render(); }, style: { fontSize: '12px' } }, 'M\u00e9langer'),
+    S.fcSessionCorrect + S.fcSessionWrong > 0 ? h('button', { onClick: () => { S.fcSessionCorrect = 0; S.fcSessionWrong = 0; S.fcIdx = 0; S.fcFlipped = false; render(); }, style: { fontSize: '12px', color: 'var(--tx3)' } }, 'Reset session') : null
   ));
 
   return wrap;

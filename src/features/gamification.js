@@ -358,15 +358,32 @@ export function isChapterUnlocked(chId) {
   });
 }
 
-export function generateFCQuizOptions(correctIdx) {
+export function generateFCQuizOptions(correctIdx, reverse) {
   var correct = window.FLASHCARDS[correctIdx];
+  // In reverse mode: question=b, answer=f. Normal: question=f, answer=b
+  var answerField = reverse ? 'f' : 'b';
   var distractors = window.FLASHCARDS.filter(function(fc, i) { return i !== correctIdx && fc.c === correct.c; });
   if (distractors.length < 3) {
     distractors = window.FLASHCARDS.filter(function(fc, i) { return i !== correctIdx; });
   }
-  var picked = shuf(distractors).slice(0, 3).map(function(fc) { return fc.b; });
-  var options = shuf(picked.concat([correct.b]));
-  var correctOptionIdx = options.indexOf(correct.b);
+  var correctAnswer = correct[answerField];
+  var picked = shuf(distractors).slice(0, 3).map(function(fc) { return fc[answerField]; });
+  // Avoid duplicate options
+  var seen = {};
+  seen[correctAnswer] = true;
+  var unique = [];
+  for (var i = 0; i < picked.length; i++) {
+    if (!seen[picked[i]]) { seen[picked[i]] = true; unique.push(picked[i]); }
+  }
+  // If not enough unique distractors, grab from all cards
+  if (unique.length < 3) {
+    var all = shuf(window.FLASHCARDS.filter(function(fc, j) { return j !== correctIdx; }));
+    for (var k = 0; k < all.length && unique.length < 3; k++) {
+      if (!seen[all[k][answerField]]) { seen[all[k][answerField]] = true; unique.push(all[k][answerField]); }
+    }
+  }
+  var options = shuf(unique.slice(0, 3).concat([correctAnswer]));
+  var correctOptionIdx = options.indexOf(correctAnswer);
   return { options: options, correct: correctOptionIdx };
 }
 

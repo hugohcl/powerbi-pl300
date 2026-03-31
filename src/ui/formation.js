@@ -83,36 +83,6 @@ export function renderDiagram(type) {
     return wrap;
   }
 
-  if (type === 'pq-pipeline') {
-    const s = svg('svg', { viewBox: '0 0 700 100', style: 'width:100%;height:auto;max-width:700px;display:block;margin:12px auto;' });
-    const steps = [
-      { label: 'Source', abbr: 'SRC', x: 10 },
-      { label: 'Types', abbr: 'TYP', x: 125 },
-      { label: 'Nettoyage', abbr: 'CLN', x: 240 },
-      { label: 'Transform.', abbr: 'TRN', x: 355 },
-      { label: 'Merge', abbr: 'MRG', x: 470 },
-      { label: 'Chargement', abbr: 'LDR', x: 585 }
-    ];
-    const defs = svg('defs', {});
-    const marker = svg('marker', { id: 'arrowPQ', viewBox: '0 0 10 10', refX: '10', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto' });
-    marker.appendChild(svg('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: 'var(--tx3)' }));
-    defs.appendChild(marker);
-    s.appendChild(defs);
-    steps.forEach((st, i) => {
-      s.appendChild(svg('rect', { x: st.x, y: '15', width: '100', height: '55', rx: '8', fill: 'var(--accent)' + (i === 0 || i === 5 ? '25' : '12'), stroke: 'var(--accent)', 'stroke-width': '1' }));
-      s.appendChild(svg('text', { x: st.x + 50, y: '38', 'text-anchor': 'middle', fill: 'var(--accent)', 'font-size': '12', 'font-weight': '700', 'font-family': 'var(--mono)' }, st.abbr));
-      s.appendChild(svg('text', { x: st.x + 50, y: '56', 'text-anchor': 'middle', fill: 'var(--tx)', 'font-size': '11', 'font-weight': '500', 'font-family': 'var(--font)' }, st.label));
-      if (i < 5) {
-        s.appendChild(svg('line', { x1: st.x + 100, y1: '42', x2: st.x + 125, y2: '42', stroke: 'var(--tx3)', 'stroke-width': '1.5', 'marker-end': 'url(#arrowPQ)' }));
-      }
-    });
-    const wrap = h('div', { className: 'box', style: { borderColor: 'var(--accent)', borderLeftWidth: '3px', padding: '14px' } },
-      h('span', { className: 'box-label' }, 'Pipeline Power Query')
-    );
-    wrap.appendChild(s);
-    return wrap;
-  }
-
   return h('div');
 }
 

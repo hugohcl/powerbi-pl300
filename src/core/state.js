@@ -90,6 +90,9 @@ export const S = {
   fcQuizOptions: [],
   fcQuizSel: null,
   fcQuizShown: false,
+  fcReverse: false,
+  fcSessionCorrect: 0,
+  fcSessionWrong: 0,
   // Pomodoro
   pomodoro: {
     active: false,

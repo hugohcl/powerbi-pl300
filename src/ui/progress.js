@@ -73,7 +73,7 @@ export function getRecommendations() {
   const dueCount = getDueCards().length;
   if (dueCount > 0) {
     recs.push({
-      text: `${dueCount} flashcard${dueCount > 1 ? 's' : ''} a reviser aujourd'hui (repetition espacee).`,
+      text: `${dueCount} flashcard${dueCount > 1 ? 's' : ''} \u00e0 r\u00e9viser aujourd'hui (r\u00e9p\u00e9tition espac\u00e9e).`,
       action: () => { S.tab = 'flash'; S.fcFilter = 'due'; S.fcIdx = 0; S.fcFlipped = false; render(); },
       label: 'R\u00e9viser'
     });

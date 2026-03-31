@@ -180,7 +180,6 @@ export function renderChapterDetail(ch) {
     // SVG diagrams for specific sections
     if (sec.id === '3.1') wrap.appendChild(_renderDiagram('star-schema'));
     if (sec.id === '4.2') wrap.appendChild(_renderDiagram('calculate-flow'));
-    if (sec.id === '2.1') wrap.appendChild(_renderDiagram('pq-pipeline'));
 
     if (sec.deep) {
       const deepContent = renderText(sec.deep, { display: 'none', fontSize: '14px', lineHeight: '1.75', color: 'var(--tx2)' });

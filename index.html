@@ -220,6 +220,13 @@ code, .code { font-family: var(--mono); font-size: 13px; }
 .flash-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: center; }
 .flash-actions .know { background: var(--green-bg); color: var(--green); border-color: var(--green); }
 .flash-actions .review { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+.fc-stats-bar { display: flex; gap: 16px; margin-bottom: 20px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--bg2); }
+.fc-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fc-stat-num { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fc-stat-label { font-size: 11px; color: var(--tx3); }
+.fc-stat-session { margin-left: auto; border-left: 1px solid var(--bd); padding-left: 16px; }
+.fc-cat-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; background: var(--accent-bg, rgba(46,117,182,0.1)); color: var(--accent); margin-bottom: 8px; }
+.fc-explanation { margin-top: 10px; padding: 10px 14px; border-radius: var(--radius); background: var(--bg2); font-size: 13px; color: var(--tx2); line-height: 1.6; border-left: 2px solid var(--green); }
 
 /* Progress bars */
 .progress-bar { height: 6px; border-radius: 3px; background: var(--bg3); overflow: hidden; }
@@ -930,8 +937,8 @@ html.theme-transitioning, html.theme-transitioning * {
 <div id="splash"><img src="icon.png" alt="DAX Academy"><span>DAX Academy</span><div class="splash-version" id="splash-ver" style="margin-top:12px;font-size:11px;font-weight:500;color:var(--tx3);opacity:0;animation:splash-text 0.5s 1.0s ease both;"></div><div class="splash-line"></div></div>
 <div class="app" id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="data.js?v=5.5.8"></script>
-<script type="module" src="app.js?v=5.5.8"></script>
+<script src="data.js?v=5.5.9"></script>
+<script type="module" src="app.js?v=5.5.9"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>
