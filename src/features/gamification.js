@@ -76,7 +76,7 @@ export function renderDailyMix() {
     var pct = S.dailyMixTotal > 0 ? Math.round(S.dailyMixScore / S.dailyMixTotal * 100) : 0;
     wrap.appendChild(h('div', { className: 'daily-mix-complete' },
       h('div', { style: { fontSize: '48px', marginBottom: '16px' } }, icon('trophy', 48)),
-      h('h2', { style: { fontSize: '22px', marginBottom: '8px' } }, 'Session terminee !'),
+      h('h2', { style: { fontSize: '22px', marginBottom: '8px' } }, 'Session termin\u00e9e !'),
       h('div', { style: { fontSize: '32px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' } }, S.dailyMixScore + '/' + S.dailyMixTotal),
       h('div', { style: { fontSize: '14px', color: 'var(--tx2)', marginBottom: '24px' } },
         pct >= 80 ? 'Excellent travail !' : pct >= 50 ? 'Bien joue, continue !' : 'Continue de progresser !'),
@@ -197,11 +197,11 @@ export function getWeeklyChallenge() {
   if (S.weeklyChallengeDate === weekId && S.weeklyChallenge) return S.weeklyChallenge;
   // Generate new challenge
   var challenges = [
-    { id: 'flash10', title: 'Maitre des cartes', desc: 'Maitrise 10 nouvelles flashcards cette semaine', target: 10, metric: 'flashcards', icon: 'zap', xpBonus: 100 },
-    { id: 'quiz30', title: 'Machine a quiz', desc: 'Reponds a 30 questions de quiz', target: 30, metric: 'quiz_answers', icon: 'target', xpBonus: 80 },
-    { id: 'mission8', title: 'Completeur', desc: 'Termine 8 missions cette semaine', target: 8, metric: 'missions', icon: 'check', xpBonus: 120 },
-    { id: 'streak5', title: 'Regulier', desc: 'Maintiens un streak de 5+ jours', target: 5, metric: 'streak', icon: 'flame', xpBonus: 75 },
-    { id: 'dax5', title: 'DAX Warrior', desc: 'Complete 5 exercices DAX', target: 5, metric: 'dax_exercises', icon: 'award', xpBonus: 100 },
+    { id: 'flash10', title: 'Ma\u00eetre des cartes', desc: 'Ma\u00eetrise 10 nouvelles flashcards cette semaine', target: 10, metric: 'flashcards', icon: 'zap', xpBonus: 100 },
+    { id: 'quiz30', title: 'Machine \u00e0 quiz', desc: 'R\u00e9ponds \u00e0 30 questions de quiz', target: 30, metric: 'quiz_answers', icon: 'target', xpBonus: 80 },
+    { id: 'mission8', title: 'Compl\u00e9teur', desc: 'Termine 8 missions cette semaine', target: 8, metric: 'missions', icon: 'check', xpBonus: 120 },
+    { id: 'streak5', title: 'R\u00e9gulier', desc: 'Maintiens un streak de 5+ jours', target: 5, metric: 'streak', icon: 'flame', xpBonus: 75 },
+    { id: 'dax5', title: 'DAX Warrior', desc: 'Compl\u00e8te 5 exercices DAX', target: 5, metric: 'dax_exercises', icon: 'award', xpBonus: 100 },
     { id: 'xp200', title: 'Grind XP', desc: 'Gagne 200 XP cette semaine', target: 200, metric: 'weekly_xp', icon: 'xp', xpBonus: 60 }
   ];
   var challenge = challenges[Math.floor(Math.random() * challenges.length)];
@@ -479,7 +479,7 @@ export function checkBadges() {
     if (earned) {
       S.badges.push(b.id);
       playBadge();
-      showCelebration('Badge debloque !', b.name + ' \u2014 ' + b.desc, 'badge');
+      showCelebration('Badge d\u00e9bloqu\u00e9 !', b.name + ' \u2014 ' + b.desc, 'badge');
     }
   });
 }

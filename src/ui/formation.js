@@ -75,7 +75,7 @@ export function renderDiagram(type) {
     defs.appendChild(marker);
     s.appendChild(defs);
     // Annotation
-    s.appendChild(svg('text', { x: '325', y: '130', 'text-anchor': 'middle', fill: 'var(--tx2)', 'font-size': '11', 'font-family': 'var(--font)', 'font-style': 'italic' }, 'Meme colonne = REMPLACE / Autre colonne = AJOUTE'));
+    s.appendChild(svg('text', { x: '325', y: '130', 'text-anchor': 'middle', fill: 'var(--tx2)', 'font-size': '11', 'font-family': 'var(--font)', 'font-style': 'italic' }, 'M\u00eame colonne = REMPLACE / Autre colonne = AJOUTE'));
     const wrap = h('div', { className: 'box', style: { borderColor: 'var(--purple)', borderLeftWidth: '3px', padding: '14px' } },
       h('span', { className: 'box-label' }, 'Flux CALCULATE')
     );

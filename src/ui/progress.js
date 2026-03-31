@@ -408,8 +408,8 @@ export function renderProgress() {
       h('span', { className: 'box-label' }, 'Estimation PL-300')
     );
     predBox.appendChild(h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px' } },
-      h('div', null, 'Taux de reussite global : ', h('strong', null, `${pred.globalPct}%`)),
-      h('div', null, 'Score estime : ', h('strong', { style: { color: pred.ready ? 'var(--green)' : 'var(--red)' } }, `${pred.estimatedScore}/1000`)),
+      h('div', null, 'Taux de r\u00e9ussite global : ', h('strong', null, `${pred.globalPct}%`)),
+      h('div', null, 'Score estim\u00e9 : ', h('strong', { style: { color: pred.ready ? 'var(--green)' : 'var(--red)' } }, `${pred.estimatedScore}/1000`)),
       pred.strongest ? h('div', null, 'Domaine le plus fort : ', h('strong', { style: { color: 'var(--green)' } }, `${DOMAINS[pred.strongest]?.name} (${pred.strongPct}%)`)) : h('div'),
       pred.weakest ? h('div', null, 'Domaine le plus faible : ', h('strong', { style: { color: 'var(--red)' } }, `${DOMAINS[pred.weakest]?.name} (${pred.weakPct}%)`)) : h('div')
     ));

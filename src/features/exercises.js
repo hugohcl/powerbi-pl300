@@ -115,7 +115,7 @@ export function renderExercises() {
     h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } },
       h('span', { className: 'badge', style: { background: 'var(--accent-bg)', color: 'var(--accent)' } }, 'Ch.' + ex.ch),
       h('span', { className: 'badge', style: { background: ex.difficulty === 1 ? 'var(--green-bg)' : ex.difficulty === 2 ? 'var(--yellow-bg)' : 'var(--red-bg)', color: ex.difficulty === 1 ? 'var(--green)' : ex.difficulty === 2 ? '#9A6700' : 'var(--red)' } }, 'Niveau ' + ex.difficulty),
-      S.exCompleted[ex.id] ? h('span', { className: 'badge', style: { background: 'var(--green-bg)', color: 'var(--green)' } }, 'Reussi') : null
+      S.exCompleted[ex.id] ? h('span', { className: 'badge', style: { background: 'var(--green-bg)', color: 'var(--green)' } }, 'R\u00e9ussi') : null
     ),
     h('span', { style: { fontSize: '13px', color: 'var(--tx3)' } }, (S.exIdx + 1) + '/' + filtered.length)
   ));
