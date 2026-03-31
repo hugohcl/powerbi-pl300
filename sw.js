@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pl300-v5.5.3';
+const CACHE_NAME = 'pl300-v5.5.4';
 const ASSETS = [
   './',
   './index.html',

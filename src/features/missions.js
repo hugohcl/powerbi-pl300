@@ -15,7 +15,32 @@ function _inlineFormat(text) {
   return text
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/__([^_]+)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code style="font-size:0.92em;padding:1px 5px;background:var(--bg3);border-radius:4px;">$1</code>');
+    .replace(/==([^=]+)==/g, '<mark style="background:var(--yellow-bg);padding:1px 4px;border-radius:3px;">$1</mark>')
+    .replace(/`([^`]+)`/g, '<code style="font-size:0.92em;padding:1px 5px;background:var(--bg3);border-radius:4px;font-family:var(--mono);">$1</code>');
+}
+
+function _isListLine(line) {
+  var t = line.trim();
+  return /^\s*[-–•]\s/.test(t) || /^\s*\d+[.)]\s/.test(t);
+}
+
+function _renderList(lines, ordered) {
+  var tag = ordered ? 'ol' : 'ul';
+  var el = document.createElement(tag);
+  el.style.margin = '8px 0';
+  el.style.paddingLeft = '22px';
+  if (!ordered) el.style.listStyleType = 'disc';
+  lines.forEach(function(l) {
+    var clean = l.trim().replace(/^[-–•]\s*/, '').replace(/^\d+[.)]\s*/, '');
+    if (clean) {
+      var li = document.createElement('li');
+      li.style.marginBottom = '6px';
+      li.style.lineHeight = '1.65';
+      li.innerHTML = _inlineFormat(clean);
+      el.appendChild(li);
+    }
+  });
+  return el;
 }
 
 function renderText(text, style) {
@@ -25,25 +50,50 @@ function renderText(text, style) {
     const trimmed = para.trim();
     if (!trimmed) return;
     const lines = trimmed.split('\n');
-    const isList = lines.length > 1 && lines.every(l => /^\s*[-–•]/.test(l.trim()) || /^\s*\d+[.)\-]/.test(l.trim()) || l.trim() === '');
-    if (isList) {
-      const ul = h('ul', { style: { margin: '8px 0', paddingLeft: '20px', listStyleType: 'disc' } });
-      lines.forEach(l => {
-        const clean = l.trim().replace(/^[-–•]\s*/, '').replace(/^\d+[.)\-]\s*/, '');
-        if (clean) {
-          const li = document.createElement('li');
-          li.style.marginBottom = '4px';
-          li.innerHTML = _inlineFormat(clean);
-          ul.appendChild(li);
-        }
-      });
-      container.appendChild(ul);
-    } else {
-      const p = document.createElement('p');
-      p.style.marginBottom = '10px';
-      p.innerHTML = _inlineFormat(trimmed);
-      container.appendChild(p);
+
+    // Pure list (all lines are list items)
+    var allList = lines.length > 1 && lines.every(l => _isListLine(l) || l.trim() === '');
+    if (allList) {
+      var ordered = lines.some(l => /^\s*\d+[.)]/.test(l.trim()));
+      container.appendChild(_renderList(lines, ordered));
+      return;
     }
+
+    // Mixed paragraph: intro text followed by list items
+    var firstListIdx = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (_isListLine(lines[i])) { firstListIdx = i; break; }
+    }
+    if (firstListIdx > 0) {
+      // Text before the list
+      var introText = lines.slice(0, firstListIdx).join(' ').trim();
+      if (introText) {
+        var p = document.createElement('p');
+        p.style.marginBottom = '6px';
+        p.innerHTML = _inlineFormat(introText);
+        container.appendChild(p);
+      }
+      // List part
+      var listLines = lines.slice(firstListIdx);
+      var ordered = listLines.some(l => /^\s*\d+[.)]/.test(l.trim()));
+      container.appendChild(_renderList(listLines, ordered));
+      return;
+    }
+
+    // Subtitle detection: single short line ending with ":"
+    if (lines.length === 1 && trimmed.length < 80 && /[:\u00a0]$/.test(trimmed)) {
+      var sub = document.createElement('p');
+      sub.style.cssText = 'font-weight:600;font-size:14px;margin:16px 0 6px;color:var(--tx);';
+      sub.innerHTML = _inlineFormat(trimmed);
+      container.appendChild(sub);
+      return;
+    }
+
+    // Regular paragraph
+    var p = document.createElement('p');
+    p.style.marginBottom = '10px';
+    p.innerHTML = _inlineFormat(trimmed.replace(/\n/g, ' '));
+    container.appendChild(p);
   });
   return container;
 }
