@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // Core
-import { S, save, load, setSyncCallback, getSaveData, applyData, SUPABASE_URL, SUPABASE_ANON_KEY } from './src/core/state.js';
+import { S, save, load, setSyncCallback, getSaveData, applyData } from './src/core/state.js';
 import { APP_VERSION, h, $, render, setRenderFn, shuf, qHash, trackQuizAnswer, getTotalMissions, isMobile, initTheme, toggleTheme, formatStudyTime } from './src/core/render.js';
 import { icon, iconSearch, iconTimer, iconSun, iconMoon } from './src/core/icons.js';
 import { highlightCode } from './src/data/highlight.js';

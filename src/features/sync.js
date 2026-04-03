@@ -1,4 +1,4 @@
-import { S, getSaveData, applyData, save, setSyncCallback, SUPABASE_URL, SUPABASE_ANON_KEY, supabaseClient } from '../core/state.js';
+import { S, getSaveData, applyData, save, setSyncCallback } from '../core/state.js';
 import { h, render } from '../core/render.js';
 import { icon } from '../core/icons.js';
 import { showNotification } from './gamification.js';
@@ -11,17 +11,17 @@ let _syncDebounceTimer = null;
 export function getSyncCode() { return _syncCode; }
 
 export async function syncPush() {
-  if (!_syncCode || _syncPending || !supabaseClient) return;
+  if (!_syncCode || _syncPending) return;
   _syncPending = true;
   try {
-    var now = Date.now();
-    var { error } = await supabaseClient.from('users').upsert({
-      code: _syncCode,
-      data: getSaveData(),
-      updated_at: now
+    var resp = await fetch('/api/sync/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: _syncCode, data: getSaveData(), updated_at: _syncUpdatedAt })
     });
-    if (!error) {
-      _syncUpdatedAt = now;
+    var json = await resp.json();
+    if (resp.ok) {
+      _syncUpdatedAt = json.updated_at;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
     }
   } catch(e) { /* offline */ }
@@ -29,10 +29,11 @@ export async function syncPush() {
 }
 
 export async function syncPull() {
-  if (!_syncCode || !supabaseClient) return;
+  if (!_syncCode) return;
   try {
-    var { data: row, error } = await supabaseClient.from('users').select('data, updated_at').eq('code', _syncCode).single();
-    if (!error && row) {
+    var resp = await fetch('/api/sync/pull/' + _syncCode);
+    if (resp.ok) {
+      var row = await resp.json();
       _syncUpdatedAt = row.updated_at;
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
       applyData(row.data);
@@ -42,31 +43,22 @@ export async function syncPull() {
   } catch(e) { /* offline */ }
 }
 
-function _generateCode() {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  var code = '';
-  for (var i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  code += '-';
-  for (var j = 0; j < 4; j++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
-
 export async function syncGenerate() {
-  if (!supabaseClient) { showNotification('Supabase non disponible.', 'xp'); return null; }
   try {
-    var code = _generateCode();
-    var now = Date.now();
-    var { error } = await supabaseClient.from('users').insert({
-      code: code, data: getSaveData(), updated_at: now, created_at: now
+    var resp = await fetch('/api/sync/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: getSaveData() })
     });
-    if (!error) {
-      _syncCode = code;
+    var json = await resp.json();
+    if (resp.ok && json.code) {
+      _syncCode = json.code;
       localStorage.setItem('pbi-sync-code', _syncCode);
-      _syncUpdatedAt = now;
+      _syncUpdatedAt = Date.now();
       localStorage.setItem('pbi-sync-updated', String(_syncUpdatedAt));
       render();
       showNotification('Code cr\u00e9\u00e9 : ' + _syncCode, 'xp');
-      return code;
+      return json.code;
     }
   } catch(e) {
     showNotification('Erreur r\u00e9seau. R\u00e9essaie.', 'xp');
@@ -75,11 +67,15 @@ export async function syncGenerate() {
 }
 
 export async function syncConnect(code) {
-  if (!supabaseClient) return false;
   code = code.toUpperCase().trim();
   try {
-    var { data: row, error } = await supabaseClient.from('users').select('code, data, updated_at').eq('code', code).single();
-    if (!error && row) {
+    var resp = await fetch('/api/sync/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    var row = await resp.json();
+    if (resp.ok && row.code) {
       _syncCode = row.code;
       localStorage.setItem('pbi-sync-code', _syncCode);
       _syncUpdatedAt = row.updated_at;
@@ -90,7 +86,7 @@ export async function syncConnect(code) {
       showNotification('Connect\u00e9 ! Progression r\u00e9cup\u00e9r\u00e9e.', 'xp');
       return true;
     } else {
-      showNotification('Code introuvable.', 'xp');
+      showNotification(row.error || 'Code introuvable.', 'xp');
       return false;
     }
   } catch(e) {

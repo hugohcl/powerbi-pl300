@@ -1,4 +1,4 @@
-import { S, SUPABASE_URL, SUPABASE_ANON_KEY } from '../core/state.js';
+import { S } from '../core/state.js';
 import { h } from '../core/render.js';
 import { getLevel } from './gamification.js';
 
@@ -280,9 +280,9 @@ export async function sendChatMessage() {
   try {
     var body = { message: msg || 'Analyse cette image.', context: getChatContext(), history: historyToSend };
     if (image) body.image = { mimeType: image.mimeType, data: image.data };
-    var resp = await fetch(SUPABASE_URL + '/functions/v1/dax-tutor', {
+    var resp = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     var data = await resp.json();

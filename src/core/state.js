@@ -105,10 +105,7 @@ export const S = {
   },
 };
 
-// ─── Supabase config ───
-export const SUPABASE_URL = 'https://ciajqbaufrypvewzcwof.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpYWpxYmF1ZnJ5cHZld3pjd29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzE5MzgsImV4cCI6MjA4OTg0NzkzOH0.6REuqCgb5XBqANsS0BVNtYf0ggGK6pKBWBhS7S5-UIc';
-export const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// ─── Sync uses Express server (/api/sync/*) — no client-side keys ───
 
 // ─── Sync callback (injected by main app) ───
 let _syncCallback = null;
